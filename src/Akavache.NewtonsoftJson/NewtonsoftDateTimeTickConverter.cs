@@ -4,7 +4,11 @@
 
 using Newtonsoft.Json;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.NewtonsoftJson;
+#else
 namespace Akavache.NewtonsoftJson;
+#endif
 
 /// <summary>
 /// JSON converter for DateTime that preserves ticks and handles DateTimeKind appropriately.

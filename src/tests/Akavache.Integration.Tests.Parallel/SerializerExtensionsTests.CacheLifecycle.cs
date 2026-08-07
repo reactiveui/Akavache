@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests covering expiration, invalidation and concurrent access through the serializer extensions.</summary>
 public partial class SerializerExtensionsTests
@@ -21,7 +21,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var fetchCount = 0;
 
         try
@@ -30,7 +30,7 @@ public partial class SerializerExtensionsTests
             Func<IObservable<string>> fetchFunc = () =>
             {
                 fetchCount++;
-                return Observable.Return($"value_{fetchCount}");
+                return Signal.Return($"value_{fetchCount}");
             };
 
             // Act 1: First call to GetOrFetchObject should fetch and cache
@@ -68,7 +68,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange - Replicate the exact scenario from the bug report
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var cnt = 0;
 
         try
@@ -78,7 +78,7 @@ public partial class SerializerExtensionsTests
                     () =>
                     {
                         cnt++;
-                        return Observable.Return($"b{cnt}");
+                        return Signal.Return($"b{cnt}");
                     },
                     TimeProvider.System.GetUtcNow().UtcDateTime + TimeSpan.FromMilliseconds(CacheLifetimeMilliseconds));
 
@@ -109,7 +109,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         UserObject user = new() { Name = "Expiring User", Bio = "Bio", Blog = "Blog" };
         var expiration = TimeProvider.System.GetLocalNow().AddHours(1);
 
@@ -142,7 +142,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -167,13 +167,13 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         UserObject user1 = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
 
         try
         {
             // Insert only one user
-            cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
+            cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
 
             // Act - Request multiple keys where some are missing
             IList<KeyValuePair<string, UserObject>>? results = null;
@@ -196,7 +196,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var expiration = TimeProvider.System.GetLocalNow().AddHours(1);
         List<KeyValuePair<string, UserObject>> keyValuePairs =
         [
@@ -236,7 +236,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -244,7 +244,7 @@ public partial class SerializerExtensionsTests
             Exception? fetchError = null;
             _ = cache.GetOrFetchObject(
                     "failing_fetch",
-                    static () => Observable.Throw<UserObject>(new InvalidOperationException("Fetch failed")))
+                    static () => Signal.Throw<UserObject>(new InvalidOperationException("Fetch failed")))
                 .Subscribe(static _ => { }, ex => fetchError = ex);
             await Assert.That(fetchError).IsTypeOf<InvalidOperationException>();
         }
@@ -261,7 +261,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -286,7 +286,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -308,7 +308,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -332,7 +332,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -359,7 +359,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         UserObject user = new() { Name = "User", Bio = "Bio", Blog = "Blog" };
 
         try
@@ -393,7 +393,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -427,7 +427,7 @@ public partial class SerializerExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var fetchCount = 0;
 
         try
@@ -435,7 +435,7 @@ public partial class SerializerExtensionsTests
             var fetchFunc = () =>
             {
                 _ = Interlocked.Increment(ref fetchCount);
-                return Observable.Return(new UserObject { Name = $"User{fetchCount}", Bio = "Bio", Blog = "Blog" })
+                return Signal.Return(new UserObject { Name = $"User{fetchCount}", Bio = "Bio", Blog = "Blog" })
                     .Delay(TimeSpan.FromMilliseconds(FetchDelayMilliseconds));
             };
 

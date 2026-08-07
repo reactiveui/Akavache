@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>Akavache.Drawing.Reactive</AssemblyName>
+    <RootNamespace>Akavache.Reactive.Drawing</RootNamespace>
+    <PackageId>Akavache.Drawing.Reactive</PackageId>
+    <Description>Drawing and bitmap support for Akavache using Splat.Drawing, recompiled against System.Reactive</Description>
+    <PackageDescription>Akavache.Drawing recompiled against System.Reactive's Unit and IScheduler, for consumers already on the System.Reactive stack.</PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="Foundation" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Reactive\Akavache.Reactive.csproj" />
+    <ProjectReference Include="..\Akavache.HttpDownloader.Reactive\Akavache.HttpDownloader.Reactive.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Splat.Drawing" />
+    <PackageReference Include="ReactiveUI.Primitives.Reactive" ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <!-- The same source the lean Akavache.Drawing package ships, recompiled here under REACTIVE_SHIM. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Drawing\**\*.cs"
+             Exclude="..\Akavache.Drawing\obj\**\*.cs;..\Akavache.Drawing\bin\**\*.cs"
+             Link="Akavache.Drawing\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Mirrors the lean project's shared-internals set; see Akavache.Sqlite3.csproj for the rationale. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentValidation.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\ObservableUnitExtensions.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\Observables\SelectConstantObservable.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Core.Observables" />
+    <AkavacheInternalUsing Include="Akavache.Drawing" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel.Reactive" />
+  </ItemGroup>
+</Project>

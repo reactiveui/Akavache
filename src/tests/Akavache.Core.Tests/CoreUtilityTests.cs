@@ -3,10 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
-using Akavache.Core;
-using Akavache.Tests.Executors;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for core utility functionality.</summary>
 [Category("Akavache")]
@@ -163,7 +165,7 @@ public class CoreUtilityTests
         Func<IObservable<string>> factory = () =>
         {
             callCount++;
-            return Observable.Return($"result_{callCount}");
+            return Signal.Return($"result_{callCount}");
         };
 
         // Act - Call multiple times with same key
@@ -227,7 +229,7 @@ public class CoreUtilityTests
         {
             ref var callCount = ref CollectionsMarshal.GetValueRefOrAddDefault(callCounts, key, out _);
             callCount++;
-            return Observable.Return($"result_{key}_{callCount}");
+            return Signal.Return($"result_{key}_{callCount}");
         }
     }
 
@@ -264,7 +266,7 @@ public class CoreUtilityTests
     {
         // Arrange & Act
         var taskpoolScheduler = CacheDatabase.TaskpoolScheduler;
-        var immediateScheduler = ImmediateScheduler.Instance;
+        var immediateScheduler = ImmediateSequencer.Instance;
 
         using (Assert.Multiple())
         {
@@ -282,8 +284,8 @@ public class CoreUtilityTests
     public async Task UnitValuesShouldWorkCorrectly()
     {
         // Arrange & Act
-        var unit1 = Unit.Default;
-        var unit2 = default(Unit);
+        var unit1 = RxVoid.Default;
+        var unit2 = default(RxVoid);
 
         using (Assert.Multiple())
         {

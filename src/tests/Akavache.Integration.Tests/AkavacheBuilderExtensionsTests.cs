@@ -3,13 +3,14 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Settings;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Executors;
 using Splat;
 using Splat.Builder;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for AkavacheBuilderExtensions.</summary>
 [Category("Akavache")]

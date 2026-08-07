@@ -3,10 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Core;
-using Akavache.SystemTextJson;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>
 /// Tests for the internal <see cref="AkavacheBuilder"/> implementation of <see cref="IAkavacheBuilder"/>.

@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Extension methods for working with images and bitmaps in the cache.</summary>
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -249,8 +253,8 @@ public static class ImageExtensions
     /// <returns>An observable that emits the byte array if valid, or signals an error if the buffer is corrupt.</returns>
     internal static IObservable<byte[]> ThrowOnBadImageBuffer(byte[]? compressedImage) =>
         compressedImage is null || compressedImage.Length < 64
-            ? Observable.Throw<byte[]>(new InvalidOperationException("Invalid Image"))
-            : Observable.Return(compressedImage);
+            ? new ImmediateThrowSignal<byte[]>(new InvalidOperationException("Invalid Image"))
+            : Signal.Return(compressedImage);
 
     /// <summary>
     /// Routes a potentially null byte buffer from a blob cache through the
@@ -261,7 +265,7 @@ public static class ImageExtensions
     /// <returns>An observable emitting <paramref name="bytes"/>, or an error.</returns>
     internal static IObservable<byte[]> ThrowOnNullOrBadImageBuffer(byte[]? bytes) =>
         bytes is null
-            ? Observable.Throw<byte[]>(new InvalidOperationException("Image data is null"))
+            ? new ImmediateThrowSignal<byte[]>(new InvalidOperationException("Image data is null"))
             : ThrowOnBadImageBuffer(bytes);
 
     /// <summary>Returns true if the image data is in WebP format.</summary>

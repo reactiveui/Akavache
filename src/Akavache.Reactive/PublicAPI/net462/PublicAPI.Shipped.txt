@@ -1,0 +1,360 @@
+#nullable enable
+Akavache.Reactive.AkavacheBuilderExtensions
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!)
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!).WithInMemory() -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheInstance!)
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheInstance!).GetIsolatedCacheDirectory(string! cacheName) -> string?
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheInstance!).GetLegacyCacheDirectory(string! cacheName) -> string?
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Splat.Builder.IAppBuilder!)
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Splat.Builder.IAppBuilder!).WithAkavache<T>(string! applicationName, System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, System.Action<Akavache.Reactive.IAkavacheInstance!>! instance) -> Splat.Builder.IAppBuilder!
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Splat.Builder.IAppBuilder!).WithAkavache<T>(string! applicationName, System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, System.Action<Splat.IMutableDependencyResolver!, Akavache.Reactive.IAkavacheInstance!>! instance) -> Splat.Builder.IAppBuilder!
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Splat.Builder.IAppBuilder!).WithAkavache<T>(string! applicationName, System.Action<Akavache.Reactive.IAkavacheInstance!>! instance) -> Splat.Builder.IAppBuilder!
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Splat.Builder.IAppBuilder!).WithAkavache<T>(string! applicationName, System.Action<Splat.IMutableDependencyResolver!, Akavache.Reactive.IAkavacheInstance!>! instance) -> Splat.Builder.IAppBuilder!
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Splat.Builder.IAppBuilder!).WithAkavacheAsync<T>(string! applicationName, System.Func<Akavache.Reactive.IAkavacheBuilder!, System.Threading.Tasks.Task!>! configureAsync, System.Func<Akavache.Reactive.IAkavacheInstance!, System.Threading.Tasks.Task!>! instanceAsync) -> System.Threading.Tasks.Task<Splat.Builder.IAppBuilder!>!
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Splat.Builder.IAppBuilder!).WithAkavacheCacheDatabase<T>(System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, string! applicationName) -> Splat.Builder.IAppBuilder!
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Splat.Builder.IAppBuilder!).WithAkavacheCacheDatabase<T>(System.Func<T!>! configureSerializer, System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, string! applicationName) -> Splat.Builder.IAppBuilder!
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Splat.Builder.IAppBuilder!).WithAkavacheCacheDatabase<T>(System.Func<T!>! configureSerializer, string! applicationName) -> Splat.Builder.IAppBuilder!
+Akavache.Reactive.AkavacheBuilderExtensions.extension(Splat.Builder.IAppBuilder!).WithAkavacheCacheDatabase<T>(string! applicationName) -> Splat.Builder.IAppBuilder!
+Akavache.Reactive.AkavacheBuilderExtensions.extension(System.IO.DirectoryInfo!)
+Akavache.Reactive.AkavacheSqliteException
+Akavache.Reactive.AkavacheSqliteException.AkavacheSqliteException() -> void
+Akavache.Reactive.AkavacheSqliteException.AkavacheSqliteException(int resultCode, string! message) -> void
+Akavache.Reactive.AkavacheSqliteException.AkavacheSqliteException(string! message) -> void
+Akavache.Reactive.AkavacheSqliteException.AkavacheSqliteException(string! message, System.Exception! innerException) -> void
+Akavache.Reactive.AkavacheSqliteException.ResultCode.get -> int
+Akavache.Reactive.CacheDatabase
+Akavache.Reactive.CacheEntry
+Akavache.Reactive.CacheEntry.<Clone>$() -> Akavache.Reactive.CacheEntry!
+Akavache.Reactive.CacheEntry.CacheEntry(string? Id, string? TypeName, byte[]? Value, System.DateTimeOffset CreatedAt, System.DateTimeOffset? ExpiresAt) -> void
+Akavache.Reactive.CacheEntry.CreatedAt.get -> System.DateTimeOffset
+Akavache.Reactive.CacheEntry.CreatedAt.init -> void
+Akavache.Reactive.CacheEntry.Deconstruct(out string? Id, out string? TypeName, out byte[]? Value, out System.DateTimeOffset CreatedAt, out System.DateTimeOffset? ExpiresAt) -> void
+Akavache.Reactive.CacheEntry.Equals(Akavache.Reactive.CacheEntry? other) -> bool
+Akavache.Reactive.CacheEntry.ExpiresAt.get -> System.DateTimeOffset?
+Akavache.Reactive.CacheEntry.ExpiresAt.init -> void
+Akavache.Reactive.CacheEntry.Id.get -> string?
+Akavache.Reactive.CacheEntry.Id.init -> void
+Akavache.Reactive.CacheEntry.TypeName.get -> string?
+Akavache.Reactive.CacheEntry.TypeName.init -> void
+Akavache.Reactive.CacheEntry.Value.get -> byte[]?
+Akavache.Reactive.CacheEntry.Value.init -> void
+Akavache.Reactive.CheckpointMode
+Akavache.Reactive.CheckpointMode.Full = 1 -> Akavache.Reactive.CheckpointMode
+Akavache.Reactive.CheckpointMode.Passive = 0 -> Akavache.Reactive.CheckpointMode
+Akavache.Reactive.CheckpointMode.Truncate = 2 -> Akavache.Reactive.CheckpointMode
+Akavache.Reactive.Core.FileLocationOption
+Akavache.Reactive.Core.FileLocationOption.Default = 0 -> Akavache.Reactive.Core.FileLocationOption
+Akavache.Reactive.Core.FileLocationOption.Legacy = 1 -> Akavache.Reactive.Core.FileLocationOption
+Akavache.Reactive.Core.UniversalSerializer
+Akavache.Reactive.IAkavacheBuilder
+Akavache.Reactive.IAkavacheBuilder.Build() -> Akavache.Reactive.IAkavacheInstance!
+Akavache.Reactive.IAkavacheBuilder.FileLocationOption.get -> Akavache.Reactive.Core.FileLocationOption
+Akavache.Reactive.IAkavacheBuilder.UseForcedDateTimeKind(System.DateTimeKind kind) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheBuilder.WithApplicationName(string? applicationName) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheBuilder.WithExecutingAssembly(System.Reflection.Assembly! assembly) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheBuilder.WithInMemory(Akavache.Reactive.IBlobCache! cache) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheBuilder.WithInMemoryDefaults() -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheBuilder.WithLegacyFileLocation() -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheBuilder.WithLocalMachine(Akavache.Reactive.IBlobCache! cache) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheBuilder.WithSecure(Akavache.Reactive.ISecureBlobCache! cache) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheBuilder.WithSerializer<T>() -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheBuilder.WithSerializer<T>(System.Func<T!>! configure) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheBuilder.WithUserAccount(Akavache.Reactive.IBlobCache! cache) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.IAkavacheConnection
+Akavache.Reactive.IAkavacheConnection.Checkpoint(Akavache.Reactive.CheckpointMode mode) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IAkavacheConnection.Compact() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IAkavacheConnection.CreateSchema() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IAkavacheConnection.Get(string! key, string? typeFullName, System.DateTimeOffset now) -> System.IObservable<Akavache.Reactive.CacheEntry?>!
+Akavache.Reactive.IAkavacheConnection.GetAll(string? typeFullName, System.DateTimeOffset now) -> System.IObservable<Akavache.Reactive.CacheEntry!>!
+Akavache.Reactive.IAkavacheConnection.GetAllKeys(string? typeFullName, System.DateTimeOffset now) -> System.IObservable<string!>!
+Akavache.Reactive.IAkavacheConnection.GetMany(System.Collections.Generic.IReadOnlyList<string!>! keys, string? typeFullName, System.DateTimeOffset now) -> System.IObservable<Akavache.Reactive.CacheEntry!>!
+Akavache.Reactive.IAkavacheConnection.Invalidate(System.Collections.Generic.IReadOnlyList<string!>! keys, string? typeFullName) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IAkavacheConnection.InvalidateAll(string? typeFullName) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IAkavacheConnection.SetExpiry(string! key, string? typeFullName, System.DateTimeOffset? expiresAt) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IAkavacheConnection.TableExists(string! tableName) -> System.IObservable<bool>!
+Akavache.Reactive.IAkavacheConnection.TryReadLegacyV10Value(string! key, System.DateTimeOffset now, System.Type? type) -> System.IObservable<byte[]?>!
+Akavache.Reactive.IAkavacheConnection.Upsert(System.Collections.Generic.IReadOnlyList<Akavache.Reactive.CacheEntry!>! entries) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IAkavacheConnection.VacuumExpired(System.DateTimeOffset now) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IAkavacheInstance
+Akavache.Reactive.IAkavacheInstance.ApplicationName.get -> string!
+Akavache.Reactive.IAkavacheInstance.ApplicationRootPath.get -> string?
+Akavache.Reactive.IAkavacheInstance.BlobCaches.get -> System.Collections.Generic.IDictionary<string!, Akavache.Reactive.IBlobCache!>!
+Akavache.Reactive.IAkavacheInstance.ExecutingAssembly.get -> System.Reflection.Assembly!
+Akavache.Reactive.IAkavacheInstance.ExecutingAssemblyName.get -> string?
+Akavache.Reactive.IAkavacheInstance.ForcedDateTimeKind.get -> System.DateTimeKind?
+Akavache.Reactive.IAkavacheInstance.ForcedDateTimeKind.set -> void
+Akavache.Reactive.IAkavacheInstance.InMemory.get -> Akavache.Reactive.IBlobCache?
+Akavache.Reactive.IAkavacheInstance.LocalMachine.get -> Akavache.Reactive.IBlobCache?
+Akavache.Reactive.IAkavacheInstance.Secure.get -> Akavache.Reactive.ISecureBlobCache?
+Akavache.Reactive.IAkavacheInstance.Serializer.get -> Akavache.Reactive.ISerializer?
+Akavache.Reactive.IAkavacheInstance.SerializerTypeName.get -> string?
+Akavache.Reactive.IAkavacheInstance.SettingsCachePath.get -> string?
+Akavache.Reactive.IAkavacheInstance.SettingsCachePath.set -> void
+Akavache.Reactive.IAkavacheInstance.SettingsStores.get -> System.Collections.Generic.IDictionary<string!, Akavache.Reactive.Settings.ISettingsStorage!>!
+Akavache.Reactive.IAkavacheInstance.UserAccount.get -> Akavache.Reactive.IBlobCache?
+Akavache.Reactive.IAkavacheInstance.Version.get -> System.Version?
+Akavache.Reactive.IBlobCache
+Akavache.Reactive.IBlobCache.ExceptionHelpers
+Akavache.Reactive.IBlobCache.Flush() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Flush(System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.ForcedDateTimeKind.get -> System.DateTimeKind?
+Akavache.Reactive.IBlobCache.ForcedDateTimeKind.set -> void
+Akavache.Reactive.IBlobCache.Get(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Reactive.IBlobCache.Get(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Reactive.IBlobCache.Get(string! key) -> System.IObservable<byte[]?>!
+Akavache.Reactive.IBlobCache.Get(string! key, System.Type! type) -> System.IObservable<byte[]?>!
+Akavache.Reactive.IBlobCache.GetAll(System.Type! type) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Reactive.IBlobCache.GetAllKeys() -> System.IObservable<string!>!
+Akavache.Reactive.IBlobCache.GetAllKeys(System.Type! type) -> System.IObservable<string!>!
+Akavache.Reactive.IBlobCache.GetCreatedAt(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<(string! Key, System.DateTimeOffset? Time)>!
+Akavache.Reactive.IBlobCache.GetCreatedAt(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<(string! Key, System.DateTimeOffset? Time)>!
+Akavache.Reactive.IBlobCache.GetCreatedAt(string! key) -> System.IObservable<System.DateTimeOffset?>!
+Akavache.Reactive.IBlobCache.GetCreatedAt(string! key, System.Type! type) -> System.IObservable<System.DateTimeOffset?>!
+Akavache.Reactive.IBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Insert(string! key, byte[]! data) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Insert(string! key, byte[]! data, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Insert(string! key, byte[]! data, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Insert(string! key, byte[]! data, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Invalidate(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Invalidate(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Invalidate(string! key) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Invalidate(string! key, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.InvalidateAll() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.InvalidateAll(System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Scheduler.get -> System.Reactive.Concurrency.IScheduler!
+Akavache.Reactive.IBlobCache.Serializer.get -> Akavache.Reactive.ISerializer!
+Akavache.Reactive.IBlobCache.UpdateExpiration(System.Collections.Generic.IEnumerable<string!>! keys, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.UpdateExpiration(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.UpdateExpiration(string! key, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.UpdateExpiration(string! key, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.IBlobCache.Vacuum() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.ISecureBlobCache
+Akavache.Reactive.ISerializer
+Akavache.Reactive.ISerializer.Deserialize<T>(byte[]! bytes) -> T?
+Akavache.Reactive.ISerializer.ForcedDateTimeKind.get -> System.DateTimeKind?
+Akavache.Reactive.ISerializer.ForcedDateTimeKind.set -> void
+Akavache.Reactive.ISerializer.Serialize<T>(T item) -> byte[]!
+Akavache.Reactive.IWrappedBlobCache
+Akavache.Reactive.IWrappedBlobCache.InnerCache.get -> Akavache.Reactive.IBlobCache!
+Akavache.Reactive.InMemoryBlobCache
+Akavache.Reactive.InMemoryBlobCache.InMemoryBlobCache(Akavache.Reactive.ISerializer! serializer) -> void
+Akavache.Reactive.InMemoryBlobCache.InMemoryBlobCache(System.Reactive.Concurrency.IScheduler! scheduler, Akavache.Reactive.ISerializer? serializer) -> void
+Akavache.Reactive.InMemoryBlobCache.InMemoryBlobCache(string! serialzerType) -> void
+Akavache.Reactive.InMemoryBlobCacheBase
+Akavache.Reactive.InMemoryBlobCacheBase.Dispose() -> void
+Akavache.Reactive.InMemoryBlobCacheBase.Flush() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Flush(System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.ForcedDateTimeKind.get -> System.DateTimeKind?
+Akavache.Reactive.InMemoryBlobCacheBase.ForcedDateTimeKind.set -> void
+Akavache.Reactive.InMemoryBlobCacheBase.Get(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Reactive.InMemoryBlobCacheBase.Get(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Reactive.InMemoryBlobCacheBase.Get(string! key) -> System.IObservable<byte[]?>!
+Akavache.Reactive.InMemoryBlobCacheBase.Get(string! key, System.Type! type) -> System.IObservable<byte[]?>!
+Akavache.Reactive.InMemoryBlobCacheBase.GetAll(System.Type! type) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Reactive.InMemoryBlobCacheBase.GetAllKeys() -> System.IObservable<string!>!
+Akavache.Reactive.InMemoryBlobCacheBase.GetAllKeys(System.Type! type) -> System.IObservable<string!>!
+Akavache.Reactive.InMemoryBlobCacheBase.GetAllObjects<T>() -> System.IObservable<System.Collections.Generic.IEnumerable<T>!>!
+Akavache.Reactive.InMemoryBlobCacheBase.GetCreatedAt(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<(string! Key, System.DateTimeOffset? Time)>!
+Akavache.Reactive.InMemoryBlobCacheBase.GetCreatedAt(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<(string! Key, System.DateTimeOffset? Time)>!
+Akavache.Reactive.InMemoryBlobCacheBase.GetCreatedAt(string! key) -> System.IObservable<System.DateTimeOffset?>!
+Akavache.Reactive.InMemoryBlobCacheBase.GetCreatedAt(string! key, System.Type! type) -> System.IObservable<System.DateTimeOffset?>!
+Akavache.Reactive.InMemoryBlobCacheBase.GetObject<T>(string! key) -> System.IObservable<T?>!
+Akavache.Reactive.InMemoryBlobCacheBase.GetObjectCreatedAt<T>(string! key) -> System.IObservable<System.DateTimeOffset?>!
+Akavache.Reactive.InMemoryBlobCacheBase.InMemoryBlobCacheBase(System.Reactive.Concurrency.IScheduler! scheduler, Akavache.Reactive.ISerializer? serializer) -> void
+Akavache.Reactive.InMemoryBlobCacheBase.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Insert(string! key, byte[]! data) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Insert(string! key, byte[]! data, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Insert(string! key, byte[]! data, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Insert(string! key, byte[]! data, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.InsertObject<T>(string! key, T value) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.InsertObject<T>(string! key, T value, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Invalidate(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Invalidate(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Invalidate(string! key) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Invalidate(string! key, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.InvalidateAll() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.InvalidateAll(System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.InvalidateAllObjects<T>() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.InvalidateObject<T>(string! key) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Scheduler.get -> System.Reactive.Concurrency.IScheduler!
+Akavache.Reactive.InMemoryBlobCacheBase.Serializer.get -> Akavache.Reactive.ISerializer!
+Akavache.Reactive.InMemoryBlobCacheBase.UpdateExpiration(System.Collections.Generic.IEnumerable<string!>! keys, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.UpdateExpiration(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.UpdateExpiration(string! key, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.UpdateExpiration(string! key, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.InMemoryBlobCacheBase.Vacuum() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.LoginExtensions
+Akavache.Reactive.LoginExtensions.extension(Akavache.Reactive.ISecureBlobCache!)
+Akavache.Reactive.LoginExtensions.extension(Akavache.Reactive.ISecureBlobCache!).EraseLogin() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.LoginExtensions.extension(Akavache.Reactive.ISecureBlobCache!).EraseLogin(string! host) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.LoginExtensions.extension(Akavache.Reactive.ISecureBlobCache!).GetLogin() -> System.IObservable<Akavache.Reactive.LoginInfo!>!
+Akavache.Reactive.LoginExtensions.extension(Akavache.Reactive.ISecureBlobCache!).GetLogin(string! host) -> System.IObservable<Akavache.Reactive.LoginInfo!>!
+Akavache.Reactive.LoginExtensions.extension(Akavache.Reactive.ISecureBlobCache!).SaveLogin(string! user, string! password) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.LoginExtensions.extension(Akavache.Reactive.ISecureBlobCache!).SaveLogin(string! user, string! password, string! host) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.LoginExtensions.extension(Akavache.Reactive.ISecureBlobCache!).SaveLogin(string! user, string! password, string! host, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.LoginInfo
+Akavache.Reactive.LoginInfo.Equals(Akavache.Reactive.LoginInfo? other) -> bool
+Akavache.Reactive.LoginInfo.LoginInfo(string! username, string! password) -> void
+Akavache.Reactive.LoginInfo.Password.get -> string!
+Akavache.Reactive.LoginInfo.UserName.get -> string!
+Akavache.Reactive.RelativeTimeExtensions
+Akavache.Reactive.RelativeTimeExtensions.extension(Akavache.Reactive.IBlobCache!)
+Akavache.Reactive.RelativeTimeExtensions.extension(Akavache.Reactive.IBlobCache!).Insert(string! key, byte[]! data, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.RelativeTimeExtensions.extension(Akavache.Reactive.IBlobCache!).InsertObject<T>(string! key, T value, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.RelativeTimeExtensions.extension(Akavache.Reactive.IBlobCache!).UpdateExpiration(System.Collections.Generic.IEnumerable<string!>! keys, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.RelativeTimeExtensions.extension(Akavache.Reactive.IBlobCache!).UpdateExpiration(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.RelativeTimeExtensions.extension(Akavache.Reactive.IBlobCache!).UpdateExpiration(string! key, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.RelativeTimeExtensions.extension(Akavache.Reactive.IBlobCache!).UpdateExpiration(string! key, System.Type! type, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.RelativeTimeExtensions.extension(Akavache.Reactive.ISecureBlobCache!)
+Akavache.Reactive.RelativeTimeExtensions.extension(Akavache.Reactive.ISecureBlobCache!).SaveLogin(string! user, string! password, string! host, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!)
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAllKeysSafe() -> System.IObservable<string!>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAllKeysSafe(System.Type! type) -> System.IObservable<string!>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAllKeysSafe<T>() -> System.IObservable<string!>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAllObjects<T>() -> System.IObservable<T>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAndFetchLatest<T>(string! key, System.Func<System.IObservable<T>!>! fetchFunc) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAndFetchLatest<T>(string! key, System.Func<System.IObservable<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAndFetchLatest<T>(string! key, System.Func<System.IObservable<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAndFetchLatest<T>(string! key, System.Func<System.IObservable<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAndFetchLatest<T>(string! key, System.Func<System.IObservable<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError, System.Func<T, bool>? cacheValidationPredicate) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAndFetchLatest<T>(string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAndFetchLatest<T>(string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAndFetchLatest<T>(string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAndFetchLatest<T>(string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetAndFetchLatest<T>(string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError, System.Func<T, bool>? cacheValidationPredicate) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetObject<T>(string! key) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetObjectCreatedAt<T>(string! key) -> System.IObservable<System.DateTimeOffset?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetObjects<T>(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, T>>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetOrCreateObject<T>(string! key, System.Func<T>! fetchFunc) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetOrFetchObject<T>(string! key, System.Func<System.IObservable<T>!>! fetchFunc) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetOrFetchObject<T>(string! key, System.Func<System.IObservable<T>!>! fetchFunc, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetOrFetchObject<T>(string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).GetOrFetchObject<T>(string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<T?>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InsertAllObjects<T>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, T>>! keyValuePairs) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InsertAllObjects<T>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, T>>! keyValuePairs, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InsertObject<T>(string! key, T value) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InsertObject<T>(string! key, T value, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InsertObjects(System.Collections.Generic.IDictionary<string!, object!>! keyValuePairs) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InsertObjects(System.Collections.Generic.IDictionary<string!, object!>! keyValuePairs, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InsertObjects<T>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, T>>! keyValuePairs) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InsertObjects<T>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, T>>! keyValuePairs, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InvalidateAllObjects<T>() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InvalidateObject<T>(string! key) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.SerializerExtensions.extension(Akavache.Reactive.IBlobCache!).InvalidateObjects<T>(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Settings.ISettingsStorage
+Akavache.Reactive.Settings.ISettingsStorage.Initialize() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Settings.SettingsStorageAsyncExtensions
+Akavache.Reactive.Settings.SettingsStorageAsyncExtensions.extension(Akavache.Reactive.Settings.ISettingsStorage!)
+Akavache.Reactive.Settings.SettingsStorageAsyncExtensions.extension(Akavache.Reactive.Settings.ISettingsStorage!).InitializeAsync() -> System.Threading.Tasks.Task!
+override Akavache.Reactive.CacheEntry.Equals(object? obj) -> bool
+override Akavache.Reactive.CacheEntry.GetHashCode() -> int
+override Akavache.Reactive.CacheEntry.ToString() -> string!
+override Akavache.Reactive.LoginInfo.Equals(object? obj) -> bool
+override Akavache.Reactive.LoginInfo.GetHashCode() -> int
+override Akavache.Reactive.LoginInfo.ToString() -> string!
+static Akavache.Reactive.AkavacheBuilderExtensions.GetIsolatedCacheDirectory(this Akavache.Reactive.IAkavacheInstance! builder, string! cacheName) -> string?
+static Akavache.Reactive.AkavacheBuilderExtensions.GetLegacyCacheDirectory(this Akavache.Reactive.IAkavacheInstance! builder, string! cacheName) -> string?
+static Akavache.Reactive.AkavacheBuilderExtensions.WithAkavache<T>(this Splat.Builder.IAppBuilder! builder, string! applicationName, System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, System.Action<Akavache.Reactive.IAkavacheInstance!>! instance) -> Splat.Builder.IAppBuilder!
+static Akavache.Reactive.AkavacheBuilderExtensions.WithAkavache<T>(this Splat.Builder.IAppBuilder! builder, string! applicationName, System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, System.Action<Splat.IMutableDependencyResolver!, Akavache.Reactive.IAkavacheInstance!>! instance) -> Splat.Builder.IAppBuilder!
+static Akavache.Reactive.AkavacheBuilderExtensions.WithAkavache<T>(this Splat.Builder.IAppBuilder! builder, string! applicationName, System.Action<Akavache.Reactive.IAkavacheInstance!>! instance) -> Splat.Builder.IAppBuilder!
+static Akavache.Reactive.AkavacheBuilderExtensions.WithAkavache<T>(this Splat.Builder.IAppBuilder! builder, string! applicationName, System.Action<Splat.IMutableDependencyResolver!, Akavache.Reactive.IAkavacheInstance!>! instance) -> Splat.Builder.IAppBuilder!
+static Akavache.Reactive.AkavacheBuilderExtensions.WithAkavacheAsync<T>(this Splat.Builder.IAppBuilder! builder, string! applicationName, System.Func<Akavache.Reactive.IAkavacheBuilder!, System.Threading.Tasks.Task!>! configureAsync, System.Func<Akavache.Reactive.IAkavacheInstance!, System.Threading.Tasks.Task!>! instanceAsync) -> System.Threading.Tasks.Task<Splat.Builder.IAppBuilder!>!
+static Akavache.Reactive.AkavacheBuilderExtensions.WithAkavacheCacheDatabase<T>(this Splat.Builder.IAppBuilder! builder, System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, string! applicationName) -> Splat.Builder.IAppBuilder!
+static Akavache.Reactive.AkavacheBuilderExtensions.WithAkavacheCacheDatabase<T>(this Splat.Builder.IAppBuilder! builder, System.Func<T!>! configureSerializer, System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, string! applicationName) -> Splat.Builder.IAppBuilder!
+static Akavache.Reactive.AkavacheBuilderExtensions.WithAkavacheCacheDatabase<T>(this Splat.Builder.IAppBuilder! builder, System.Func<T!>! configureSerializer, string! applicationName) -> Splat.Builder.IAppBuilder!
+static Akavache.Reactive.AkavacheBuilderExtensions.WithAkavacheCacheDatabase<T>(this Splat.Builder.IAppBuilder! builder, string! applicationName) -> Splat.Builder.IAppBuilder!
+static Akavache.Reactive.AkavacheBuilderExtensions.WithInMemory(this Akavache.Reactive.IAkavacheBuilder! builder) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.CacheDatabase.ApplicationName.get -> string!
+static Akavache.Reactive.CacheDatabase.CreateBuilder() -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.CacheDatabase.CreateBuilder(Akavache.Reactive.Core.FileLocationOption fileLocationOption) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.CacheDatabase.CreateBuilder(string! applicationName) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.CacheDatabase.CreateBuilder(string! applicationName, Akavache.Reactive.Core.FileLocationOption fileLocationOption) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.CacheDatabase.CurrentInstance.get -> Akavache.Reactive.IAkavacheInstance?
+static Akavache.Reactive.CacheDatabase.ForcedDateTimeKind.get -> System.DateTimeKind?
+static Akavache.Reactive.CacheDatabase.InMemory.get -> Akavache.Reactive.IBlobCache!
+static Akavache.Reactive.CacheDatabase.Initialize<T>(System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, string! applicationName) -> void
+static Akavache.Reactive.CacheDatabase.Initialize<T>(System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, string! applicationName, Akavache.Reactive.Core.FileLocationOption fileLocationOption) -> void
+static Akavache.Reactive.CacheDatabase.Initialize<T>(System.Func<T!>! configureSerializer, System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, string! applicationName) -> void
+static Akavache.Reactive.CacheDatabase.Initialize<T>(System.Func<T!>! configureSerializer, System.Action<Akavache.Reactive.IAkavacheBuilder!>! configure, string! applicationName, Akavache.Reactive.Core.FileLocationOption fileLocationOption) -> void
+static Akavache.Reactive.CacheDatabase.Initialize<T>(System.Func<T!>! configureSerializer, string! applicationName) -> void
+static Akavache.Reactive.CacheDatabase.Initialize<T>(System.Func<T!>! configureSerializer, string! applicationName, Akavache.Reactive.Core.FileLocationOption fileLocationOption) -> void
+static Akavache.Reactive.CacheDatabase.Initialize<T>(string! applicationName) -> void
+static Akavache.Reactive.CacheDatabase.Initialize<T>(string! applicationName, Akavache.Reactive.Core.FileLocationOption fileLocationOption) -> void
+static Akavache.Reactive.CacheDatabase.IsInitialized.get -> bool
+static Akavache.Reactive.CacheDatabase.LocalMachine.get -> Akavache.Reactive.IBlobCache!
+static Akavache.Reactive.CacheDatabase.Secure.get -> Akavache.Reactive.ISecureBlobCache!
+static Akavache.Reactive.CacheDatabase.Shutdown() -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.CacheDatabase.TaskpoolScheduler.get -> System.Reactive.Concurrency.IScheduler!
+static Akavache.Reactive.CacheDatabase.TaskpoolScheduler.set -> void
+static Akavache.Reactive.CacheDatabase.UserAccount.get -> Akavache.Reactive.IBlobCache!
+static Akavache.Reactive.CacheEntry.operator !=(Akavache.Reactive.CacheEntry? left, Akavache.Reactive.CacheEntry? right) -> bool
+static Akavache.Reactive.CacheEntry.operator ==(Akavache.Reactive.CacheEntry? left, Akavache.Reactive.CacheEntry? right) -> bool
+static Akavache.Reactive.Core.UniversalSerializer.Deserialize<T>(byte[]! data, Akavache.Reactive.ISerializer! primarySerializer) -> T?
+static Akavache.Reactive.Core.UniversalSerializer.Deserialize<T>(byte[]! data, Akavache.Reactive.ISerializer! primarySerializer, System.DateTimeKind? forcedDateTimeKind) -> T?
+static Akavache.Reactive.Core.UniversalSerializer.RegisterSerializer(System.Func<Akavache.Reactive.ISerializer!>! factory) -> void
+static Akavache.Reactive.Core.UniversalSerializer.Serialize<T>(T value, Akavache.Reactive.ISerializer! targetSerializer) -> byte[]!
+static Akavache.Reactive.Core.UniversalSerializer.Serialize<T>(T value, Akavache.Reactive.ISerializer! targetSerializer, System.DateTimeKind? forcedDateTimeKind) -> byte[]!
+static Akavache.Reactive.Core.UniversalSerializer.TryFindDataWithAlternativeKeys<T>(Akavache.Reactive.IBlobCache! cache, string! requestedKey, Akavache.Reactive.ISerializer! primarySerializer) -> System.IObservable<T?>!
+static Akavache.Reactive.Core.UniversalSerializer.TryFindDataWithAlternativeKeysAsync<T>(Akavache.Reactive.IBlobCache! cache, string! requestedKey, Akavache.Reactive.ISerializer! primarySerializer) -> System.Threading.Tasks.Task<T?>!
+static Akavache.Reactive.IBlobCache.ExceptionHelpers.ObservableThrowKeyNotFoundException<T>(string! key) -> System.IObservable<T>!
+static Akavache.Reactive.IBlobCache.ExceptionHelpers.ObservableThrowKeyNotFoundException<T>(string! key, System.Exception? innerException) -> System.IObservable<T>!
+static Akavache.Reactive.IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<T>(string! obj) -> System.IObservable<T>!
+static Akavache.Reactive.IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<T>(string! obj, System.Exception? innerException) -> System.IObservable<T>!
+static Akavache.Reactive.LoginExtensions.EraseLogin(this Akavache.Reactive.ISecureBlobCache! blobCache) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.LoginExtensions.EraseLogin(this Akavache.Reactive.ISecureBlobCache! blobCache, string! host) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.LoginExtensions.GetLogin(this Akavache.Reactive.ISecureBlobCache! blobCache) -> System.IObservable<Akavache.Reactive.LoginInfo!>!
+static Akavache.Reactive.LoginExtensions.GetLogin(this Akavache.Reactive.ISecureBlobCache! blobCache, string! host) -> System.IObservable<Akavache.Reactive.LoginInfo!>!
+static Akavache.Reactive.LoginExtensions.SaveLogin(this Akavache.Reactive.ISecureBlobCache! blobCache, string! user, string! password) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.LoginExtensions.SaveLogin(this Akavache.Reactive.ISecureBlobCache! blobCache, string! user, string! password, string! host) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.LoginExtensions.SaveLogin(this Akavache.Reactive.ISecureBlobCache! blobCache, string! user, string! password, string! host, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.RelativeTimeExtensions.Insert(this Akavache.Reactive.IBlobCache! blobCache, string! key, byte[]! data, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.RelativeTimeExtensions.InsertObject<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, T value, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.RelativeTimeExtensions.SaveLogin(this Akavache.Reactive.ISecureBlobCache! blobCache, string! user, string! password, string! host, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.RelativeTimeExtensions.UpdateExpiration(this Akavache.Reactive.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<string!>! keys, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.RelativeTimeExtensions.UpdateExpiration(this Akavache.Reactive.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.RelativeTimeExtensions.UpdateExpiration(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.RelativeTimeExtensions.UpdateExpiration(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Type! type, System.TimeSpan expiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.DeserializeWithContext<T>(byte[]! data, Akavache.Reactive.IBlobCache! cache) -> T?
+static Akavache.Reactive.SerializerExtensions.GetAllKeysSafe(this Akavache.Reactive.IBlobCache! blobCache) -> System.IObservable<string!>!
+static Akavache.Reactive.SerializerExtensions.GetAllKeysSafe(this Akavache.Reactive.IBlobCache! blobCache, System.Type! type) -> System.IObservable<string!>!
+static Akavache.Reactive.SerializerExtensions.GetAllKeysSafe<T>(this Akavache.Reactive.IBlobCache! blobCache) -> System.IObservable<string!>!
+static Akavache.Reactive.SerializerExtensions.GetAllObjects<T>(this Akavache.Reactive.IBlobCache! blobCache) -> System.IObservable<T>!
+static Akavache.Reactive.SerializerExtensions.GetAndFetchLatest<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.IObservable<T>!>! fetchFunc) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetAndFetchLatest<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.IObservable<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetAndFetchLatest<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.IObservable<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetAndFetchLatest<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.IObservable<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetAndFetchLatest<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.IObservable<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError, System.Func<T, bool>? cacheValidationPredicate) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetAndFetchLatest<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetAndFetchLatest<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetAndFetchLatest<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetAndFetchLatest<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetAndFetchLatest<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError, System.Func<T, bool>? cacheValidationPredicate) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetObject<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetObjectCreatedAt<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key) -> System.IObservable<System.DateTimeOffset?>!
+static Akavache.Reactive.SerializerExtensions.GetObjects<T>(this Akavache.Reactive.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, T>>!
+static Akavache.Reactive.SerializerExtensions.GetOrCreateObject<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<T>! fetchFunc) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetOrFetchObject<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.IObservable<T>!>! fetchFunc) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetOrFetchObject<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.IObservable<T>!>! fetchFunc, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetOrFetchObject<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.GetOrFetchObject<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, System.Func<System.Threading.Tasks.Task<T>!>! fetchFunc, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<T?>!
+static Akavache.Reactive.SerializerExtensions.InsertAllObjects<T>(this Akavache.Reactive.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, T>>! keyValuePairs) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.InsertAllObjects<T>(this Akavache.Reactive.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, T>>! keyValuePairs, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.InsertObject<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, T value) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.InsertObject<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key, T value, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.InsertObjects(this Akavache.Reactive.IBlobCache! blobCache, System.Collections.Generic.IDictionary<string!, object!>! keyValuePairs) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.InsertObjects(this Akavache.Reactive.IBlobCache! blobCache, System.Collections.Generic.IDictionary<string!, object!>! keyValuePairs, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.InsertObjects<T>(this Akavache.Reactive.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, T>>! keyValuePairs) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.InsertObjects<T>(this Akavache.Reactive.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, T>>! keyValuePairs, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.InvalidateAllObjects<T>(this Akavache.Reactive.IBlobCache! blobCache) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.InvalidateObject<T>(this Akavache.Reactive.IBlobCache! blobCache, string! key) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.InvalidateObjects<T>(this Akavache.Reactive.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.SerializerExtensions.SerializeWithContext<T>(T value, Akavache.Reactive.IBlobCache! cache) -> byte[]!
+static Akavache.Reactive.Settings.SettingsStorageAsyncExtensions.InitializeAsync(this Akavache.Reactive.Settings.ISettingsStorage! storage) -> System.Threading.Tasks.Task!
+virtual Akavache.Reactive.InMemoryBlobCacheBase.Dispose(bool disposing) -> void

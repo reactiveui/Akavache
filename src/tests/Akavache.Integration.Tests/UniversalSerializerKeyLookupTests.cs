@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>
 /// Tests for the alternative-key lookup <see cref="UniversalSerializer"/> performs when a
@@ -29,7 +29,7 @@ public class UniversalSerializerKeyLookupTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         UserObject testObject = new() { Name = "Alt Key Test", Bio = "Alt Bio", Blog = "Alt Blog" };
 
         try
@@ -132,7 +132,7 @@ public class UniversalSerializerKeyLookupTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultForNullKey()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             var result =
@@ -153,7 +153,7 @@ public class UniversalSerializerKeyLookupTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultForNullSerializer()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             var result = await UniversalSerializer.TryFindDataWithAlternativeKeysAsync<string>(cache, "key", null!);
@@ -170,7 +170,7 @@ public class UniversalSerializerKeyLookupTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultForEmptyCache()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             var result =
@@ -192,7 +192,7 @@ public class UniversalSerializerKeyLookupTests
     public async Task TryFindDataWithAlternativeKeysShouldFindByTypePrefix()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         try
         {
             UserObject testObj = new() { Name = "found", Bio = "bio", Blog = "blog" };
@@ -221,7 +221,7 @@ public class UniversalSerializerKeyLookupTests
     public async Task TryFindDataWithAlternativeKeysShouldFindByShortNamePrefix()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         try
         {
             UserObject testObj = new() { Name = "found2", Bio = "bio", Blog = "blog" };
@@ -247,7 +247,7 @@ public class UniversalSerializerKeyLookupTests
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultForEmptyEntry()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         try
         {
             _ = cache.Insert("empty_key", []).Subscribe();
@@ -267,7 +267,7 @@ public class UniversalSerializerKeyLookupTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultWhenGetAllKeysThrows()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         cache.Dispose();
 
         // Disposed cache's GetAllKeys returns an observable that throws ObjectDisposedException.
@@ -288,7 +288,7 @@ public class UniversalSerializerKeyLookupTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultWhenGetThrowsInnerCatch()
     {
-        InMemoryBlobCache inner = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache inner = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             // Insert a key whose key is the raw "lookup" name so it is matched by EndsWith.
@@ -317,7 +317,7 @@ public class UniversalSerializerKeyLookupTests
     public async Task TryFindDataWithAlternativeKeysShouldSkipDefaultValueResults()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         try
         {
             // Store a default int (0) under a key that will match
@@ -346,7 +346,7 @@ public class UniversalSerializerKeyLookupTests
         public ISerializer Serializer => inner.Serializer;
 
         /// <inheritdoc/>
-        public IScheduler Scheduler => inner.Scheduler;
+        public ISequencer Scheduler => inner.Scheduler;
 
         /// <inheritdoc/>
         public DateTimeKind? ForcedDateTimeKind
@@ -356,53 +356,53 @@ public class UniversalSerializerKeyLookupTests
         }
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
             Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
+        public IObservable<RxVoid> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             DateTimeOffset? absoluteExpiration) =>
                 inner.Insert(keyValuePairs, absoluteExpiration);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data) =>
             Insert(key, data, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
             inner.Insert(key, data, absoluteExpiration);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
             Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
+        public IObservable<RxVoid> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             Type type,
             DateTimeOffset? absoluteExpiration) =>
                 inner.Insert(keyValuePairs, type, absoluteExpiration);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
             Insert(key, data, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit>
+        public IObservable<RxVoid>
             Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
             inner.Insert(key, data, type, absoluteExpiration);
 
         /// <inheritdoc/>
         public IObservable<byte[]?> Get(string key) =>
-            Observable.Throw<byte[]?>(new InvalidOperationException("Throwing Get"));
+            Signal.Throw<byte[]?>(new InvalidOperationException("Throwing Get"));
 
         /// <inheritdoc/>
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) => inner.Get(keys);
 
         /// <inheritdoc/>
         public IObservable<byte[]?> Get(string key, Type type) =>
-            Observable.Throw<byte[]?>(new InvalidOperationException("Throwing Get"));
+            Signal.Throw<byte[]?>(new InvalidOperationException("Throwing Get"));
 
         /// <inheritdoc/>
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) =>
@@ -432,46 +432,46 @@ public class UniversalSerializerKeyLookupTests
         public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => inner.GetCreatedAt(key, type);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush() => inner.Flush();
+        public IObservable<RxVoid> Flush() => inner.Flush();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush(Type type) => inner.Flush(type);
+        public IObservable<RxVoid> Flush(Type type) => inner.Flush(type);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key) => inner.Invalidate(key);
+        public IObservable<RxVoid> Invalidate(string key) => inner.Invalidate(key);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key, Type type) => inner.Invalidate(key, type);
+        public IObservable<RxVoid> Invalidate(string key, Type type) => inner.Invalidate(key, type);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => inner.Invalidate(keys);
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys) => inner.Invalidate(keys);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => inner.Invalidate(keys, type);
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type) => inner.Invalidate(keys, type);
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll(Type type) => inner.InvalidateAll(type);
+        public IObservable<RxVoid> InvalidateAll(Type type) => inner.InvalidateAll(type);
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll() => inner.InvalidateAll();
+        public IObservable<RxVoid> InvalidateAll() => inner.InvalidateAll();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Vacuum() => inner.Vacuum();
+        public IObservable<RxVoid> Vacuum() => inner.Vacuum();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
             inner.UpdateExpiration(key, absoluteExpiration);
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
             inner.UpdateExpiration(key, type, absoluteExpiration);
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
             inner.UpdateExpiration(keys, absoluteExpiration);
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(
+        public IObservable<RxVoid> UpdateExpiration(
             IEnumerable<string> keys,
             Type type,
             DateTimeOffset? absoluteExpiration) => inner.UpdateExpiration(keys, type, absoluteExpiration);

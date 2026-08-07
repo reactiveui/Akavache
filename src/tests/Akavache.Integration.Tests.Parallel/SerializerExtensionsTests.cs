@@ -2,12 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-using Akavache.Tests.Helpers;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for serializer extension methods.</summary>
 [Category("Akavache")]
@@ -140,7 +139,7 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             List<KeyValuePair<string, UserObject>> keyValuePairs =
             [
                 new(FirstUserKey, new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog }),
@@ -150,7 +149,7 @@ public partial class SerializerExtensionsTests
             try
             {
                 // Act
-                cache.InsertObjects(keyValuePairs).SubscribeAndComplete();
+                cache.InsertObjects(keyValuePairs).WaitForCompletion();
 
                 // Assert
                 var user1 = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetValue();
@@ -187,15 +186,15 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             UserObject user1 = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
             UserObject user2 = new() { Name = SecondUserName, Bio = "Bio2", Blog = SecondUserBlog };
 
             try
             {
                 // Insert test data
-                cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
-                cache.InsertObject(SecondUserKey, user2).SubscribeAndComplete();
+                cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
+                cache.InsertObject(SecondUserKey, user2).WaitForCompletion();
 
                 // Act
                 var results = cache.GetObjects<UserObject>([FirstUserKey, SecondUserKey]).ToList().SubscribeGetValue();
@@ -235,14 +234,14 @@ public partial class SerializerExtensionsTests
         using (Utility.WithEmptyDirectory(out _))
         {
             // Use 'using' for resource management
-            using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
             UserObject user1 = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
             UserObject user2 = new() { Name = SecondUserName, Bio = "Bio2", Blog = SecondUserBlog };
 
             // Insert test data
-            cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
-            cache.InsertObject(SecondUserKey, user2).SubscribeAndComplete();
+            cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
+            cache.InsertObject(SecondUserKey, user2).WaitForCompletion();
 
             // Act
             var allObjects = cache.GetAllObjects<UserObject>().SubscribeGetValue();
@@ -268,20 +267,20 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             UserObject user = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
 
             try
             {
                 // Insert test data
-                cache.InsertObject(FirstUserKey, user).SubscribeAndComplete();
+                cache.InsertObject(FirstUserKey, user).WaitForCompletion();
 
                 // Verify object exists
                 var retrievedUser = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetValue();
                 await Assert.That(retrievedUser).IsNotNull();
 
                 // Act
-                cache.InvalidateObject<UserObject>(FirstUserKey).SubscribeAndComplete();
+                cache.InvalidateObject<UserObject>(FirstUserKey).WaitForCompletion();
 
                 // Assert
                 var knfError1 = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetError();
@@ -304,18 +303,18 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             UserObject user1 = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
             UserObject user2 = new() { Name = SecondUserName, Bio = "Bio2", Blog = SecondUserBlog };
 
             try
             {
                 // Insert test data
-                cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
-                cache.InsertObject(SecondUserKey, user2).SubscribeAndComplete();
+                cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
+                cache.InsertObject(SecondUserKey, user2).WaitForCompletion();
 
                 // Act
-                cache.InvalidateObjects<UserObject>([FirstUserKey, SecondUserKey]).SubscribeAndComplete();
+                cache.InvalidateObjects<UserObject>([FirstUserKey, SecondUserKey]).WaitForCompletion();
 
                 // Assert
                 var knfError1 = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetError();
@@ -341,22 +340,22 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             UserObject user1 = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
             UserObject user2 = new() { Name = SecondUserName, Bio = "Bio2", Blog = SecondUserBlog };
 
             try
             {
                 // Insert test data
-                cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
-                cache.InsertObject(SecondUserKey, user2).SubscribeAndComplete();
+                cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
+                cache.InsertObject(SecondUserKey, user2).WaitForCompletion();
 
                 // Verify objects exist before invalidation
                 var beforeInvalidation = cache.GetAllObjects<UserObject>().SubscribeGetValue();
                 await Assert.That(beforeInvalidation!.Count()).IsEqualTo(SampleUserCount);
 
                 // Act
-                cache.InvalidateAllObjects<UserObject>().SubscribeAndComplete();
+                cache.InvalidateAllObjects<UserObject>().WaitForCompletion();
 
                 // Assert - The primary verification is that individual objects can't be retrieved
                 var knfError1 = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetError();
@@ -386,14 +385,14 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             UserObject user = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
             var beforeInsert = TimeProvider.System.GetLocalNow();
 
             try
             {
                 // Act
-                cache.InsertObject(FirstUserKey, user).SubscribeAndComplete();
+                cache.InsertObject(FirstUserKey, user).WaitForCompletion();
                 var createdAt = cache.GetObjectCreatedAt<UserObject>(FirstUserKey).SubscribeGetValue();
 
                 // Assert
@@ -418,7 +417,7 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             KeyValuePair<string, UserObject>[] keyValuePairs =
             [
                 new(FirstUserKey, new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog }),
@@ -428,7 +427,7 @@ public partial class SerializerExtensionsTests
             try
             {
                 // Act
-                cache.InsertAllObjects(keyValuePairs).SubscribeAndComplete();
+                cache.InsertAllObjects(keyValuePairs).WaitForCompletion();
 
                 // Assert
                 var user1 = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetValue();
@@ -461,7 +460,7 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             UserObject user = new() { Name = CreatedUserName, Bio = "Created Bio", Blog = "Created Blog" };
 
             try
@@ -497,14 +496,14 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             UserObject existingUser = new() { Name = "Existing User", Bio = "Existing Bio", Blog = "Existing Blog" };
             UserObject newUser = new() { Name = "New User", Bio = "New Bio", Blog = "New Blog" };
 
             try
             {
                 // Insert existing user
-                cache.InsertObject("existing_user", existingUser).SubscribeAndComplete();
+                cache.InsertObject("existing_user", existingUser).WaitForCompletion();
 
                 // Act
                 UserObject? result = null;
@@ -533,7 +532,7 @@ public partial class SerializerExtensionsTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         UserObject fetchedUser = new() { Name = FetchedUserName, Bio = "Fetched Bio", Blog = "Fetched Blog" };
         var fetchCount = 0;
 
@@ -544,7 +543,7 @@ public partial class SerializerExtensionsTests
             _ = cache.GetOrFetchObject("fetch_user", () =>
             {
                 fetchCount++;
-                return Observable.Return(fetchedUser);
+                return Signal.Return(fetchedUser);
             }).Subscribe(v => result = v);
 
             // Assert
@@ -575,7 +574,7 @@ public partial class SerializerExtensionsTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         UserObject cachedUser = new() { Name = CachedUserName, Bio = CachedUserBio, Blog = CachedUserBlog };
         UserObject fetchedUser = new() { Name = FetchedUserName, Bio = "Fetched Bio", Blog = "Fetched Blog" };
         var fetchCount = 0;
@@ -590,7 +589,7 @@ public partial class SerializerExtensionsTests
             _ = cache.GetOrFetchObject("cached_user", () =>
             {
                 fetchCount++;
-                return Observable.Return(fetchedUser);
+                return Signal.Return(fetchedUser);
             }).Subscribe(v => result = v);
 
             // Assert - should return cached value, not fetch
@@ -615,7 +614,7 @@ public partial class SerializerExtensionsTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         UserObject fetchedUser = new() { Name = "Task Fetched User", Bio = "Task Bio", Blog = "Task Blog" };
 
         try
@@ -642,7 +641,7 @@ public partial class SerializerExtensionsTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         UserObject cachedUser = new() { Name = CachedUserName, Bio = CachedUserBio, Blog = CachedUserBlog };
         UserObject latestUser = new() { Name = LatestUserName, Bio = "Latest Bio", Blog = "Latest Blog" };
 
@@ -654,9 +653,8 @@ public partial class SerializerExtensionsTests
             List<UserObject?> results = [];
 
             // Act - GetAndFetchLatest should return cached value first, then latest
-            await cache.GetAndFetchLatest("user", () => Observable.Return(latestUser))
-                .Take(CachedThenLatestCount)
-                .ForEachAsync(results.Add);
+            await cache.GetAndFetchLatest("user", () => Signal.Return(latestUser))
+                .Take(CachedThenLatestCount).Do(results.Add).LastOrDefaultAsync();
 
             // Assert
             await Assert.That(results).IsNotEmpty(); // Should have at least cached value
@@ -684,7 +682,7 @@ public partial class SerializerExtensionsTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         UserObject latestUser = new() { Name = "Task Latest User", Bio = "Task Bio", Blog = "Task Blog" };
 
         try
@@ -693,8 +691,7 @@ public partial class SerializerExtensionsTests
 
             // Act - GetAndFetchLatest with no cached value
             await cache.GetAndFetchLatest(NewUserKey, () => Task.FromResult(latestUser))
-                .Take(1) // Should only get the fetched value
-                .ForEachAsync(results.Add);
+                .Take(1).Do(results.Add).LastOrDefaultAsync();
 
             // Assert
             await Assert.That(results).Count().IsEqualTo(1);
@@ -715,7 +712,7 @@ public partial class SerializerExtensionsTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         UserObject cachedUser = new() { Name = CachedUserName, Bio = CachedUserBio, Blog = CachedUserBlog };
         UserObject latestUser = new() { Name = LatestUserName, Bio = "Latest Bio", Blog = "Latest Blog" };
         var fetchCount = 0;
@@ -733,11 +730,10 @@ public partial class SerializerExtensionsTests
                     () =>
                     {
                         fetchCount++;
-                        return Observable.Return(latestUser);
+                        return Signal.Return(latestUser);
                     },
                     fetchPredicate: static _ => false) // Never fetch
-                .Take(1) // Should only get cached value
-                .ForEachAsync(results.Add);
+                .Take(1).Do(results.Add).LastOrDefaultAsync();
 
             // Assert
             await Assert.That(results).Count().IsEqualTo(1);

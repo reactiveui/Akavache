@@ -4,13 +4,11 @@
 
 using System.Diagnostics;
 
-using Akavache.Core;
-using Akavache.NewtonsoftJson;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests.TestBases;
+#else
 namespace Akavache.Tests.TestBases;
+#endif
 
 /// <summary>Tests associated with the DateTime and DateTimeOffset.</summary>
 public abstract class DateTimeTestBase : IDisposable
@@ -149,7 +147,7 @@ public abstract class DateTimeTestBase : IDisposable
             fixture.ForcedDateTimeKind = DateTimeKind.Utc;
 
             var value = TimeProvider.System.GetUtcNow().UtcDateTime;
-            fixture.InsertObject("key", value).SubscribeAndComplete();
+            fixture.InsertObject("key", value).WaitForCompletion();
             var result = fixture.GetObject<DateTime>("key").SubscribeGetValue();
             await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
         }

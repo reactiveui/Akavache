@@ -3,10 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Akavache.Core;
 using Newtonsoft.Json;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.NewtonsoftJson;
+#else
 namespace Akavache.NewtonsoftJson;
+#endif
 
 /// <summary>Provides extension methods for configuring Akavache to use Newtonsoft.Json serialization.</summary>
 public static class AkavacheBuilderExtensions

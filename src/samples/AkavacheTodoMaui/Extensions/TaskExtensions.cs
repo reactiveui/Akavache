@@ -13,7 +13,11 @@ public static class TaskExtensions
     {
         /// <summary>Converts a Task to IObservable{Unit}.</summary>
         /// <returns>An observable that completes when the task completes.</returns>
-        public IObservable<Unit> ToObservable() => Observable.FromAsync(() => task);
+        public IObservable<RxVoid> ToObservable() => Signal.FromAsync(async () =>
+        {
+            await task.ConfigureAwait(false);
+            return RxVoid.Default;
+        });
     }
 
     /// <summary>Observable conversions for a task that produces a result.</summary>
@@ -23,6 +27,6 @@ public static class TaskExtensions
     {
         /// <summary>Converts a Task{T} to IObservable{T}.</summary>
         /// <returns>An observable that produces the task result.</returns>
-        public IObservable<T> ToObservable() => Observable.FromAsync(() => task);
+        public IObservable<T> ToObservable() => Signal.FromAsync(() => task);
     }
 }

@@ -70,7 +70,7 @@ public class CacheDatabaseWriteBenchmarks
 
     /// <summary> Clears the cache before each iteration so every measured write starts from an empty database. </summary>
     [IterationSetup]
-    public void IterationSetup() => BlobCache.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
+    public void IterationSetup() => BlobCache.InvalidateAll().WaitForCompletion();
 
     /// <summary> Measures inserting <see cref="BenchmarkSize"/> freshly generated blobs one key at a time, awaiting each write before the next starts. </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>

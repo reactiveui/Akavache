@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-using Akavache.Settings.Core;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests;
+#else
 namespace Akavache.Settings.Tests;
+#endif
 
 /// <summary>
 /// Tests for <see cref="SettingsValueSubject{T}"/> covering the OnNext-after-terminal,
@@ -49,7 +50,7 @@ public class SettingsValueSubjectTests
         await Assert.That(subject.Value).IsEqualTo(SeedValue);
     }
 
-    /// <summary>Subscribing to a disposed subject replays the final value and completes immediately, returning <see cref="Disposable.Empty"/>.</summary>
+    /// <summary>Subscribing to a disposed subject replays the final value and completes immediately, returning <see cref="Scope.Empty"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SubscribeAfterDisposeShouldReplayFinalValueAndComplete()
@@ -60,7 +61,7 @@ public class SettingsValueSubjectTests
         string? received = null;
         var completed = false;
         var sub = subject.Subscribe(
-            Observer.Create<string>(
+            Witness.Create<string>(
                 v => received = v,
                 static _ => { },
                 () => completed = true));
@@ -81,8 +82,8 @@ public class SettingsValueSubjectTests
         var completed1 = false;
         var completed2 = false;
 
-        _ = subject.Subscribe(Observer.Create<int>(static _ => { }, static _ => { }, () => completed1 = true));
-        _ = subject.Subscribe(Observer.Create<int>(static _ => { }, static _ => { }, () => completed2 = true));
+        _ = subject.Subscribe(Witness.Create<int>(static _ => { }, static _ => { }, () => completed1 = true));
+        _ = subject.Subscribe(Witness.Create<int>(static _ => { }, static _ => { }, () => completed2 = true));
 
         subject.Dispose();
 
@@ -113,7 +114,7 @@ public class SettingsValueSubjectTests
         var subject = new SettingsValueSubject<int>(0);
         var values = new List<int>();
 
-        var sub = subject.Subscribe(Observer.Create<int>(values.Add));
+        var sub = subject.Subscribe(Witness.Create<int>(values.Add));
 
         // The subscribe replay should have pushed the seed value.
         await Assert.That(values.Count).IsEqualTo(1);
@@ -133,7 +134,7 @@ public class SettingsValueSubjectTests
         var subject = new SettingsValueSubject<int>(0);
         var values = new List<int>();
 
-        var sub = subject.Subscribe(Observer.Create<int>(values.Add));
+        var sub = subject.Subscribe(Witness.Create<int>(values.Add));
         sub.Dispose();
 
         subject.OnNext(PublishedValue);
@@ -156,9 +157,9 @@ public class SettingsValueSubjectTests
         var values2 = new List<int>();
         var values3 = new List<int>();
 
-        _ = subject.Subscribe(Observer.Create<int>(values1.Add));
-        var sub2 = subject.Subscribe(Observer.Create<int>(values2.Add));
-        _ = subject.Subscribe(Observer.Create<int>(values3.Add));
+        _ = subject.Subscribe(Witness.Create<int>(values1.Add));
+        var sub2 = subject.Subscribe(Witness.Create<int>(values2.Add));
+        _ = subject.Subscribe(Witness.Create<int>(values3.Add));
 
         // Remove the middle observer.
         sub2.Dispose();
@@ -182,7 +183,7 @@ public class SettingsValueSubjectTests
         var subject = new SettingsValueSubject<int>(0);
         var values = new List<int>();
 
-        var sub = subject.Subscribe(Observer.Create<int>(values.Add));
+        var sub = subject.Subscribe(Witness.Create<int>(values.Add));
         sub.Dispose();
         sub.Dispose(); // Should not throw or double-remove.
 
@@ -210,7 +211,7 @@ public class SettingsValueSubjectTests
         var subject = new SettingsValueSubject<int>(0);
         var received = new List<int>();
 
-        _ = subject.Subscribe(Observer.Create<int>(received.Add));
+        _ = subject.Subscribe(Witness.Create<int>(received.Add));
 
         subject.OnNext(PublishedValue);
 
@@ -227,8 +228,8 @@ public class SettingsValueSubjectTests
         var values1 = new List<int>();
         var values2 = new List<int>();
 
-        _ = subject.Subscribe(Observer.Create<int>(values1.Add));
-        _ = subject.Subscribe(Observer.Create<int>(values2.Add));
+        _ = subject.Subscribe(Witness.Create<int>(values1.Add));
+        _ = subject.Subscribe(Witness.Create<int>(values2.Add));
 
         subject.OnNext(PublishedValue);
 
@@ -244,7 +245,7 @@ public class SettingsValueSubjectTests
         var subject = new SettingsValueSubject<int>(0);
         var received = new List<int>();
 
-        _ = subject.Subscribe(Observer.Create<int>(received.Add));
+        _ = subject.Subscribe(Witness.Create<int>(received.Add));
 
         subject.OnNext(FirstSequencedValue);
         subject.OnNext(SecondSequencedValue);
@@ -266,7 +267,7 @@ public class SettingsValueSubjectTests
         subject.OnNext(PublishedValue);
 
         var received = new List<int>();
-        _ = subject.Subscribe(Observer.Create<int>(received.Add));
+        _ = subject.Subscribe(Witness.Create<int>(received.Add));
 
         await Assert.That(received.Count).IsEqualTo(1);
         await Assert.That(received[0]).IsEqualTo(PublishedValue);
@@ -281,8 +282,8 @@ public class SettingsValueSubjectTests
         var values1 = new List<int>();
         var values2 = new List<int>();
 
-        var sub1 = subject.Subscribe(Observer.Create<int>(values1.Add));
-        _ = subject.Subscribe(Observer.Create<int>(values2.Add));
+        var sub1 = subject.Subscribe(Witness.Create<int>(values1.Add));
+        _ = subject.Subscribe(Witness.Create<int>(values2.Add));
 
         sub1.Dispose();
 
@@ -301,8 +302,8 @@ public class SettingsValueSubjectTests
         var values1 = new List<int>();
         var values2 = new List<int>();
 
-        _ = subject.Subscribe(Observer.Create<int>(values1.Add));
-        var sub2 = subject.Subscribe(Observer.Create<int>(values2.Add));
+        _ = subject.Subscribe(Witness.Create<int>(values1.Add));
+        var sub2 = subject.Subscribe(Witness.Create<int>(values2.Add));
 
         sub2.Dispose();
 
@@ -325,7 +326,7 @@ public class SettingsValueSubjectTests
         subject.OnNext(PublishedValue);
 
         var received = new List<int>();
-        _ = subject.Subscribe(Observer.Create<int>(received.Add));
+        _ = subject.Subscribe(Witness.Create<int>(received.Add));
 
         subject.OnNext(LaterPublishedValue);
 
@@ -364,7 +365,7 @@ public class SettingsValueSubjectTests
     public async Task UnsubscribeAfterSubjectDisposeShouldHitIndexLessThanZeroPath()
     {
         var subject = new SettingsValueSubject<int>(0);
-        var sub = subject.Subscribe(Observer.Create<int>(static _ => { }));
+        var sub = subject.Subscribe(Witness.Create<int>(static _ => { }));
 
         // Dispose the subject first — clears the observer array.
         subject.Dispose();
@@ -381,7 +382,7 @@ public class SettingsValueSubjectTests
     public async Task OnNextAfterAllUnsubscribedShouldNotThrow()
     {
         var subject = new SettingsValueSubject<int>(0);
-        var sub = subject.Subscribe(Observer.Create<int>(static _ => { }));
+        var sub = subject.Subscribe(Witness.Create<int>(static _ => { }));
         sub.Dispose();
 
         subject.OnNext(PublishedValue);

@@ -5,9 +5,17 @@
 using System.Collections.Concurrent;
 
 #if ENCRYPTED
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.EncryptedSqlite3;
+#else
 namespace Akavache.EncryptedSqlite3;
+#endif
+#else
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Sqlite3;
 #else
 namespace Akavache.Sqlite3;
+#endif
 #endif
 
 /// <summary>

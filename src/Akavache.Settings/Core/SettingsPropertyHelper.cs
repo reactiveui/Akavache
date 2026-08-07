@@ -4,7 +4,11 @@
 
 using System.ComponentModel;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Core;
+#else
 namespace Akavache.Settings.Core;
+#endif
 
 /// <summary>
 /// Lightweight sync-readable wrapper around a settings <see cref="SettingsStream{T}"/>.
@@ -117,14 +121,14 @@ public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyC
 
     /// <summary>
     /// Writes a new value through to the underlying blob cache. The returned observable
-    /// fires <see cref="Unit"/> once the persistent write has been accepted, or errors
+    /// fires <see cref="RxVoid"/> once the persistent write has been accepted, or errors
     /// if the cache insert fails. The live stream is updated synchronously so any
     /// subsequent read of <see cref="Value"/> sees the new value immediately, regardless
     /// of whether the caller awaits the commit.
     /// </summary>
     /// <param name="value">The new value.</param>
-    /// <returns>A one-shot observable that fires <see cref="Unit"/> when the persistent write commits.</returns>
-    public IObservable<Unit> Set(T value) => _stream.Set(value);
+    /// <returns>A one-shot observable that fires <see cref="RxVoid"/> when the persistent write commits.</returns>
+    public IObservable<RxVoid> Set(T value) => _stream.Set(value);
 
     /// <inheritdoc/>
     public IDisposable Subscribe(IObserver<T> observer) => _stream.Subscribe(observer);

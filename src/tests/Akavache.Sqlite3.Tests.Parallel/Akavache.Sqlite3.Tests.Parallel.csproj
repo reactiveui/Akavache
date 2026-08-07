@@ -20,4 +20,23 @@
     <Compile Include="..\shared\Mocks\*.cs" Link="Mocks\%(Filename)%(Extension)" />
     <Compile Include="..\shared\TestBases\*.cs" Exclude="..\shared\TestBases\BlobCacheDownloadTestsBase.cs" Link="TestBases\%(Filename)%(Extension)" />
   </ItemGroup>
+
+  <!-- Akavache namespaces as global usings; Directory.Build.targets shifts them for the .Reactive twin. -->
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Core.Observables" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.NewtonsoftJson" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
+    <AkavacheInternalUsing Include="Akavache.Sqlite3" />
+    <AkavacheInternalUsing Include="Akavache.Sqlite3.Tests.Parallel" />
+    <AkavacheInternalUsing Include="Akavache.SystemTextJson" />
+    <AkavacheInternalUsing Include="Akavache.SystemTextJson.Bson" />
+    <AkavacheInternalUsing Include="Akavache.Tests" />
+    <AkavacheInternalUsing Include="Akavache.Tests.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Tests.Mocks" />
+    <AkavacheInternalUsing Include="Akavache.Tests.TestBases" />
+  </ItemGroup>
+
 </Project>

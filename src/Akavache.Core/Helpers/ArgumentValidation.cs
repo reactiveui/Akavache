@@ -5,7 +5,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Helpers;
+#else
 namespace Akavache.Helpers;
+#endif
 
 /// <summary>
 /// Provides argument-validation helpers. On .NET 8.0 and later the null/empty/whitespace guards forward to the

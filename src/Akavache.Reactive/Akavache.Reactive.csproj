@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>Akavache.Reactive</AssemblyName>
+    <RootNamespace>Akavache.Reactive</RootNamespace>
+    <PackageId>Akavache.Reactive</PackageId>
+    <PackageDescription>Akavache recompiled against System.Reactive's Unit and IScheduler, for consumers already on the System.Reactive stack.</PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+    <PackageReference Include="Splat.Builder" />
+    <PackageReference Include="ReactiveUI.Primitives.Reactive" ExcludeAssets="analyzers" />
+    <PackageReference Include="System.Memory" Condition="$(TargetFramework.StartsWith('net4'))" />
+  </ItemGroup>
+
+  <!-- The same source the lean Akavache package ships, recompiled here under REACTIVE_SHIM. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core\**\*.cs"
+             Exclude="..\Akavache.Core\obj\**\*.cs;..\Akavache.Core\bin\**\*.cs"
+             Link="Akavache.Core\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Core.Observables" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.HttpDownloader.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Core.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Core.Tests.Parallel.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Sqlite3.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Sqlite3.Tests.Parallel.Reactive" />
+    <InternalsVisibleTo Include="Akavache.EncryptedSqlite3.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.EncryptedSqlite3.Tests.Parallel.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests.Parallel.Reactive" />
+  </ItemGroup>
+</Project>

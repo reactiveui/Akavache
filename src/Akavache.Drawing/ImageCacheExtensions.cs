@@ -2,11 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-
 using Splat;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Drawing;
+#else
 namespace Akavache.Drawing;
+#endif
 
 /// <summary>Advanced image caching and manipulation extensions.</summary>
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -44,29 +46,29 @@ public static class ImageCacheExtensions
             return keys.ToObservable()
                 .SelectMany(key => blobCache.LoadImage(key, desiredWidth, desiredHeight)
                     .Select(bitmap => new KeyValuePair<string, IBitmap>(key, bitmap))
-                    .Catch<KeyValuePair<string, IBitmap>, Exception>(static _ => Observable.Empty<KeyValuePair<string, IBitmap>>()));
+                    .Catch<KeyValuePair<string, IBitmap>, Exception>(static _ => ImmutableEmptySignal<KeyValuePair<string, IBitmap>>.Instance));
         }
 
         /// <summary>Preload and cache images from multiple URLs.</summary>
         /// <param name="urls">The URLs to download and cache.</param>
         /// <returns>An observable that completes when all images are cached.</returns>
-        public IObservable<Unit> PreloadImagesFromUrls(IEnumerable<string> urls) =>
+        public IObservable<RxVoid> PreloadImagesFromUrls(IEnumerable<string> urls) =>
             blobCache.PreloadImagesFromUrls(urls, (DateTimeOffset?)null);
 
         /// <summary>Preload and cache images from multiple URLs.</summary>
         /// <param name="urls">The URLs to download and cache.</param>
         /// <param name="absoluteExpiration">Optional expiration date for cached images.</param>
         /// <returns>An observable that completes when all images are cached.</returns>
-        public IObservable<Unit> PreloadImagesFromUrls(IEnumerable<string> urls, DateTimeOffset? absoluteExpiration)
+        public IObservable<RxVoid> PreloadImagesFromUrls(IEnumerable<string> urls, DateTimeOffset? absoluteExpiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return urls.ToObservable()
                 .SelectMany(url => blobCache.DownloadUrl(url, absoluteExpiration: absoluteExpiration)
-                    .Catch<byte[], Exception>(static _ => Observable.Empty<byte[]>()))
+                    .Catch<byte[], Exception>(static _ => ImmutableEmptySignal<byte[]>.Instance))
                 .SelectUnit()
-                .DefaultIfEmpty(Unit.Default)
-                .TakeLast(1);
+                .IgnoreElements()
+                .Concat(ImmutableReturnRxVoidSignal.Instance);
         }
 
         /// <summary>Load an image with automatic fallback to a default image if loading fails.</summary>
@@ -156,7 +158,7 @@ public static class ImageCacheExtensions
         /// <param name="thumbnailWidth">The desired thumbnail width.</param>
         /// <param name="thumbnailHeight">The desired thumbnail height.</param>
         /// <returns>An observable that completes when the thumbnail is created and cached.</returns>
-        public IObservable<Unit> CreateAndCacheThumbnail(string sourceKey, string thumbnailKey, float thumbnailWidth, float thumbnailHeight) =>
+        public IObservable<RxVoid> CreateAndCacheThumbnail(string sourceKey, string thumbnailKey, float thumbnailWidth, float thumbnailHeight) =>
             blobCache.CreateAndCacheThumbnail(sourceKey, thumbnailKey, thumbnailWidth, thumbnailHeight, (DateTimeOffset?)null);
 
         /// <summary>Create a thumbnail version of an image and cache it separately.</summary>
@@ -166,7 +168,7 @@ public static class ImageCacheExtensions
         /// <param name="thumbnailHeight">The desired thumbnail height.</param>
         /// <param name="absoluteExpiration">Optional expiration date for the thumbnail.</param>
         /// <returns>An observable that completes when the thumbnail is created and cached.</returns>
-        public IObservable<Unit> CreateAndCacheThumbnail(string sourceKey, string thumbnailKey, float thumbnailWidth, float thumbnailHeight, DateTimeOffset? absoluteExpiration)
+        public IObservable<RxVoid> CreateAndCacheThumbnail(string sourceKey, string thumbnailKey, float thumbnailWidth, float thumbnailHeight, DateTimeOffset? absoluteExpiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
@@ -189,7 +191,7 @@ public static class ImageCacheExtensions
         /// <summary>Clear all cached images that match a specific pattern.</summary>
         /// <param name="keyPattern">A function to determine if a key should be invalidated.</param>
         /// <returns>An observable that completes when all matching images are cleared.</returns>
-        public IObservable<Unit> ClearImageCache(Func<string, bool> keyPattern)
+        public IObservable<RxVoid> ClearImageCache(Func<string, bool> keyPattern)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             ArgumentExceptionHelper.ThrowIfNull(keyPattern);
@@ -197,8 +199,8 @@ public static class ImageCacheExtensions
             return blobCache.GetAllKeys()
                 .Where(keyPattern)
                 .SelectMany(blobCache.Invalidate)
-                .DefaultIfEmpty(Unit.Default)
-                .TakeLast(1);
+                .IgnoreElements()
+                .Concat(ImmutableReturnRxVoidSignal.Instance);
         }
     }
 
@@ -213,7 +215,7 @@ public static class ImageCacheExtensions
     /// <param name="desiredHeight">Optional target height for the decoded bitmap.</param>
     /// <returns>An observable that emits the decoded bitmap or fails with <see cref="IOException"/>.</returns>
     internal static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
-        Observable.FromAsync(async () =>
+        Signal.FromAsync(async () =>
         {
 #if NETFRAMEWORK
             using var ms = new MemoryStream(compressedImage, writable: false);
@@ -228,7 +230,7 @@ public static class ImageCacheExtensions
     /// <param name="bytes">The encoded image bytes.</param>
     /// <returns>An observable that emits the image size.</returns>
     internal static IObservable<Size> LoadBitmapSize(byte[] bytes) =>
-        Observable.FromAsync(async () =>
+        Signal.FromAsync(async () =>
         {
 #if NETFRAMEWORK
             using var ms = new MemoryStream(bytes, writable: false);

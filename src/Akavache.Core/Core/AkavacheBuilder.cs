@@ -3,10 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Settings;
 using Splat;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core;
+#else
 namespace Akavache.Core;
+#endif
 
 /// <summary>Provides the default implementation of the Akavache builder interface for configuring cache instances.</summary>
 internal class AkavacheBuilder : IAkavacheBuilder

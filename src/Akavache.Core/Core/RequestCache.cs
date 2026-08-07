@@ -4,7 +4,11 @@
 
 using System.Collections.Concurrent;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core;
+#else
 namespace Akavache.Core;
+#endif
 
 /// <summary>A cache for deduplicating concurrent requests for the same key.</summary>
 internal static class RequestCache

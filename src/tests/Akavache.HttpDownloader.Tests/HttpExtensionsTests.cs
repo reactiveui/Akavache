@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for HttpExtensions covering null/empty argument validation and stream paths.</summary>
 [Category("Akavache")]
@@ -84,7 +86,7 @@ public class HttpExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringShouldThrowOnNullUrl()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl((string)null!))
@@ -105,7 +107,7 @@ public class HttpExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringShouldThrowOnEmptyUrl()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl(string.Empty))
@@ -129,7 +131,7 @@ public class HttpExtensionsTests
     [Test]
     public async Task DownloadUrlUriShouldThrowOnNullUrl()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl((Uri)null!))
@@ -161,7 +163,7 @@ public class HttpExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullKey()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl(null!, SampleUrl))
@@ -182,7 +184,7 @@ public class HttpExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnEmptyKey()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl(string.Empty, SampleUrl))
@@ -203,7 +205,7 @@ public class HttpExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullUrl()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl("key", (string)null!))
@@ -224,7 +226,7 @@ public class HttpExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnEmptyUrl()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl("key", string.Empty))
@@ -248,7 +250,7 @@ public class HttpExtensionsTests
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnNullKey()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl(null!, new Uri(SampleUrl)))
@@ -265,7 +267,7 @@ public class HttpExtensionsTests
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnEmptyKey()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl(string.Empty, new Uri(SampleUrl)))
@@ -282,7 +284,7 @@ public class HttpExtensionsTests
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnNullUrl()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl("key", (Uri)null!))

@@ -7,9 +7,12 @@ using System.Net;
 #if NET462_OR_GREATER
 using System.Net.Http;
 #endif
-using Akavache.Core.Observables;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Provides a default implementation of HTTP service functionality for Akavache.</summary>
 [SuppressMessage(
@@ -131,11 +134,11 @@ public class HttpService : IHttpService, IDisposable
         method ??= HttpMethod.Get;
 
         var doFetch = MakeWebRequest(new(url), method, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
-        var fetchAndCache = doFetch.SelectMany(x => new SelectConstantObservable<Unit, byte[]>(blobCache.Insert(key, x, absoluteExpiration), x));
+        var fetchAndCache = doFetch.SelectMany(x => new SelectConstantObservable<RxVoid, byte[]>(blobCache.Insert(key, x, absoluteExpiration), x));
 
-        var ret = !fetchAlways ? blobCache.Get(key).Catch(fetchAndCache) : fetchAndCache;
+        var ret = !fetchAlways ? blobCache.Get(key).Catch<byte[]?, Exception>(_ => fetchAndCache) : fetchAndCache;
 
-        var conn = ret.PublishLast();
+        var conn = ret.Multicast(new AsyncSignal<byte[]?>());
         _ = conn.Connect();
         return conn.Select(static x => x ?? []);
     }
@@ -175,11 +178,11 @@ public class HttpService : IHttpService, IDisposable
         method ??= HttpMethod.Get;
 
         var doFetch = MakeWebRequest(url, method, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
-        var fetchAndCache = doFetch.SelectMany(x => new SelectConstantObservable<Unit, byte[]>(blobCache.Insert(key, x, absoluteExpiration), x));
+        var fetchAndCache = doFetch.SelectMany(x => new SelectConstantObservable<RxVoid, byte[]>(blobCache.Insert(key, x, absoluteExpiration), x));
 
-        var ret = !fetchAlways ? blobCache.Get(key).Catch(fetchAndCache).Select(static x => x ?? []) : fetchAndCache;
+        var ret = !fetchAlways ? blobCache.Get(key).Catch<byte[]?, Exception>(_ => fetchAndCache).Select(static x => x ?? []) : fetchAndCache;
 
-        var conn = ret.PublishLast();
+        var conn = ret.Multicast(new AsyncSignal<byte[]>());
         _ = conn.Connect();
         return conn;
     }
@@ -222,8 +225,8 @@ public class HttpService : IHttpService, IDisposable
     /// <returns>An observable that emits the response bytes.</returns>
     internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, string url, DateTimeOffset? absoluteExpiration) =>
         !responseMessage.IsSuccessStatusCode
-            ? Observable.Throw<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode}] Http Failure to {url} with expiry {absoluteExpiration}: {responseMessage.ReasonPhrase}"))
-            : Observable.FromAsync(() => responseMessage.Content.ReadAsByteArrayAsync());
+            ? new ImmediateThrowSignal<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode}] Http Failure to {url} with expiry {absoluteExpiration}: {responseMessage.ReasonPhrase}"))
+            : Signal.FromAsync(() => responseMessage.Content.ReadAsByteArrayAsync());
 
     /// <summary>Reads the response body as a byte array, throwing if the response status indicates failure.</summary>
     /// <param name="responseMessage">The HTTP response to process.</param>
@@ -283,22 +286,25 @@ public class HttpService : IHttpService, IDisposable
         int retries,
         TimeSpan? timeout)
     {
-        var request = Observable.Defer(() =>
+        var request = Signal.Defer(() =>
         {
             var httpRequest = CreateWebRequest(uri, method, headers);
 
             if (content is null)
             {
-                return Observable.FromAsync(() => HttpClient.SendAsync(httpRequest));
+                return Signal.FromAsync(() => HttpClient.SendAsync(httpRequest));
             }
 
             httpRequest.Content = new StringContent(content);
 
-            return Observable.FromAsync(() => HttpClient.SendAsync(httpRequest));
+            return Signal.FromAsync(() => HttpClient.SendAsync(httpRequest));
         });
 
         var timedRequest = request.Timeout(timeout ?? DefaultTimeout, CacheDatabase.TaskpoolScheduler);
-        return retries > 0 ? timedRequest.Retry(retries) : timedRequest;
+
+        // retries is the total number of attempts, but Retry counts re-subscriptions after the
+        // first one, so the initial attempt has to come off the top.
+        return retries > 0 ? timedRequest.Retry(retries - 1) : timedRequest;
     }
 
     /// <summary>Releases the resources used by the <see cref="HttpService"/>.</summary>

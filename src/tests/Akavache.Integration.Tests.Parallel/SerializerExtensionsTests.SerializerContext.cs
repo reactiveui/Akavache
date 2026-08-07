@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests covering serialization through a cache's serializer context and the safe key enumerations.</summary>
 public partial class SerializerExtensionsTests
@@ -219,7 +220,7 @@ public partial class SerializerExtensionsTests
             IList<UserObject?>? results = null;
             _ = cache.GetAndFetchLatest(
                     "validate_key",
-                    () => Observable.Return(latest),
+                    () => Signal.Return(latest),
                     fetchPredicate: null,
                     absoluteExpiration: null,
                     shouldInvalidateOnError: false,
@@ -258,11 +259,10 @@ public partial class SerializerExtensionsTests
             {
                 await cache.GetAndFetchLatest(
                         InvalidatedKey,
-                        static () => Observable.Throw<UserObject>(new InvalidOperationException("fetch boom")),
+                        static () => Signal.Throw<UserObject>(new InvalidOperationException("fetch boom")),
                         fetchPredicate: null,
                         absoluteExpiration: null,
-                        shouldInvalidateOnError: true)
-                    .ForEachAsync(observed.Add);
+                        shouldInvalidateOnError: true).Do(observed.Add).LastOrDefaultAsync();
             }
             catch (Exception ex)
             {
@@ -298,8 +298,7 @@ public partial class SerializerExtensionsTests
             {
                 await cache.GetAndFetchLatest(
                         RetainedKey,
-                        static () => Observable.Throw<UserObject>(new InvalidOperationException("fetch boom")))
-                    .ForEachAsync(observed.Add);
+                        static () => Signal.Throw<UserObject>(new InvalidOperationException("fetch boom"))).Do(observed.Add).LastOrDefaultAsync();
             }
             catch (InvalidOperationException)
             {
@@ -339,10 +338,9 @@ public partial class SerializerExtensionsTests
             {
                 await cache.GetAndFetchLatest(
                         key,
-                        static () => Observable.Throw<UserObject>(new InvalidOperationException("expiring fetch boom")),
+                        static () => Signal.Throw<UserObject>(new InvalidOperationException("expiring fetch boom")),
                         fetchPredicate: null,
-                        absoluteExpiration: TimeProvider.System.GetUtcNow().AddHours(1))
-                    .ForEachAsync(static _ => { });
+                        absoluteExpiration: TimeProvider.System.GetUtcNow().AddHours(1)).Do(static _ => { }).LastOrDefaultAsync();
             }
             catch (InvalidOperationException ex)
             {
@@ -386,8 +384,7 @@ public partial class SerializerExtensionsTests
 
             // Nothing is cached, so there is no timestamp for the predicate to judge and the fetch runs anyway.
             List<UserObject?> firstPass = [];
-            await cache.GetAndFetchLatest(key, fetchFunc, fetchPredicate: static _ => false)
-                .ForEachAsync(firstPass.Add);
+            await cache.GetAndFetchLatest(key, fetchFunc, fetchPredicate: static _ => false).Do(firstPass.Add).LastOrDefaultAsync();
 
             await Assert.That(firstPass).Count().IsEqualTo(1);
 
@@ -399,8 +396,7 @@ public partial class SerializerExtensionsTests
 
             // Now there is a timestamp, the predicate declares it fresh and no second fetch happens.
             List<UserObject?> secondPass = [];
-            await cache.GetAndFetchLatest(key, fetchFunc, fetchPredicate: static _ => false)
-                .ForEachAsync(secondPass.Add);
+            await cache.GetAndFetchLatest(key, fetchFunc, fetchPredicate: static _ => false).Do(secondPass.Add).LastOrDefaultAsync();
 
             using (Assert.Multiple())
             {
@@ -437,8 +433,7 @@ public partial class SerializerExtensionsTests
                     key,
                     () => Task.FromResult(latest),
                     fetchPredicate: null,
-                    absoluteExpiration: expiration)
-                .ForEachAsync(fetched.Add);
+                    absoluteExpiration: expiration).Do(fetched.Add).LastOrDefaultAsync();
 
             await Assert.That(fetched).Count().IsEqualTo(1);
 
@@ -455,8 +450,7 @@ public partial class SerializerExtensionsTests
                         key,
                         static () => Task.FromException<UserObject>(new InvalidOperationException("task fetch boom")),
                         fetchPredicate: null,
-                        absoluteExpiration: expiration)
-                    .ForEachAsync(static _ => { });
+                        absoluteExpiration: expiration).Do(static _ => { }).LastOrDefaultAsync();
             }
             catch (InvalidOperationException ex)
             {
@@ -814,8 +808,7 @@ public partial class SerializerExtensionsTests
                         static () => Task.FromException<UserObject>(new InvalidOperationException("task fetch boom")),
                         fetchPredicate: null,
                         absoluteExpiration: null,
-                        shouldInvalidateOnError: true)
-                    .ForEachAsync(static _ => { });
+                        shouldInvalidateOnError: true).Do(static _ => { }).LastOrDefaultAsync();
             }
             catch (Exception ex)
             {
@@ -977,5 +970,5 @@ public partial class SerializerExtensionsTests
     /// <summary>Creates a new instance of an in-memory blob cache with the specified scheduler and serializer.</summary>
     /// <returns>A new instance of the in-memory blob cache.</returns>
     private static InMemoryBlobCache CreateCache() =>
-        new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 }

@@ -2,10 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Settings.Core;
 using Splat; // AppLocator
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings;
+#else
 namespace Akavache.Settings;
+#endif
 
 /// <summary>
 /// Provides a base class for implementing application settings storage using Akavache.

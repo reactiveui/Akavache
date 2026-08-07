@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests focused on SqliteBlobCache.InvalidateAll behavior.</summary>
 [Category("Akavache")]
@@ -42,20 +42,20 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldRemove_AllItems()
     {
         SystemJsonSerializer serializer = new();
-        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateSequencer.Instance);
 
         const int InsertedKeyCount = 3;
 
         // Arrange
-        cache.Insert("a", FirstUntypedPayload).SubscribeAndComplete();
-        cache.Insert("b", SecondUntypedPayload).SubscribeAndComplete();
-        cache.Insert("c", ThirdUntypedPayload).SubscribeAndComplete();
+        cache.Insert("a", FirstUntypedPayload).WaitForCompletion();
+        cache.Insert("b", SecondUntypedPayload).WaitForCompletion();
+        cache.Insert("c", ThirdUntypedPayload).WaitForCompletion();
 
         var keysBefore = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keysBefore).Count().IsEqualTo(InsertedKeyCount);
 
         // Act
-        cache.InvalidateAll().SubscribeAndComplete();
+        cache.InvalidateAll().WaitForCompletion();
 
         // Assert
         var keysAfter = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -77,23 +77,23 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldRemove_TypedAndUntypedItems()
     {
         SystemJsonSerializer serializer = new();
-        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateSequencer.Instance);
 
         const int InsertedKeyCount = 4;
 
         // Arrange: mix typed and untyped entries
-        cache.Insert("u1", FirstUntypedPayload).SubscribeAndComplete();
-        cache.Insert("u2", SecondUntypedPayload).SubscribeAndComplete();
+        cache.Insert("u1", FirstUntypedPayload).WaitForCompletion();
+        cache.Insert("u2", SecondUntypedPayload).WaitForCompletion();
 
         var userType = typeof(string);
-        cache.Insert("t1", FirstTypedPayload, userType).SubscribeAndComplete();
-        cache.Insert("t2", SecondTypedPayload, userType).SubscribeAndComplete();
+        cache.Insert("t1", FirstTypedPayload, userType).WaitForCompletion();
+        cache.Insert("t2", SecondTypedPayload, userType).WaitForCompletion();
 
         var keysBefore = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keysBefore).Count().IsEqualTo(InsertedKeyCount);
 
         // Act
-        cache.InvalidateAll().SubscribeAndComplete();
+        cache.InvalidateAll().WaitForCompletion();
 
         // Assert
         var keysAfter = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -119,11 +119,11 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldIgnore_ExpiredEntriesButStillClearAll()
     {
         SystemJsonSerializer serializer = new();
-        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateSequencer.Instance);
 
         // Arrange: one expired, one not
-        cache.Insert("live", FirstUntypedPayload, TimeProvider.System.GetLocalNow().Add(LiveEntryLifetime)).SubscribeAndComplete();
-        cache.Insert("expired", SecondUntypedPayload, TimeProvider.System.GetLocalNow().Add(ExpiringEntryLifetime)).SubscribeAndComplete();
+        cache.Insert("live", FirstUntypedPayload, TimeProvider.System.GetLocalNow().Add(LiveEntryLifetime)).WaitForCompletion();
+        cache.Insert("expired", SecondUntypedPayload, TimeProvider.System.GetLocalNow().Add(ExpiringEntryLifetime)).WaitForCompletion();
 
         // wait for expiration
         await Task.Delay(ExpiryGracePeriod);
@@ -134,7 +134,7 @@ public class SqliteBlobCacheInvalidateAllTests
         await Assert.That(keysBefore).Count().IsLessThanOrEqualTo(1);
 
         // Act
-        cache.InvalidateAll().SubscribeAndComplete();
+        cache.InvalidateAll().WaitForCompletion();
 
         // Assert
         var keysAfter = cache.GetAllKeys().ToList().SubscribeGetValue();

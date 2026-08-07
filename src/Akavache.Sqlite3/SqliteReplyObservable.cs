@@ -2,12 +2,18 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-
 #if ENCRYPTED
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.EncryptedSqlite3;
+#else
 namespace Akavache.EncryptedSqlite3;
+#endif
+#else
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Sqlite3;
 #else
 namespace Akavache.Sqlite3;
+#endif
 #endif
 
 /// <summary>
@@ -89,11 +95,11 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
 
         if (capturedState == StatePending)
         {
-            return Disposable.Empty;
+            return Scope.Empty;
         }
 
         ReplayTo(observer, capturedState, capturedValue, capturedError);
-        return Disposable.Empty;
+        return Scope.Empty;
     }
 
     /// <summary>

@@ -4,7 +4,11 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Provides extension methods for handling user login credentials in secure blob caches.</summary>
 public static class LoginExtensions
@@ -29,7 +33,7 @@ public static class LoginExtensions
         /// <returns>An observable that signals when the login data is saved.</returns>
         [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
-        public IObservable<Unit> SaveLogin(string user, string password) =>
+        public IObservable<RxVoid> SaveLogin(string user, string password) =>
             blobCache.SaveLogin(user, password, DefaultHost, (DateTimeOffset?)null);
 
         /// <summary>
@@ -43,7 +47,7 @@ public static class LoginExtensions
         /// <returns>An observable that signals when the login data is saved.</returns>
         [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
-        public IObservable<Unit> SaveLogin(string user, string password, string host) =>
+        public IObservable<RxVoid> SaveLogin(string user, string password, string host) =>
             blobCache.SaveLogin(user, password, host, (DateTimeOffset?)null);
 
         /// <summary>
@@ -58,7 +62,7 @@ public static class LoginExtensions
         /// <returns>An observable that signals when the login data is saved.</returns>
         [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
-        public IObservable<Unit> SaveLogin(string user, string password, string host, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> SaveLogin(string user, string password, string host, DateTimeOffset? absoluteExpiration) =>
                 blobCache.InsertObject($"login:{host}", new LoginInfo(user, password), absoluteExpiration);
 
         /// <summary>
@@ -86,13 +90,13 @@ public static class LoginExtensions
 
         /// <summary>Erases the login associated with the specified host.</summary>
         /// <returns>A observable which signals when the erase is completed.</returns>
-        public IObservable<Unit> EraseLogin() =>
+        public IObservable<RxVoid> EraseLogin() =>
             blobCache.EraseLogin(DefaultHost);
 
         /// <summary>Erases the login associated with the specified host.</summary>
         /// <param name="host">The host associated with the data.</param>
         /// <returns>A observable which signals when the erase is completed.</returns>
-        public IObservable<Unit> EraseLogin(string host) =>
+        public IObservable<RxVoid> EraseLogin(string host) =>
                 blobCache.InvalidateObject<LoginInfo>($"login:{host}");
     }
 }

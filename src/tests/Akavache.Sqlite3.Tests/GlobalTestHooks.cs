@@ -2,12 +2,15 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Tests;
 using Splat.Builder;
 
 [assembly: NotInParallel]
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Sqlite3.Tests;
+#else
 namespace Akavache.Sqlite3.Tests;
+#endif
 
 /// <summary>Resets shared Akavache and SQLite static state around each SQLite test.</summary>
 public static class GlobalTestHooks
@@ -23,10 +26,10 @@ public static class GlobalTestHooks
     /// <summary>Resets shared static state used by SQLite tests.</summary>
     private static void ResetState()
     {
-        CacheDatabase.ResetForTests().SubscribeAndComplete();
-        Akavache.Core.RequestCache.Clear();
-        Akavache.Core.UniversalSerializer.ResetCaches();
-        Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+        CacheDatabase.ResetForTests().WaitForCompletion();
+        RequestCache.Clear();
+        UniversalSerializer.ResetCaches();
+        AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         AppBuilder.ResetBuilderStateForTests();
     }
 }

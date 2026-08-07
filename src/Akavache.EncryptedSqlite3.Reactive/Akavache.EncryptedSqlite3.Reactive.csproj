@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <DefineConstants>$(DefineConstants);ENCRYPTED</DefineConstants>
+    <AssemblyName>Akavache.EncryptedSqlite3.Reactive</AssemblyName>
+    <RootNamespace>Akavache.Reactive.EncryptedSqlite3</RootNamespace>
+    <PackageId>Akavache.EncryptedSqlite3.Reactive</PackageId>
+    <PackageDescription>Akavache.EncryptedSqlite3 recompiled against System.Reactive's Unit and IScheduler, for consumers already on the System.Reactive stack.</PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.core" />
+    <PackageReference Include="SQLite3MC.PCLRaw.bundle" />
+    <PackageReference Include="ReactiveUI.Primitives.Reactive" ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Reactive\Akavache.Reactive.csproj" />
+  </ItemGroup>
+
+  <!-- The same source the lean Akavache.EncryptedSqlite3 package ships, recompiled here under
+       REACTIVE_SHIM: its own files plus the unencrypted sibling's, which toggle on ENCRYPTED. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.EncryptedSqlite3\**\*.cs"
+             Exclude="..\Akavache.EncryptedSqlite3\obj\**\*.cs;..\Akavache.EncryptedSqlite3\bin\**\*.cs"
+             Link="Akavache.EncryptedSqlite3\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\*.cs"
+             Exclude="..\Akavache.Sqlite3\AkavacheBuilderExtensions.cs"
+             Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Mirrors the lean project's shared-internals set; see Akavache.Sqlite3.csproj for the rationale. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentValidation.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Helpers\DisposeHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\SecurityUtilities.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\SqliteProviderGate.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\Observables\*.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Core.Observables" />
+    <AkavacheInternalUsing Include="Akavache.EncryptedSqlite3" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.HttpDownloader.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel.Reactive" />
+    <InternalsVisibleTo Include="Akavache.EncryptedSqlite3.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.EncryptedSqlite3.Tests.Parallel.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests.Parallel.Reactive" />
+  </ItemGroup>
+</Project>

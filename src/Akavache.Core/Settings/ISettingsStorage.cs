@@ -5,7 +5,11 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings;
+#else
 namespace Akavache.Settings;
+#endif
 
 /// <summary>
 /// Represents a storage interface for application settings that supports property change notifications and asynchronous operations.
@@ -22,5 +26,5 @@ public interface ISettingsStorage : INotifyPropertyChanged, IDisposable
     /// <returns>A one-shot observable that completes once every property's cold load from disk has finished.</returns>
     [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
     [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
-    IObservable<Unit> Initialize();
+    IObservable<RxVoid> Initialize();
 }

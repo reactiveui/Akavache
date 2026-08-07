@@ -2,12 +2,18 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-
 #if ENCRYPTED
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.EncryptedSqlite3;
+#else
 namespace Akavache.EncryptedSqlite3;
+#endif
+#else
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Sqlite3;
 #else
 namespace Akavache.Sqlite3;
+#endif
 #endif
 
 /// <summary>
@@ -145,7 +151,7 @@ internal sealed class SqliteRowObservable<T> : IObservable<T>
         if (terminal)
         {
             observer.OnCompleted();
-            return Disposable.Empty;
+            return Scope.Empty;
         }
 
         return new CancellationDisposable(this);

@@ -4,11 +4,12 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using Akavache.Settings.Core;
-using Akavache.SystemTextJson;
-using Akavache.Tests;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests;
+#else
 namespace Akavache.Settings.Tests;
+#endif
 
 /// <summary>Tests targeting missed coverage lines in <see cref="SettingsStorage"/>, <see cref="SettingsStream{T}"/>, <see cref="SettingsPropertyHelper{T}"/>, and <see cref="SettingsBase"/>.</summary>
 [Category("Akavache")]
@@ -55,7 +56,7 @@ public class SettingsStreamAndPropertyTests
     public async Task GetOrCreateObservableShouldEmitDefaultValue()
     {
         using var storage = new ObservableTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         var value = storage.Name.SubscribeGetValue();
 
@@ -68,7 +69,7 @@ public class SettingsStreamAndPropertyTests
     public async Task GetOrCreateObservableShouldReturnSameStreamOnSecondAccess()
     {
         using var storage = new ObservableTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         var first = storage.Name;
         var second = storage.Name;
@@ -83,10 +84,10 @@ public class SettingsStreamAndPropertyTests
     public async Task SetObservableShouldCreateStreamAndPersistValue()
     {
         using var storage = new ObservableTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         // Set before any getter access — forces the on-the-fly stream creation.
-        storage.SetName("hello").SubscribeAndComplete();
+        storage.SetName("hello").WaitForCompletion();
 
         var value = storage.Name.SubscribeGetValue();
 
@@ -99,12 +100,12 @@ public class SettingsStreamAndPropertyTests
     public async Task SetObservableShouldRaisePropertyChanged()
     {
         using var storage = new ObservableTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         string? changedProperty = null;
         storage.PropertyChanged += (_, args) => changedProperty = args.PropertyName;
 
-        storage.SetName("world").SubscribeAndComplete();
+        storage.SetName("world").WaitForCompletion();
 
         await Assert.That(changedProperty).IsEqualTo("Name");
     }
@@ -116,7 +117,7 @@ public class SettingsStreamAndPropertyTests
     public async Task DisposeStreamsShouldSwallowStreamDisposeExceptions()
     {
         var storage = new ThrowingDisposeStorage(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         // Access the property to create the stream, then inject a throwing stream.
         _ = storage.Name.SubscribeGetValue();
@@ -134,7 +135,7 @@ public class SettingsStreamAndPropertyTests
     [Test]
     public async Task EnsureLoadedShouldReturnSameObservableOnSecondCall()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var stream = new SettingsStream<string>(cache, "test:key", "seed");
 
         var first = stream.EnsureLoaded();
@@ -143,8 +144,8 @@ public class SettingsStreamAndPropertyTests
         await Assert.That(ReferenceEquals(first, second)).IsTrue();
 
         // Both should complete successfully.
-        first.SubscribeAndComplete();
-        second.SubscribeAndComplete();
+        first.WaitForCompletion();
+        second.WaitForCompletion();
     }
 
     // ───────────────────────── SettingsPropertyHelper: Value, Set, Subscribe, Dispose ─────
@@ -154,7 +155,7 @@ public class SettingsStreamAndPropertyTests
     public async Task PropertyHelperValueShouldReturnDefaultBeforeUpdate()
     {
         using var storage = new PropertyHelperTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         await Assert.That(storage.Score.Value).IsEqualTo(DefaultScore);
     }
@@ -165,9 +166,9 @@ public class SettingsStreamAndPropertyTests
     public async Task PropertyHelperSetShouldUpdateValue()
     {
         using var storage = new PropertyHelperTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
-        storage.Score.Set(UpdatedScore).SubscribeAndComplete();
+        storage.Score.Set(UpdatedScore).WaitForCompletion();
 
         await Assert.That(storage.Score.Value).IsEqualTo(UpdatedScore);
     }
@@ -178,12 +179,12 @@ public class SettingsStreamAndPropertyTests
     public async Task PropertyHelperSubscribeShouldDelegateToStream()
     {
         using var storage = new PropertyHelperTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         var received = new List<int>();
-        var sub = storage.Score.Subscribe(Observer.Create<int>(received.Add));
+        var sub = storage.Score.Subscribe(Witness.Create<int>(received.Add));
 
-        storage.Score.Set(UpdatedScore).SubscribeAndComplete();
+        storage.Score.Set(UpdatedScore).WaitForCompletion();
         sub.Dispose();
 
         await Assert.That(received).Contains(DefaultScore); // initial replay
@@ -196,7 +197,7 @@ public class SettingsStreamAndPropertyTests
     public async Task PropertyHelperDisposeShouldNotThrow()
     {
         var storage = new PropertyHelperTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         storage.Score.Dispose();
 
@@ -210,12 +211,12 @@ public class SettingsStreamAndPropertyTests
     public async Task PropertyHelperShouldRaisePropertyChangedOnUpdate()
     {
         using var storage = new PropertyHelperTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         string? changedProp = null;
         storage.Score.PropertyChanged += (_, args) => changedProp = args.PropertyName;
 
-        storage.Score.Set(UpdatedScore).SubscribeAndComplete();
+        storage.Score.Set(UpdatedScore).WaitForCompletion();
 
         await Assert.That(changedProp).IsEqualTo("Value");
     }
@@ -226,7 +227,7 @@ public class SettingsStreamAndPropertyTests
     public async Task PropertyHelperImplicitConversionShouldReturnCurrentValue()
     {
         using var storage = new PropertyHelperTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         int value = storage.Score;
 
@@ -239,7 +240,7 @@ public class SettingsStreamAndPropertyTests
     public async Task PropertyHelperToTShouldReturnCurrentValue()
     {
         using var storage = new PropertyHelperTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         var value = storage.Score.ToT();
 
@@ -253,7 +254,7 @@ public class SettingsStreamAndPropertyTests
     public async Task TryGetFromBlobCacheRegistryShouldFallBackToFirstWhenNoExactMatch()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_RegistryFallbackToFirst");
-        var first = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var first = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         CacheDatabase.CurrentInstance!.BlobCaches["SomeOtherName"] = first;
 
         var result = SettingsBase.TryGetFromBlobCacheRegistry("CompletelyDifferentName");
@@ -270,14 +271,14 @@ public class SettingsStreamAndPropertyTests
     [Test]
     public async Task SetAfterEnsureLoadedShouldSkipColdLoadSeed()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var stream = new SettingsStream<string>(cache, "test:key", "seed");
 
         // Trigger the cold load first.
-        stream.EnsureLoaded().SubscribeAndComplete();
+        stream.EnsureLoaded().WaitForCompletion();
 
         // Now Set — should hit the _coldLoad is not null branch.
-        stream.Set(UpdatedName).SubscribeAndComplete();
+        stream.Set(UpdatedName).WaitForCompletion();
 
         var value = ((IObservable<string>)stream).SubscribeGetValue();
         await Assert.That(value).IsEqualTo(UpdatedName);
@@ -292,13 +293,13 @@ public class SettingsStreamAndPropertyTests
     [Test]
     public async Task SetBeforeEnsureLoadedShouldPreventOverwrite()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var stream = new SettingsStream<string>(cache, "test:set_first", "seed");
 
-        stream.Set("explicit").SubscribeAndComplete();
+        stream.Set("explicit").WaitForCompletion();
 
         // EnsureLoaded after Set should return the sentinel immediately.
-        stream.EnsureLoaded().SubscribeAndComplete();
+        stream.EnsureLoaded().WaitForCompletion();
 
         var value = ((IObservable<string>)stream).SubscribeGetValue();
         await Assert.That(value).IsEqualTo("explicit");
@@ -310,7 +311,7 @@ public class SettingsStreamAndPropertyTests
     [Test]
     public async Task SettingsStreamDisposeShouldCompleteSubscribers()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var stream = new SettingsStream<int>(cache, "test:dispose", DefaultScore);
 
         var completed = false;
@@ -334,10 +335,10 @@ public class SettingsStreamAndPropertyTests
     public async Task PropertyHelperSetWithNoHandlerShouldNotThrow()
     {
         using var storage = new PropertyHelperTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         // No PropertyChanged handler registered — should not throw.
-        storage.Score.Set(UnobservedScore).SubscribeAndComplete();
+        storage.Score.Set(UnobservedScore).WaitForCompletion();
 
         await Assert.That(storage.Score.Value).IsEqualTo(UnobservedScore);
     }
@@ -362,14 +363,14 @@ public class SettingsStreamAndPropertyTests
     public async Task SetObservableOnExistingStreamShouldReuseAndUpdate()
     {
         using var storage = new ObservableTestSettings(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         // Create stream via getter.
         var initial = storage.Name.SubscribeGetValue();
         await Assert.That(initial).IsEqualTo(DefaultName);
 
         // Set through the setter — should reuse the existing stream.
-        storage.SetName(UpdatedName).SubscribeAndComplete();
+        storage.SetName(UpdatedName).WaitForCompletion();
 
         var updated = storage.Name.SubscribeGetValue();
         await Assert.That(updated).IsEqualTo(UpdatedName);
@@ -396,7 +397,7 @@ public class SettingsStreamAndPropertyTests
         /// The key is named explicitly because the caller-member name here is <c>SetName</c>,
         /// not <c>Name</c>, and the setter has to address the same stream as the getter.
         /// </remarks>
-        internal IObservable<Unit> SetName(string value) => SetObservable(value, nameof(Name));
+        internal IObservable<RxVoid> SetName(string value) => SetObservable(value, nameof(Name));
     }
 
     /// <summary>Minimal <see cref="SettingsStorage"/> subclass that exposes a <see cref="SettingsPropertyHelper{T}"/> property for testing the helper pattern.</summary>
@@ -457,7 +458,7 @@ public class SettingsStreamAndPropertyTests
                 static () => throw new InvalidOperationException("dispose failure");
 
             /// <inheritdoc/>
-            public IObservable<Unit> EnsureLoaded() => Observable.Return(Unit.Default);
+            public IObservable<RxVoid> EnsureLoaded() => Signal.Return(RxVoid.Default);
 
             /// <inheritdoc/>
             public void Dispose() => FailingTeardown();

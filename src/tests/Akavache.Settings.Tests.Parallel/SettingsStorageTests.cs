@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 using System.Globalization;
 using System.Reflection;
-using Akavache.Settings.Core;
-using Akavache.SystemTextJson;
-using Akavache.Tests;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests;
+#else
 namespace Akavache.Settings.Tests;
+#endif
 
 /// <summary>
 /// Direct tests for <see cref="SettingsStorage"/> covering the constructor argument
@@ -31,21 +32,21 @@ public class SettingsStorageTests
     /// <returns>A task.</returns>
     [Test]
     public async Task ConstructorShouldThrowForNullKeyPrefix() =>
-        await Assert.That(static () => new TestStorage(null!, new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer())))
+        await Assert.That(static () => new TestStorage(null!, new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer())))
             .Throws<ArgumentNullException>();
 
     /// <summary>Tests that constructing a storage with a whitespace key prefix throws <see cref="ArgumentException"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ConstructorShouldThrowForWhitespaceKeyPrefix() =>
-        await Assert.That(static () => new TestStorage("   ", new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer())))
+        await Assert.That(static () => new TestStorage("   ", new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer())))
             .Throws<ArgumentException>();
 
     /// <summary>Tests that constructing a storage with an empty key prefix throws <see cref="ArgumentException"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ConstructorShouldThrowForEmptyKeyPrefix() =>
-        await Assert.That(static () => new TestStorage(string.Empty, new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer())))
+        await Assert.That(static () => new TestStorage(string.Empty, new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer())))
             .Throws<ArgumentException>();
 
     /// <summary>Tests that <see cref="SettingsStorage.EagerCreateStreams"/> throws when <c>target</c> is null.</summary>
@@ -81,7 +82,7 @@ public class SettingsStorageTests
     [Test]
     public async Task InitializeShouldEagerLoadEveryProperty()
     {
-        using ProbeStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+        using ProbeStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         await storage.InitializeAsync();
 
@@ -147,7 +148,7 @@ public class SettingsStorageTests
     [Test]
     public async Task OnPropertyChangedShouldRaiseEventWhenSubscribed()
     {
-        using TestStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+        using TestStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         string? observed = null;
         storage.PropertyChanged += (_, args) => observed = args.PropertyName;
@@ -166,7 +167,7 @@ public class SettingsStorageTests
     [Test]
     public async Task OnPropertyChangedWithoutNameShouldSignalEveryProperty()
     {
-        using TestStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+        using TestStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         var raiseCount = 0;
         string? observed = RaisedPropertyName;
@@ -187,7 +188,7 @@ public class SettingsStorageTests
     [Test]
     public async Task OnPropertyChangedShouldBeNoOpWhenNoSubscriber()
     {
-        using TestStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+        using TestStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         storage.RaisePropertyChanged(RaisedPropertyName);
 
@@ -199,7 +200,7 @@ public class SettingsStorageTests
     [Test]
     public async Task DisposeShouldBeIdempotent()
     {
-        TestStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+        TestStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         storage.Dispose();
         storage.Dispose();
@@ -212,7 +213,7 @@ public class SettingsStorageTests
     [Test]
     public async Task DisposeShouldDisposeUnderlyingBlobCache()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         TestStorage storage = new(StorageKeyPrefix, cache);
 
         storage.Dispose();
@@ -232,13 +233,13 @@ public class SettingsStorageTests
     [Test]
     public async Task DisposeWithDisposingFalseShouldNotTouchManagedResources()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         TestStorage storage = new(StorageKeyPrefix, cache);
 
         storage.InvokeDispose(disposing: false);
 
         // Cache still works: insert/retrieve a key without throwing.
-        cache.Insert("k", SamplePayload).SubscribeAndComplete();
+        cache.Insert("k", SamplePayload).WaitForCompletion();
         var bytes = cache.Get("k").SubscribeGetValue();
         await Assert.That(bytes).IsNotNull();
 
@@ -250,7 +251,7 @@ public class SettingsStorageTests
     [Test]
     public async Task InitializeShouldReturnImmediatelyWhenNoStreamsExist()
     {
-        using EmptyStorage storage = new("empty_prefix", new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+        using EmptyStorage storage = new("empty_prefix", new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         await storage.InitializeAsync();
 
@@ -262,7 +263,7 @@ public class SettingsStorageTests
     [Test]
     public async Task GetOrCreateObservableShouldThrowOnNullKey()
     {
-        using NullKeyStorage storage = new(new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+        using NullKeyStorage storage = new(new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         await Assert.That(() => storage.GetWithNullKey())
             .Throws<ArgumentNullException>();
@@ -273,7 +274,7 @@ public class SettingsStorageTests
     [Test]
     public async Task SetObservableShouldThrowOnNullKey()
     {
-        using NullKeyStorage storage = new(new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+        using NullKeyStorage storage = new(new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         await Assert.That(() => storage.SetWithNullKey("value"))
             .Throws<ArgumentNullException>();
@@ -284,7 +285,7 @@ public class SettingsStorageTests
     [Test]
     public async Task CreatePropertyShouldThrowOnNullPropertyName() =>
         await Assert.That(static () => new NullPropertyNameStorage(
-                new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer())))
+                new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer())))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -295,7 +296,7 @@ public class SettingsStorageTests
     [Test]
     public async Task DisposeShouldCompleteActiveStreamSubscribers()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var storage = new MultiPropertyStorage(cache);
 
         // Subscribe before dispose so we can observe OnCompleted.
@@ -319,7 +320,7 @@ public class SettingsStorageTests
     [Test]
     public async Task DisposeShouldContinuePastAStreamThatReportsItIsAlreadyDisposed()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var storage = new MultiPropertyStorage(cache);
 
         var alphaTeardownReached = false;
@@ -355,7 +356,7 @@ public class SettingsStorageTests
     internal async Task InitializeShouldMergeLoadersWhenStreamsExist()
     {
         using MultiPropertyStorage storage = new(
-            new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+            new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         // Initialize calls EagerCreateStreams which visits Alpha and Beta,
         // populating _streams via GetOrCreateObservable. The loaders array
@@ -593,7 +594,7 @@ public class SettingsStorageTests
         /// <summary>Calls <c>SetObservable</c> with a null key.</summary>
         /// <param name="value">The value to set.</param>
         /// <returns>The observable (never reached).</returns>
-        public IObservable<Unit> SetWithNullKey(string value) => SetObservable(value, null!);
+        public IObservable<RxVoid> SetWithNullKey(string value) => SetObservable(value, null!);
     }
 
     /// <summary>Storage subclass that calls <c>CreateProperty</c> with a null property name, which triggers the null guard in the constructor.</summary>

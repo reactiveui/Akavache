@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheBaseTargets)</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Akavache.Core.Tests.Parallel.Reactive</AssemblyName>
+    <RootNamespace>Akavache.Reactive.Core.Tests.Parallel</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Akavache.Reactive\Akavache.Reactive.csproj" />
+    <ProjectReference Include="..\..\Akavache.SystemTextJson.Reactive\Akavache.SystemTextJson.Reactive.csproj" />
+  </ItemGroup>
+
+  <!-- The same tests the lean Akavache.Core.Tests.Parallel assembly runs, recompiled here under REACTIVE_SHIM. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core.Tests.Parallel\**\*.cs" Exclude="..\Akavache.Core.Tests.Parallel\obj\**\*.cs;..\Akavache.Core.Tests.Parallel\bin\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\shared\Helpers\*.cs" Link="Helpers\%(Filename)%(Extension)" />
+    <Compile Include="..\shared\Mocks\*.cs" Exclude="..\shared\Mocks\InMemoryAkavacheConnection.cs" Link="Mocks\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Akavache namespaces as global usings; Directory.Build.targets shifts them to Akavache.Reactive.*. -->
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Core.Observables" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
+    <AkavacheInternalUsing Include="Akavache.SystemTextJson" />
+    <AkavacheInternalUsing Include="Akavache.Tests" />
+    <AkavacheInternalUsing Include="Akavache.Tests.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Tests.Mocks" />
+  </ItemGroup>
+
+</Project>

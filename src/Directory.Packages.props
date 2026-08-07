@@ -5,13 +5,14 @@
   </PropertyGroup>
   <!-- Version groups for packages that share the same version -->
   <PropertyGroup>
-    <MicrosoftExtensionsVersion>10.0.8</MicrosoftExtensionsVersion>
-    <SqlitePclRawVersion>3.0.3</SqlitePclRawVersion>
-    <Sqlite3MultipleCiphersVersion>2.3.4</Sqlite3MultipleCiphersVersion>
-    <SplatVersion>19.4.1</SplatVersion>
-    <ReactiveUIVersion>23.2.28</ReactiveUIVersion>
-    <MauiVersion>10.0.70</MauiVersion>
-    <TUnitVersion>1.48.6</TUnitVersion>
+    <MicrosoftExtensionsVersion>10.0.10</MicrosoftExtensionsVersion>
+    <SqlitePclRawVersion>3.0.5</SqlitePclRawVersion>
+    <Sqlite3MultipleCiphersVersion>2.4.0</Sqlite3MultipleCiphersVersion>
+    <SplatVersion>21.0.0</SplatVersion>
+    <ReactiveUIVersion>24.1.0</ReactiveUIVersion>
+    <ReactiveUIPrimitivesVersion>7.1.0</ReactiveUIPrimitivesVersion>
+    <MauiVersion>10.0.90</MauiVersion>
+    <TUnitVersion>1.63.0</TUnitVersion>
     <!-- StyleSharp.Analyzers, PerformanceSharp.Analyzers and SecuritySharp.Analyzers ship from the
          same release pipeline and always share a version. -->
     <RoslynCommonAnalyzersVersion>3.41.7</RoslynCommonAnalyzersVersion>
@@ -22,7 +23,7 @@
     <PackageVersion Include="StyleSharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="PerformanceSharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="SecuritySharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
-    <PackageVersion Include="PublicApiSharp.Analyzers" Version="1.0.7" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.31.0.145097" />
     <PackageVersion Include="Blazor.Common.Analyzers" Version="2.1.0" />
@@ -34,7 +35,6 @@
   <!-- Test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
-    <PackageVersion Include="ReactiveUI.Testing" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="TUnit" Version="$(TUnitVersion)" />
     <PackageVersion Include="TUnit.Core" Version="$(TUnitVersion)" />
     <PackageVersion Include="Verify.TUnit" Version="31.28.0" />
@@ -44,7 +44,10 @@
   <!-- Core library packages -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Splat" Version="$(SplatVersion)" />
     <PackageVersion Include="Splat.Builder" Version="$(SplatVersion)" />
+    <PackageVersion Include="ReactiveUI.Primitives" Version="$(ReactiveUIPrimitivesVersion)" />
+    <PackageVersion Include="ReactiveUI.Primitives.Reactive" Version="$(ReactiveUIPrimitivesVersion)" />
     <PackageVersion Include="System.Reactive" Version="7.0.0" />
     <PackageVersion Include="SQLitePCLRaw.core" Version="$(SqlitePclRawVersion)" />
     <PackageVersion Include="SQLite3MC.PCLRaw.bundle" Version="$(Sqlite3MultipleCiphersVersion)" />
@@ -70,13 +73,16 @@
   </ItemGroup>
   <!-- Sample application packages -->
   <ItemGroup>
-    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="3.1.0" />
+    <PackageVersion Include="DynamicData" Version="9.4.33" />
+    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="3.2.0" />
     <PackageVersion Include="ReactiveUI.WPF" Version="$(ReactiveUIVersion)" />
+    <PackageVersion Include="ReactiveUI.WPF.Reactive" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="ReactiveUI.Maui" Version="$(ReactiveUIVersion)" />
+    <PackageVersion Include="ReactiveUI.Maui.Reactive" Version="$(ReactiveUIVersion)" />
   </ItemGroup>
   <!-- MAUI-specific package -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' OR $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' OR $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst' OR $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">

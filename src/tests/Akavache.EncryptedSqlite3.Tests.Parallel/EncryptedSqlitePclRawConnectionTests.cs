@@ -3,12 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Akavache.EncryptedSqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
 using SQLitePCL;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for <see cref="SqlitePclRawConnection"/> (encrypted variant) covering static helpers and typed query paths.</summary>
 [Category("Akavache")]
@@ -1055,7 +1056,7 @@ public class EncryptedSqlitePclRawConnectionTests
     /// <param name="path">The directory for the database file.</param>
     /// <returns>A new <see cref="EncryptedSqliteBlobCache"/>.</returns>
     private static EncryptedSqliteBlobCache CreateCache(string path) =>
-        new(Path.Combine(path, $"test_{Guid.NewGuid():N}.db"), TestPassword, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        new(Path.Combine(path, $"test_{Guid.NewGuid():N}.db"), TestPassword, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
     /// <summary>Creates the legacy V10 CacheElement table using a direct SQLite connection.</summary>
     /// <param name="dbPath">The database file path.</param>

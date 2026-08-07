@@ -2,15 +2,20 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core.Observables;
-using Akavache.Helpers;
-
 #if ENCRYPTED
 using System.Diagnostics.CodeAnalysis;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.EncryptedSqlite3;
+#else
 namespace Akavache.EncryptedSqlite3;
+#endif
+#else
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Sqlite3;
 #else
 namespace Akavache.Sqlite3;
+#endif
 #endif
 
 /// <summary>
@@ -60,7 +65,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="password">The encryption key (applied via <c>PRAGMA key</c>).</param>
     /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
-    public EncryptedSqliteBlobCache(string fileName, string password, ISerializer serializer, IScheduler scheduler)
+    public EncryptedSqliteBlobCache(string fileName, string password, ISerializer serializer, ISequencer scheduler)
     {
         ArgumentExceptionHelper.ThrowIfNull(fileName);
         ArgumentExceptionHelper.ThrowIfNull(password);
@@ -77,7 +82,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="connection">The database connection abstraction.</param>
     /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
-    public EncryptedSqliteBlobCache(IAkavacheConnection connection, ISerializer serializer, IScheduler scheduler) =>
+    public EncryptedSqliteBlobCache(IAkavacheConnection connection, ISerializer serializer, ISequencer scheduler) =>
         Init(connection, serializer, scheduler);
 #else
     /// <summary>Initializes a new instance of the <see cref="SqliteBlobCache"/> class.</summary>
@@ -93,7 +98,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="fileName">The database file name.</param>
     /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
-    public SqliteBlobCache(string fileName, ISerializer serializer, IScheduler scheduler)
+    public SqliteBlobCache(string fileName, ISerializer serializer, ISequencer scheduler)
     {
         ArgumentExceptionHelper.ThrowIfNull(fileName);
         Init(SqlitePclRawConnection.Create(fileName, password: null, readOnly: false), serializer, scheduler);
@@ -109,7 +114,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="connection">The database connection abstraction.</param>
     /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
-    public SqliteBlobCache(IAkavacheConnection connection, ISerializer serializer, IScheduler scheduler) =>
+    public SqliteBlobCache(IAkavacheConnection connection, ISerializer serializer, ISequencer scheduler) =>
         Init(connection, serializer, scheduler);
 #endif
 
@@ -117,7 +122,7 @@ public class SqliteBlobCache : IBlobCache
     public IAkavacheConnection Connection { get; private set; }
 
     /// <inheritdoc/>
-    public IScheduler Scheduler { get; private set; }
+    public ISequencer Scheduler { get; private set; }
 
     /// <inheritdoc/>
     public DateTimeKind? ForcedDateTimeKind { get; set; }
@@ -133,9 +138,9 @@ public class SqliteBlobCache : IBlobCache
     internal TimeProvider Clock { get; set; } = TimeProvider.System;
 
     /// <inheritdoc/>
-    public IObservable<Unit> Flush() =>
+    public IObservable<RxVoid> Flush() =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName)
 
             // Passive checkpoint nudges data out of the WAL; a failure is non-fatal
             // because the WAL itself is durable.
@@ -144,10 +149,10 @@ public class SqliteBlobCache : IBlobCache
                     .CatchReturnUnit());
 
     /// <inheritdoc/>
-    public IObservable<Unit> Flush(Type type) =>
+    public IObservable<RxVoid> Flush(Type type) =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
-            : Core.CachedObservables.UnitDefault;
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName)
+            : ImmutableReturnRxVoidSignal.Instance;
 
     /// <inheritdoc/>
     public IObservable<byte[]?> Get(string key)
@@ -158,7 +163,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         return string.IsNullOrWhiteSpace(key)
-            ? Observable.Throw<byte[]>(new ArgumentNullException(nameof(key)))
+            ? new ImmediateThrowSignal<byte[]>(new ArgumentNullException(nameof(key)))
             : _initialized.Gate(() => ReadValueWithLegacyFallback(key, type: null));
     }
 
@@ -167,7 +172,7 @@ public class SqliteBlobCache : IBlobCache
     {
         if (keys is null)
         {
-            return Observable.Throw<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(keys)));
+            return new ImmediateThrowSignal<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(keys)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
@@ -190,12 +195,12 @@ public class SqliteBlobCache : IBlobCache
     {
         if (key is null)
         {
-            return Observable.Throw<byte[]>(new ArgumentNullException(nameof(key)));
+            return new ImmediateThrowSignal<byte[]>(new ArgumentNullException(nameof(key)));
         }
 
         if (type is null)
         {
-            return Observable.Throw<byte[]>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<byte[]>(new ArgumentNullException(nameof(type)));
         }
 
         return Volatile.Read(ref _disposed) != 0
@@ -208,12 +213,12 @@ public class SqliteBlobCache : IBlobCache
     {
         if (keys is null)
         {
-            return Observable.Throw<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(keys)));
+            return new ImmediateThrowSignal<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(keys)));
         }
 
         if (type is null)
         {
-            return Observable.Throw<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(type)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
@@ -237,7 +242,7 @@ public class SqliteBlobCache : IBlobCache
     {
         if (type is null)
         {
-            return Observable.Throw<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(type)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
@@ -272,7 +277,7 @@ public class SqliteBlobCache : IBlobCache
     {
         if (type is null)
         {
-            return Observable.Throw<string>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<string>(new ArgumentNullException(nameof(type)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
@@ -291,7 +296,7 @@ public class SqliteBlobCache : IBlobCache
     {
         if (keys is null)
         {
-            return Observable.Throw<(string Key, DateTimeOffset? Time)>(new ArgumentNullException(nameof(keys)));
+            return new ImmediateThrowSignal<(string Key, DateTimeOffset? Time)>(new ArgumentNullException(nameof(keys)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
@@ -314,7 +319,7 @@ public class SqliteBlobCache : IBlobCache
     {
         if (key is null)
         {
-            return Observable.Throw<DateTimeOffset?>(new ArgumentNullException(nameof(key)));
+            return new ImmediateThrowSignal<DateTimeOffset?>(new ArgumentNullException(nameof(key)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
@@ -339,12 +344,12 @@ public class SqliteBlobCache : IBlobCache
     {
         if (type is null)
         {
-            return Observable.Throw<(string Key, DateTimeOffset? Time)>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<(string Key, DateTimeOffset? Time)>(new ArgumentNullException(nameof(type)));
         }
 
         if (keys is null)
         {
-            return Observable.Throw<(string Key, DateTimeOffset? Time)>(new ArgumentNullException(nameof(keys)));
+            return new ImmediateThrowSignal<(string Key, DateTimeOffset? Time)>(new ArgumentNullException(nameof(keys)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
@@ -368,12 +373,12 @@ public class SqliteBlobCache : IBlobCache
     {
         if (type is null)
         {
-            return Observable.Throw<DateTimeOffset?>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<DateTimeOffset?>(new ArgumentNullException(nameof(type)));
         }
 
         if (key is null)
         {
-            return Observable.Throw<DateTimeOffset?>(new ArgumentNullException(nameof(key)));
+            return new ImmediateThrowSignal<DateTimeOffset?>(new ArgumentNullException(nameof(key)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
@@ -391,20 +396,20 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
         Insert(keyValuePairs, (DateTimeOffset?)null);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration)
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration)
     {
         if (keyValuePairs is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keyValuePairs)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(keyValuePairs)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName);
         }
 
         var expiry = absoluteExpiration;
@@ -415,38 +420,38 @@ public class SqliteBlobCache : IBlobCache
             var entries = BuildCacheEntries(keyValuePairs, typeName: null, createdAt, expiry);
             return entries.Count > 0
                 ? Connection.Upsert(entries)
-                : Core.CachedObservables.UnitDefault;
+                : ImmutableReturnRxVoidSignal.Instance;
         });
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data) =>
         Insert(key, data, (DateTimeOffset?)null);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
         Insert([new KeyValuePair<string, byte[]>(key, data)], absoluteExpiration);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
         Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration)
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration)
     {
         if (type is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(type)));
         }
 
         if (keyValuePairs is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keyValuePairs)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(keyValuePairs)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName);
         }
 
         var expiry = absoluteExpiration;
@@ -461,7 +466,7 @@ public class SqliteBlobCache : IBlobCache
             // durable either way. A failed Upsert must reach the caller, or the write is lost
             // while the observable still reports success and the next read comes back empty.
             return entries.Count == 0
-                ? Core.CachedObservables.UnitDefault
+                ? ImmutableReturnRxVoidSignal.Instance
                 : Connection.Upsert(entries)
                     .SelectMany(_ => Connection.Checkpoint(CheckpointMode.Passive)
                         .CatchReturnUnit());
@@ -469,57 +474,57 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
         Insert(key, data, type, (DateTimeOffset?)null);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration)
+    public IObservable<RxVoid> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
-            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
         }
 
         if (data is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(data)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(data)));
         }
 
         return type is null
-            ? Observable.Throw<Unit>(new ArgumentNullException(nameof(type)))
+            ? new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(type)))
             : Insert([new KeyValuePair<string, byte[]>(key, data)], type, absoluteExpiration);
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(string key) =>
+    public IObservable<RxVoid> Invalidate(string key) =>
         string.IsNullOrWhiteSpace(key)
-            ? Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)))
+            ? new ImmediateThrowSignal<RxVoid>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)))
             : Invalidate([key]);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(string key, Type type)
+    public IObservable<RxVoid> Invalidate(string key, Type type)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
-            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
         }
 
         return type is null
-            ? Observable.Throw<Unit>(new ArgumentNullException(nameof(type)))
+            ? new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(type)))
             : Invalidate([key], type);
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(IEnumerable<string> keys)
+    public IObservable<RxVoid> Invalidate(IEnumerable<string> keys)
     {
         if (keys is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(keys)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName);
         }
 
         var keyList = MaterializeKeys(keys);
@@ -527,25 +532,25 @@ public class SqliteBlobCache : IBlobCache
         return _initialized.Gate(() =>
             keyList.Count > 0
                 ? Connection.Invalidate(keyList, typeFullName: null)
-                : Core.CachedObservables.UnitDefault);
+                : ImmutableReturnRxVoidSignal.Instance);
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type)
+    public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type)
     {
         if (type is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(type)));
         }
 
         if (keys is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(keys)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName);
         }
 
         var keyList = MaterializeKeys(keys);
@@ -554,20 +559,20 @@ public class SqliteBlobCache : IBlobCache
         return _initialized.Gate(() =>
             keyList.Count > 0
                 ? Connection.Invalidate(keyList, typeName)
-                : Core.CachedObservables.UnitDefault);
+                : ImmutableReturnRxVoidSignal.Instance);
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> InvalidateAll(Type type)
+    public IObservable<RxVoid> InvalidateAll(Type type)
     {
         if (type is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(type)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName);
         }
 
         var typeName = type.FullName;
@@ -575,28 +580,28 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> InvalidateAll() =>
+    public IObservable<RxVoid> InvalidateAll() =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName)
             : _initialized.Gate(() => Connection.InvalidateAll(typeFullName: null));
 
     /// <inheritdoc/>
-    public IObservable<Unit> Vacuum() =>
+    public IObservable<RxVoid> Vacuum() =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName)
             : _initialized.Gate(Connection.Compact);
 
     /// <inheritdoc/>
-    public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration)
+    public IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
-            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName);
         }
 
         var expiry = absoluteExpiration;
@@ -604,21 +609,21 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration)
+    public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
-            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
         }
 
         if (type is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(type)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName);
         }
 
         var expiry = absoluteExpiration;
@@ -627,16 +632,16 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration)
+    public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration)
     {
         if (keys is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(keys)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName);
         }
 
         var expiry = absoluteExpiration;
@@ -645,10 +650,10 @@ public class SqliteBlobCache : IBlobCache
         {
             if (keyList.Count == 0)
             {
-                return Core.CachedObservables.UnitDefault;
+                return ImmutableReturnRxVoidSignal.Instance;
             }
 
-            var setExpiryOperations = new IObservable<Unit>[keyList.Count];
+            var setExpiryOperations = new IObservable<RxVoid>[keyList.Count];
             for (var i = 0; i < keyList.Count; i++)
             {
                 setExpiryOperations[i] = Connection.SetExpiry(keyList[i], typeFullName: null, expiry);
@@ -659,21 +664,21 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration)
+    public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration)
     {
         if (keys is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(keys)));
         }
 
         if (type is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
+            return new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(type)));
         }
 
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(ClassName);
         }
 
         var expiry = absoluteExpiration;
@@ -683,10 +688,10 @@ public class SqliteBlobCache : IBlobCache
         {
             if (keyList.Count == 0)
             {
-                return Core.CachedObservables.UnitDefault;
+                return ImmutableReturnRxVoidSignal.Instance;
             }
 
-            var setExpiryOperations = new IObservable<Unit>[keyList.Count];
+            var setExpiryOperations = new IObservable<RxVoid>[keyList.Count];
             for (var i = 0; i < keyList.Count; i++)
             {
                 setExpiryOperations[i] = Connection.SetExpiry(keyList[i], typeName, expiry);
@@ -722,7 +727,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="connection">The Akavache SQLite connection.</param>
     /// <param name="gate">The initialization signal.</param>
     /// <param name="scheduler">The scheduler.</param>
-    internal static void InitializeDatabase(IAkavacheConnection connection, InitSignal gate, IScheduler scheduler) =>
+    internal static void InitializeDatabase(IAkavacheConnection connection, InitSignal gate, ISequencer scheduler) =>
         connection.CreateSchema()
             .SubscribeOn(scheduler)
             .Subscribe(
@@ -784,7 +789,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler, or <see langword="null"/> for the default task-pool scheduler.</param>
     [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(Connection), nameof(Serializer), nameof(Scheduler))]
-    internal void Init(IAkavacheConnection connection, ISerializer serializer, IScheduler? scheduler)
+    internal void Init(IAkavacheConnection connection, ISerializer serializer, ISequencer? scheduler)
     {
         ArgumentExceptionHelper.ThrowIfNull(connection);
         ArgumentExceptionHelper.ThrowIfNull(serializer);
@@ -799,10 +804,10 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="data">The byte data to encrypt.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>A Future result representing the encrypted data.</returns>
-    protected internal virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler) =>
+    protected internal virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, ISequencer scheduler) =>
         Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache")
-            : Observable.Return(data, scheduler);
+            : Signal.Return(data, scheduler);
 
     /// <summary>Releases the resources used by the instance.</summary>
     /// <param name="isDisposing">true to release managed resources.</param>

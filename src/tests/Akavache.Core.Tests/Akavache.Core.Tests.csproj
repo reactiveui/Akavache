@@ -24,4 +24,20 @@
     <Compile Include="..\shared\Helpers\*.cs" Link="Helpers\%(Filename)%(Extension)" />
     <Compile Include="..\shared\Mocks\*.cs" Exclude="..\shared\Mocks\InMemoryAkavacheConnection.cs" Link="Mocks\%(Filename)%(Extension)" />
   </ItemGroup>
+
+  <!-- Akavache namespaces as global usings; Directory.Build.targets shifts them for the .Reactive twin. -->
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Core.Observables" />
+    <AkavacheInternalUsing Include="Akavache.Core.Tests" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
+    <AkavacheInternalUsing Include="Akavache.SystemTextJson" />
+    <AkavacheInternalUsing Include="Akavache.Tests" />
+    <AkavacheInternalUsing Include="Akavache.Tests.Executors" />
+    <AkavacheInternalUsing Include="Akavache.Tests.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Tests.Mocks" />
+  </ItemGroup>
+
 </Project>

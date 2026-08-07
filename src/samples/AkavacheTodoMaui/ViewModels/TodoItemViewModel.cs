@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Disposables.Fluent;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
 using AkavacheTodoMaui.Views;
@@ -105,16 +104,16 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     public bool IsDueSoon => _isDueSoon.Value;
 
     /// <summary>Gets the command to toggle completion status.</summary>
-    public ReactiveCommand<Unit, Unit> ToggleCompletedCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ToggleCompletedCommand { get; }
 
     /// <summary>Gets the command to delete the todo.</summary>
-    public ReactiveCommand<Unit, Unit> DeleteCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> DeleteCommand { get; }
 
     /// <summary>Gets the command to edit the todo.</summary>
-    public ReactiveCommand<Unit, Unit> EditCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> EditCommand { get; }
 
     /// <summary>Gets the command to schedule a reminder.</summary>
-    public ReactiveCommand<Unit, Unit> ScheduleReminderCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ScheduleReminderCommand { get; }
 
     /// <summary>Gets the background color based on todo status.</summary>
     public string BackgroundColor
@@ -171,8 +170,10 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// <returns>An observable that completes when the toggle has been persisted.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private IObservable<Unit> ExecuteToggleCompleted() =>
-        Observable.FromAsync(async () => await MainThread.InvokeOnMainThreadAsync(() =>
+    private IObservable<RxVoid> ExecuteToggleCompleted() =>
+        Signal.FromAsync(async () =>
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 TodoItem.IsCompleted = !TodoItem.IsCompleted;
 
@@ -186,7 +187,9 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
                 // Refresh time-based properties
                 TodoItem.RefreshTimeBasedProperties();
-            }))
+            });
+            return RxVoid.Default;
+        })
         .SelectMany(_ => SaveTodoItem())
         .SelectMany(_ => TodoCacheService.InvalidateTodo(TodoItem.Id))
         .Do(_ =>
@@ -198,21 +201,22 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     /// <summary>Command handler that deletes the todo and invalidates its cache entry.</summary>
     /// <returns>An observable that completes when the delete is done.</returns>
-    private IObservable<Unit> ExecuteDelete() =>
-        Observable.FromAsync(async () =>
+    private IObservable<RxVoid> ExecuteDelete() =>
+        Signal.FromAsync(async () =>
         {
             // Remove from parent collection first
             await MainThread.InvokeOnMainThreadAsync(() => DeleteAction?.Invoke(this));
 
             // Then invalidate cache
             await TodoCacheService.InvalidateTodo(TodoItem.Id);
+            return RxVoid.Default;
         });
 
     /// <summary>Command handler that navigates to the edit page for this todo.</summary>
     /// <returns>Unit default value.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private Unit ExecuteEdit()
+    private RxVoid ExecuteEdit()
     {
         // Navigate to edit page for MAUI
         EditTodoViewModel editViewModel = new(TodoItem);
@@ -252,18 +256,18 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
         // Navigate to the edit page
         Application.Current!.Windows[0].Page?.Navigation.PushAsync(editPage);
-        return Unit.Default;
+        return RxVoid.Default;
     }
 
     /// <summary>Command handler that schedules a reminder for this todo.</summary>
     /// <returns>An observable that completes when scheduling is done.</returns>
-    private IObservable<Unit> ExecuteScheduleReminder() => !TodoItem.DueDate.HasValue
-        ? Observable.Return(Unit.Default)
+    private IObservable<RxVoid> ExecuteScheduleReminder() => !TodoItem.DueDate.HasValue
+        ? Signal.Return(RxVoid.Default)
         : _notificationService.ScheduleReminder(TodoItem);
 
     /// <summary>Persists the current todo item by merging it into the cached todo list.</summary>
     /// <returns>An observable that completes when the save is done.</returns>
-    private IObservable<Unit> SaveTodoItem() =>
+    private IObservable<RxVoid> SaveTodoItem() =>
         TodoCacheService.GetAllTodos()
             .Take(1)
             .SelectMany(todos =>

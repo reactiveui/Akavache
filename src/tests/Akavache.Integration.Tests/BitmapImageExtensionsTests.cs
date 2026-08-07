@@ -3,12 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Akavache.Drawing;
-using Akavache.SystemTextJson;
-using Akavache.Tests;
 using Splat;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for Akavache.Drawing BitmapImageExtensions functionality.</summary>
 [Category("Akavache")]
@@ -238,7 +239,7 @@ public class BitmapImageExtensionsTests
     public async Task SaveImageShouldThrowArgumentNullExceptionWhenImageIsNull()
     {
         // Arrange
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         IBitmap? nullBitmap = null;
 
         // Act & Assert
@@ -318,7 +319,7 @@ public class BitmapImageExtensionsTests
     public async Task LoadImageShouldHandleMissingKeysCorrectly()
     {
         // Arrange
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         // Act & Assert
         var error = cache.LoadImage("nonexistent_key").SubscribeGetError();
@@ -331,13 +332,13 @@ public class BitmapImageExtensionsTests
     public async Task SaveImageAndLoadImageShouldWorkTogether()
     {
         // Arrange
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         MockBitmap mockBitmap = new();
         const string key = "test_image";
 
         // Act - Save image (should serialize the bitmap data)
         cache.SaveImage(key, mockBitmap)
-            .SubscribeAndComplete();
+            .WaitForCompletion();
 
         // Act - Load image (should deserialize and recreate bitmap)
         var loadedBitmap = cache.LoadImage(key)
@@ -415,7 +416,7 @@ public class BitmapImageExtensionsTests
     public async Task LoadImageWithDimensionsShouldAcceptParameters()
     {
         // Arrange
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
@@ -426,7 +427,7 @@ public class BitmapImageExtensionsTests
 
         // Insert valid image data
         cache.Insert(key, validImageData)
-            .SubscribeAndComplete();
+            .WaitForCompletion();
 
         // Act - Load with dimensions
         var loadedBitmap = cache.LoadImage(key, DesiredWidthPixels, DesiredHeightPixels)
@@ -442,7 +443,7 @@ public class BitmapImageExtensionsTests
     public async Task SaveImageWithExpirationShouldWork()
     {
         // Arrange
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         MockBitmap mockBitmap = new();
         const string key = "expiring_image";
         var expiration = TimeProvider.System.GetLocalNow().AddMinutes(ImageExpirationMinutes);
@@ -464,12 +465,12 @@ public class BitmapImageExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageFromUrlStringShouldReturnBitmapFromCachedData()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string url = "http://example.com/cached_string_url.png";
         var imageData = CreateValidImageBytes();
 
         // Seed cache with the URL as the key — DownloadUrl(string url) uses `url` as key.
-        cache.Insert(url, imageData).SubscribeAndComplete();
+        cache.Insert(url, imageData).WaitForCompletion();
 
         var loaded = cache.LoadImageFromUrl(url).SubscribeGetValue();
 
@@ -481,12 +482,12 @@ public class BitmapImageExtensionsTests
     [Test]
     public async Task LoadImageFromUrlUriShouldReturnBitmapFromCachedData()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         Uri uri = new("http://example.com/cached_uri.png");
         var imageData = CreateValidImageBytes();
 
         // HttpService.DownloadUrl(Uri) uses url.ToString() as the cache key.
-        cache.Insert(uri.ToString(), imageData).SubscribeAndComplete();
+        cache.Insert(uri.ToString(), imageData).WaitForCompletion();
 
         var loaded = cache.LoadImageFromUrl(uri).SubscribeGetValue();
 
@@ -505,12 +506,12 @@ public class BitmapImageExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageFromUrlWithKeyAndStringShouldReturnBitmapFromCachedData()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string key = "custom_key_string";
         const string url = "http://example.com/keyed_string_url.png";
         var imageData = CreateValidImageBytes();
 
-        cache.Insert(key, imageData).SubscribeAndComplete();
+        cache.Insert(key, imageData).WaitForCompletion();
 
         var loaded = cache.LoadImageFromUrl(key, url).SubscribeGetValue();
 
@@ -525,12 +526,12 @@ public class BitmapImageExtensionsTests
     [Test]
     public async Task LoadImageFromUrlWithKeyAndUriShouldReturnBitmapFromCachedData()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string key = "custom_key_uri";
         Uri uri = new("http://example.com/keyed_uri.png");
         var imageData = CreateValidImageBytes();
 
-        cache.Insert(key, imageData).SubscribeAndComplete();
+        cache.Insert(key, imageData).WaitForCompletion();
 
         var loaded = cache.LoadImageFromUrl(key, uri).SubscribeGetValue();
 
@@ -549,11 +550,11 @@ public class BitmapImageExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageFromUrlWithDimensionsShouldPassThroughToLoader()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string url = "http://example.com/dimensioned.png";
         var imageData = CreateValidImageBytes();
 
-        cache.Insert(url, imageData).SubscribeAndComplete();
+        cache.Insert(url, imageData).WaitForCompletion();
 
         var loaded = cache.LoadImageFromUrl(url, fetchAlways: false, desiredWidth: 320F, desiredHeight: 240F)
             .SubscribeGetValue();
@@ -569,10 +570,10 @@ public class BitmapImageExtensionsTests
         // Swap in a loader that returns null for Load so the null-coalescing throw fires.
         BitmapLoader.Current = new NullReturningBitmapLoader();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string key = "null_bitmap_key";
 
-        cache.Insert(key, CreateValidImageBytes()).SubscribeAndComplete();
+        cache.Insert(key, CreateValidImageBytes()).WaitForCompletion();
 
         var error = cache.LoadImage(key).SubscribeGetError();
         await Assert.That(error).IsTypeOf<IOException>();
@@ -730,9 +731,9 @@ public class BitmapImageExtensionsTests
     [Test]
     public async Task LoadImageAtWidthShouldDecodeCachedBytesAtNativeHeight()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string key = "width_only_image";
-        cache.Insert(key, CreateValidImageBytes()).SubscribeAndComplete();
+        cache.Insert(key, CreateValidImageBytes()).WaitForCompletion();
 
         CapturingBitmapLoader loader = new();
         BitmapLoader.Current = loader;
@@ -1071,10 +1072,10 @@ public class BitmapImageExtensionsTests
     /// <returns>The fixture owning the cache, the HTTP service and the loader.</returns>
     private static ImageLoadFixture CreateSeededImageFixture(string key)
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         CacheBackedHttpService httpService = new();
         cache.SetHttpService(httpService);
-        cache.Insert(key, CreateValidImageBytes()).SubscribeAndComplete();
+        cache.Insert(key, CreateValidImageBytes()).WaitForCompletion();
 
         CapturingBitmapLoader loader = new();
         BitmapLoader.Current = loader;

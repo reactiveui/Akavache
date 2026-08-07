@@ -4,11 +4,12 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Threading.Tasks;
-using Akavache.Core.Observables;
-using Akavache.Helpers;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core;
+#else
 namespace Akavache.Core;
+#endif
 
 /// <summary>
 /// Universal serializer compatibility utilities that enable cross-serializer functionality.
@@ -219,7 +220,7 @@ public static class UniversalSerializer
     {
         if (cache is null || string.IsNullOrEmpty(requestedKey) || primarySerializer is null)
         {
-            return Observable.Return<T?>(default);
+            return Signal.Return<T?>(default);
         }
 
         return cache.GetAllKeys()
@@ -228,7 +229,7 @@ public static class UniversalSerializer
             {
                 if (allKeys.Count == 0)
                 {
-                    return Observable.Return<T?>(default);
+                    return Signal.Return<T?>(default);
                 }
 
                 var candidates = FindKeyCandidates<T>(allKeys, requestedKey);
@@ -240,7 +241,7 @@ public static class UniversalSerializer
                     static value => value is not null && !EqualityComparer<T>.Default.Equals(value, default!),
                     default);
             })
-            .Catch<T?, Exception>(static _ => Observable.Return<T?>(default));
+            .Catch<T?, Exception>(static _ => Signal.Return<T?>(default));
     }
 
     /// <summary>Registers a serializer factory for use as a fallback when the primary serializer fails.</summary>

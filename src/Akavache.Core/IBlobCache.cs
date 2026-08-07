@@ -4,7 +4,11 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>IBlobCache is the core database interface, it is an interface describing an asynchronous persistent key-value store.</summary>
 public interface IBlobCache : IDisposable
@@ -16,7 +20,7 @@ public interface IBlobCache : IDisposable
     ISerializer Serializer { get; }
 
     /// <summary>Gets the IScheduler used to defer operations. By default, this is BlobCache.TaskpoolScheduler.</summary>
-    IScheduler Scheduler { get; }
+    ISequencer Scheduler { get; }
 
     /// <summary>Gets or sets the DateTimeKind handling for BSON readers to be forced.</summary>
     /// <remarks>
@@ -31,19 +35,19 @@ public interface IBlobCache : IDisposable
     /// <summary>Inserts the specified key/value pairs into the blob.</summary>
     /// <param name="keyValuePairs">The key/value to insert.</param>
     /// <returns>A observable which signals when complete.</returns>
-    IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs);
+    IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs);
 
     /// <summary>Inserts the specified key/value pairs into the blob.</summary>
     /// <param name="keyValuePairs">The key/value to insert.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A observable which signals when complete.</returns>
-    IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration);
+    IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration);
 
     /// <summary>Insert a blob into the cache with the specified key and expiration date.</summary>
     /// <param name="key">The key to use for the data.</param>
     /// <param name="data">The data to save in the cache.</param>
     /// <returns>A signal to indicate when the key has been inserted.</returns>
-    IObservable<Unit> Insert(string key, byte[] data);
+    IObservable<RxVoid> Insert(string key, byte[] data);
 
     /// <summary>Insert a blob into the cache with the specified key and expiration date.</summary>
     /// <param name="key">The key to use for the data.</param>
@@ -51,27 +55,27 @@ public interface IBlobCache : IDisposable
     /// <param name="absoluteExpiration">An optional expiration date.
     /// After the specified date, the key-value pair should be removed.</param>
     /// <returns>A signal to indicate when the key has been inserted.</returns>
-    IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration);
+    IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration);
 
     /// <summary>Inserts the specified key/value pairs into the blob.</summary>
     /// <param name="keyValuePairs">The key/value to insert.</param>
     /// <param name="type">The type.</param>
     /// <returns>A observable which signals when complete.</returns>
-    IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type);
+    IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type);
 
     /// <summary>Inserts the specified key/value pairs into the blob.</summary>
     /// <param name="keyValuePairs">The key/value to insert.</param>
     /// <param name="type">The type.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A observable which signals when complete.</returns>
-    IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration);
+    IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration);
 
     /// <summary>Insert a blob into the cache with the specified key and expiration date.</summary>
     /// <param name="key">The key to use for the data.</param>
     /// <param name="data">The data to save in the cache.</param>
     /// <param name="type">The type.</param>
     /// <returns>A signal to indicate when the key has been inserted.</returns>
-    IObservable<Unit> Insert(string key, byte[] data, Type type);
+    IObservable<RxVoid> Insert(string key, byte[] data, Type type);
 
     /// <summary>Insert a blob into the cache with the specified key and expiration date.</summary>
     /// <param name="key">The key to use for the data.</param>
@@ -80,7 +84,7 @@ public interface IBlobCache : IDisposable
     /// <param name="absoluteExpiration">An optional expiration date.
     /// After the specified date, the key-value pair should be removed.</param>
     /// <returns>A signal to indicate when the key has been inserted.</returns>
-    IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration);
+    IObservable<RxVoid> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration);
 
     /// <summary>
     /// Retrieve a value from the key-value cache. If the key is not in
@@ -158,12 +162,12 @@ public interface IBlobCache : IDisposable
 
     /// <summary>This method guarantees that all in-flight inserts have completed and any indexes have been written to disk.</summary>
     /// <returns>A signal indicating when the flush is complete.</returns>
-    IObservable<Unit> Flush();
+    IObservable<RxVoid> Flush();
 
     /// <summary>This method guarantees that all in-flight inserts have completed and any indexes have been written to disk.</summary>
     /// <param name="type">The type.</param>
     /// <returns>A signal indicating when the flush is complete.</returns>
-    IObservable<Unit> Flush(Type type);
+    IObservable<RxVoid> Flush(Type type);
 
     /// <summary>
     /// Remove a key from the cache. If the key doesn't exist, this method
@@ -171,7 +175,7 @@ public interface IBlobCache : IDisposable
     /// </summary>
     /// <param name="key">The key to remove from the cache.</param>
     /// <returns>A signal indicating when the invalidate is complete.</returns>
-    IObservable<Unit> Invalidate(string key);
+    IObservable<RxVoid> Invalidate(string key);
 
     /// <summary>
     /// Remove a key from the cache. If the key doesn't exist, this method
@@ -180,23 +184,23 @@ public interface IBlobCache : IDisposable
     /// <param name="key">The key to remove from the cache.</param>
     /// <param name="type">The type.</param>
     /// <returns>A signal indicating when the invalidate is complete.</returns>
-    IObservable<Unit> Invalidate(string key, Type type);
+    IObservable<RxVoid> Invalidate(string key, Type type);
 
     /// <summary>Invalidates all the entries at the specified keys, causing them in future to have to be re-fetched.</summary>
     /// <param name="keys">The keys to invalid.</param>
     /// <returns>A observable which signals when complete.</returns>
-    IObservable<Unit> Invalidate(IEnumerable<string> keys);
+    IObservable<RxVoid> Invalidate(IEnumerable<string> keys);
 
     /// <summary>Invalidates all the entries at the specified keys, causing them in future to have to be re-fetched.</summary>
     /// <param name="keys">The keys to invalid.</param>
     /// <param name="type">The type to invalidate.</param>
     /// <returns>A observable which signals when complete.</returns>
-    IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type);
+    IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type);
 
     /// <summary>Invalidates all entries for the specified type.</summary>
     /// <param name="type">The type to invalidate.</param>
     /// <returns>A signal indicating when the invalidate is complete.</returns>
-    IObservable<Unit> InvalidateAll(Type type);
+    IObservable<RxVoid> InvalidateAll(Type type);
 
     /// <summary>
     /// Invalidate all entries in the cache (i.e. clear it). Note that
@@ -204,7 +208,7 @@ public interface IBlobCache : IDisposable
     /// penalty if used while the cache is being used on other threads.
     /// </summary>
     /// <returns>A signal indicating when the invalidate is complete.</returns>
-    IObservable<Unit> InvalidateAll();
+    IObservable<RxVoid> InvalidateAll();
 
     /// <summary>
     /// This method eagerly removes all expired keys from the blob cache, as
@@ -212,7 +216,7 @@ public interface IBlobCache : IDisposable
     /// it does a Vacuum).
     /// </summary>
     /// <returns>A signal indicating when the operation is complete.</returns>
-    IObservable<Unit> Vacuum();
+    IObservable<RxVoid> Vacuum();
 
     /// <summary>
     /// Updates the expiration date for an existing cache entry without reading or writing the cached data.
@@ -221,7 +225,7 @@ public interface IBlobCache : IDisposable
     /// <param name="key">The key of the cache entry to update.</param>
     /// <param name="absoluteExpiration">The new expiration date. Pass null for no expiration.</param>
     /// <returns>A signal indicating when the operation is complete.</returns>
-    IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration);
+    IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration);
 
     /// <summary>
     /// Updates the expiration date for an existing cache entry without reading or writing the cached data.
@@ -231,7 +235,7 @@ public interface IBlobCache : IDisposable
     /// <param name="type">The type of the cached object.</param>
     /// <param name="absoluteExpiration">The new expiration date. Pass null for no expiration.</param>
     /// <returns>A signal indicating when the operation is complete.</returns>
-    IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration);
+    IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration);
 
     /// <summary>
     /// Updates the expiration date for multiple existing cache entries without reading or writing the cached data.
@@ -240,7 +244,7 @@ public interface IBlobCache : IDisposable
     /// <param name="keys">The keys of the cache entries to update.</param>
     /// <param name="absoluteExpiration">The new expiration date. Pass null for no expiration.</param>
     /// <returns>A signal indicating when the operation is complete.</returns>
-    IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration);
+    IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration);
 
     /// <summary>
     /// Updates the expiration date for multiple existing cache entries without reading or writing the cached data.
@@ -250,7 +254,7 @@ public interface IBlobCache : IDisposable
     /// <param name="type">The type of the cached objects.</param>
     /// <param name="absoluteExpiration">The new expiration date. Pass null for no expiration.</param>
     /// <returns>A signal indicating when the operation is complete.</returns>
-    IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration);
+    IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration);
 
     /// <summary>Exception helpers for implementers of the class.</summary>
     public static class ExceptionHelpers
@@ -276,8 +280,7 @@ public interface IBlobCache : IDisposable
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
         public static IObservable<T> ObservableThrowKeyNotFoundException<T>(string key, Exception? innerException) =>
-            Observable.Throw<T>(
-                new KeyNotFoundException($"The given key '{key}' was not present in the cache.", innerException));
+            new ImmediateThrowSignal<T>(new KeyNotFoundException($"The given key '{key}' was not present in the cache.", innerException));
 
         /// <summary>Throws an exception that the object is disposed.</summary>
         /// <typeparam name="T">The type of value.</typeparam>
@@ -300,7 +303,6 @@ public interface IBlobCache : IDisposable
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
         public static IObservable<T> ObservableThrowObjectDisposedException<T>(string obj, Exception? innerException) =>
-            Observable.Throw<T>(
-                new ObjectDisposedException($"The cache '{obj}' was disposed.", innerException));
+            new ImmediateThrowSignal<T>(new ObjectDisposedException($"The cache '{obj}' was disposed.", innerException));
     }
 }

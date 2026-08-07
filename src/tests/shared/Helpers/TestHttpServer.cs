@@ -5,7 +5,11 @@
 using System.Net;
 using System.Net.Sockets;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests.Helpers;
+#else
 namespace Akavache.Tests.Helpers;
+#endif
 
 /// <summary>
 /// A simple local HTTP server for testing HTTP functionality without external

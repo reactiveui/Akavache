@@ -50,6 +50,17 @@
     <Project Path="tests/Akavache.Integration.Tests/Akavache.Integration.Tests.csproj" />
     <Project Path="tests/Akavache.HttpDownloader.Tests/Akavache.HttpDownloader.Tests.csproj" />
     <Project Path="tests/Akavache.Integration.Tests.Parallel/Akavache.Integration.Tests.Parallel.csproj" />
+    <Project Path="tests/Akavache.Core.Tests.Reactive/Akavache.Core.Tests.Reactive.csproj" />
+    <Project Path="tests/Akavache.Core.Tests.Parallel.Reactive/Akavache.Core.Tests.Parallel.Reactive.csproj" />
+    <Project Path="tests/Akavache.EncryptedSqlite3.Tests.Reactive/Akavache.EncryptedSqlite3.Tests.Reactive.csproj" />
+    <Project Path="tests/Akavache.EncryptedSqlite3.Tests.Parallel.Reactive/Akavache.EncryptedSqlite3.Tests.Parallel.Reactive.csproj" />
+    <Project Path="tests/Akavache.Settings.Tests.Reactive/Akavache.Settings.Tests.Reactive.csproj" />
+    <Project Path="tests/Akavache.Settings.Tests.Parallel.Reactive/Akavache.Settings.Tests.Parallel.Reactive.csproj" />
+    <Project Path="tests/Akavache.Sqlite3.Tests.Reactive/Akavache.Sqlite3.Tests.Reactive.csproj" />
+    <Project Path="tests/Akavache.Sqlite3.Tests.Parallel.Reactive/Akavache.Sqlite3.Tests.Parallel.Reactive.csproj" />
+    <Project Path="tests/Akavache.Integration.Tests.Reactive/Akavache.Integration.Tests.Reactive.csproj" />
+    <Project Path="tests/Akavache.HttpDownloader.Tests.Reactive/Akavache.HttpDownloader.Tests.Reactive.csproj" />
+    <Project Path="tests/Akavache.Integration.Tests.Parallel.Reactive/Akavache.Integration.Tests.Parallel.Reactive.csproj" />
   </Folder>
   <Project Path="Akavache.Core/Akavache.csproj" />
   <Project Path="Akavache.HttpDownloader/Akavache.HttpDownloader.csproj" />
@@ -61,4 +72,14 @@
   <Project Path="Akavache.SystemTextJson/Akavache.SystemTextJson.csproj" />
   <Project Path="Akavache.SystemTextJson.Bson/Akavache.SystemTextJson.Bson.csproj" />
   <Project Path="Akavache.V10toV11/Akavache.V10toV11.csproj" />
+  <Project Path="Akavache.Reactive/Akavache.Reactive.csproj" />
+  <Project Path="Akavache.HttpDownloader.Reactive/Akavache.HttpDownloader.Reactive.csproj" />
+  <Project Path="Akavache.Drawing.Reactive/Akavache.Drawing.Reactive.csproj" />
+  <Project Path="Akavache.EncryptedSqlite3.Reactive/Akavache.EncryptedSqlite3.Reactive.csproj" />
+  <Project Path="Akavache.NewtonsoftJson.Reactive/Akavache.NewtonsoftJson.Reactive.csproj" />
+  <Project Path="Akavache.Settings.Reactive/Akavache.Settings.Reactive.csproj" />
+  <Project Path="Akavache.Sqlite3.Reactive/Akavache.Sqlite3.Reactive.csproj" />
+  <Project Path="Akavache.SystemTextJson.Reactive/Akavache.SystemTextJson.Reactive.csproj" />
+  <Project Path="Akavache.SystemTextJson.Bson.Reactive/Akavache.SystemTextJson.Bson.Reactive.csproj" />
+  <Project Path="Akavache.V10toV11.Reactive/Akavache.V10toV11.Reactive.csproj" />
 </Solution>

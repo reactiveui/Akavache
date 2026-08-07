@@ -83,8 +83,8 @@ public class SqliteBackendBenchmarks : IDisposable
         }
 
         // Pre-populate so the Read/Invalidate benchmarks have something to chew on.
-        _ = _plain.Insert(_bulkPayload).FirstAsync().GetAwaiter().GetResult();
-        _ = _encrypted.Insert(_bulkPayload).FirstAsync().GetAwaiter().GetResult();
+        _plain.Insert(_bulkPayload).WaitForCompletion();
+        _encrypted.Insert(_bulkPayload).WaitForCompletion();
     }
 
     /// <summary> Closes both backends and removes the temp directory their databases live in. </summary>

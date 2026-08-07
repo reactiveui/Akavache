@@ -2,13 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.NewtonsoftJson;
-using Akavache.Settings.Core;
-using Akavache.Sqlite3;
-using Akavache.Tests;
 using Splat.Builder;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests;
+#else
 namespace Akavache.Settings.Tests;
+#endif
 
 /// <summary>
 /// Tests for SettingsBase fallback logic when no explicit cache is configured.
@@ -125,9 +125,9 @@ public class SettingsBaseFallbackTests
             // Create the first settings instance.
             var settings1 = instance!.GetSettingsStore<TestSettings>(
                 overrideDatabaseName: databaseName,
-                scheduler: ImmediateScheduler.Instance);
+                scheduler: ImmediateSequencer.Instance);
             settings1.Initialize().WaitForCompletion();
-            settings1.TestValue.Set(expectedValue).SubscribeAndComplete();
+            settings1.TestValue.Set(expectedValue).WaitForCompletion();
 
             // Verify the value was set.
             await Assert.That((int)settings1.TestValue).IsEqualTo(expectedValue);
@@ -138,7 +138,7 @@ public class SettingsBaseFallbackTests
             // Create a second instance and verify the value persisted.
             var settings2 = instance!.GetSettingsStore<TestSettings>(
                 overrideDatabaseName: databaseName,
-                scheduler: ImmediateScheduler.Instance);
+                scheduler: ImmediateSequencer.Instance);
             settings2.Initialize().WaitForCompletion();
 
             await Assert.That((int)settings2.TestValue).IsEqualTo(expectedValue);
@@ -148,7 +148,7 @@ public class SettingsBaseFallbackTests
         finally
         {
             instance?.DisposeSettingsStore<TestSettings>(databaseName).WaitForCompletion();
-            CacheDatabase.ResetForTests().SubscribeAndComplete();
+            CacheDatabase.ResetForTests().WaitForCompletion();
         }
 
         await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);

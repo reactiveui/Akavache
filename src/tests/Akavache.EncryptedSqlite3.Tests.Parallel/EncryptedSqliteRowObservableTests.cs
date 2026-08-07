@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.EncryptedSqlite3;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests for <see cref="SqliteRowObservable{T}"/> (encrypted variant) covering state
@@ -25,7 +27,7 @@ public class EncryptedSqliteRowObservableTests
         var values = new List<int>();
         var completed = false;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             () => completed = true));
@@ -47,7 +49,7 @@ public class EncryptedSqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var completedCount = 0;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             static _ => { },
             () => completedCount++));
@@ -66,7 +68,7 @@ public class EncryptedSqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         Exception? caught = null;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -86,7 +88,7 @@ public class EncryptedSqliteRowObservableTests
         var completed = false;
         Exception? caught = null;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             () => completed = true));
@@ -109,7 +111,7 @@ public class EncryptedSqliteRowObservableTests
         var completed = false;
         var values = new List<int>();
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             () => completed = true));
@@ -132,7 +134,7 @@ public class EncryptedSqliteRowObservableTests
         var completed = false;
         Exception? caught = null;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             () => completed = true));
@@ -148,7 +150,7 @@ public class EncryptedSqliteRowObservableTests
     {
         var sut = new SqliteRowObservable<int>();
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             static _ => { },
             static () => { }));
@@ -156,7 +158,7 @@ public class EncryptedSqliteRowObservableTests
         await Assert.ThrowsAsync<InvalidOperationException>(
             () =>
             {
-                _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+                _ = sut.Subscribe(Witness.Create<int>(
                     static _ => { },
                     static _ => { },
                     static () => { }));
@@ -184,7 +186,7 @@ public class EncryptedSqliteRowObservableTests
     {
         var sut = new SqliteRowObservable<int>();
 
-        var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        var subscription = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             static _ => { },
             static () => { }));
@@ -203,7 +205,7 @@ public class EncryptedSqliteRowObservableTests
     {
         var sut = new SqliteRowObservable<int>();
 
-        var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        var subscription = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             static _ => { },
             static () => { }));
@@ -225,7 +227,7 @@ public class EncryptedSqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var values = new List<int>();
 
-        var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        var subscription = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             static () => { }));
@@ -257,7 +259,7 @@ public class EncryptedSqliteRowObservableTests
         var values = new List<int>();
         var completed = false;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             () => completed = true));
@@ -281,7 +283,7 @@ public class EncryptedSqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
 
         var values = new List<int>();
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             static () => { }));
@@ -301,7 +303,7 @@ public class EncryptedSqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var errorCount = 0;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             _ => errorCount++,
             static () => { }));
@@ -323,7 +325,7 @@ public class EncryptedSqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var values = new List<int>();
 
-        var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        var subscription = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             static () => { }));
@@ -359,7 +361,7 @@ public class EncryptedSqliteRowObservableTests
         var values = new List<int>();
         var completed = false;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             () => completed = true));
@@ -403,7 +405,7 @@ public class EncryptedSqliteRowObservableTests
         var values = new List<int>();
         var completed = false;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             () => completed = true));
@@ -427,7 +429,7 @@ public class EncryptedSqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var values = new List<int>();
 
-        var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        var subscription = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             static () => { }));

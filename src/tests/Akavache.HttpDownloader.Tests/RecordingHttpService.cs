@@ -4,7 +4,11 @@
 
 using System.Net;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>
 /// An <see cref="HttpService"/> that answers every request from memory instead of the network and
@@ -47,7 +51,7 @@ internal sealed class RecordingHttpService : HttpService
         string? content,
         int retries,
         TimeSpan? timeout) =>
-        Observable.Defer(() => Observable.Return(Issue(uri, method, headers, content, retries, timeout)));
+        Signal.Defer(() => Signal.Return(Issue(uri, method, headers, content, retries, timeout)));
 
     /// <inheritdoc/>
     protected override void Dispose(bool isDisposing)

@@ -4,7 +4,11 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Helpers;
+#else
 namespace Akavache.Helpers;
+#endif
 
 /// <summary>Thread safe interlocked dispose helper.</summary>
 [ExcludeFromCodeCoverage]

@@ -6,7 +6,11 @@
 using System.Net.Http;
 #endif
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>
 /// Provides extension methods for downloading data from URLs with expiration based on relative time intervals from the current time.

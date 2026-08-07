@@ -30,7 +30,7 @@ public class NotificationService : ReactiveObject, IDisposable
     private const int ReminderWindowLifetimeSeconds = 5;
 
     /// <summary>Subject used to publish reminder notifications.</summary>
-    private readonly Subject<TodoItem> _reminderSubject = new();
+    private readonly Signal<TodoItem> _reminderSubject = new();
 
     /// <summary>Backing field for <see cref="CacheInfo"/>.</summary>
     private readonly ObservableAsPropertyHelper<CacheInfo> _cacheInfo;
@@ -55,7 +55,7 @@ public class NotificationService : ReactiveObject, IDisposable
         _reminderTimer = new(_ => CheckForReminders(), null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
         // Setup cache info
-        _cacheInfo = Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(CacheInfoRefreshSeconds))
+        _cacheInfo = Signal.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(CacheInfoRefreshSeconds))
             .SelectMany(static _ => TodoCacheService.GetCacheInfo())
             .ObserveOn(RxSchedulers.MainThreadScheduler)
             .ToProperty(this, x => x.CacheInfo, new CacheInfo());
@@ -74,8 +74,9 @@ public class NotificationService : ReactiveObject, IDisposable
     /// <param name="todo">The todo item.</param>
     /// <param name="message">The notification message.</param>
     /// <returns>Observable unit.</returns>
-    public static IObservable<Unit> ShowTrayNotification(TodoItem todo, string message) =>
-        Observable.FromAsync(async () =>
+    public static IObservable<RxVoid> ShowTrayNotification(TodoItem todo, string message) =>
+        Signal.FromAsync(async () =>
+        {
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 // Create a simple notification window or use system tray
@@ -107,16 +108,18 @@ public class NotificationService : ReactiveObject, IDisposable
                 timer.Start();
 
                 notificationWindow.Show();
-            }));
+            });
+            return RxVoid.Default;
+        });
 
     /// <summary>Schedules a reminder for a specific todo item.</summary>
     /// <param name="todo">The todo item to schedule.</param>
     /// <returns>Observable unit.</returns>
-    public IObservable<Unit> ScheduleReminder(TodoItem todo)
+    public IObservable<RxVoid> ScheduleReminder(TodoItem todo)
     {
         if (todo?.DueDate.HasValue == false || !_currentSettings.NotificationsEnabled)
         {
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         }
 
         var reminderTime = todo?.DueDate!.Value.AddMinutes(-_currentSettings.NotificationMinutes);
@@ -125,7 +128,7 @@ public class NotificationService : ReactiveObject, IDisposable
         {
             // Immediate notification for overdue items
             _reminderSubject.OnNext(todo!);
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         }
 
         // Schedule future notification
@@ -134,10 +137,10 @@ public class NotificationService : ReactiveObject, IDisposable
         {
             // If the delay is negative, it means the todo is overdue
             _reminderSubject.OnNext(todo!);
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         }
 
-        return Observable.Timer(delay.Value)
+        return Signal.Timer(delay.Value)
             .Select(_ =>
             {
                 if (todo?.IsCompleted == false)
@@ -145,7 +148,7 @@ public class NotificationService : ReactiveObject, IDisposable
                     _reminderSubject.OnNext(todo);
                 }
 
-                return Unit.Default;
+                return RxVoid.Default;
             });
     }
 
@@ -158,49 +161,53 @@ public class NotificationService : ReactiveObject, IDisposable
     /// <param name="todo">The todo item.</param>
     /// <param name="message">The notification message.</param>
     /// <returns>Observable unit.</returns>
-    public IObservable<Unit> SendNotification(TodoItem todo, string message) =>
-        Observable.FromAsync(async () => await Application.Current.Dispatcher.InvokeAsync(() =>
+    public IObservable<RxVoid> SendNotification(TodoItem todo, string message) =>
+        Signal.FromAsync(async () =>
         {
-            // Show WPF MessageBox or system notification
-            _ = MessageBox.Show(
-                message,
-                "Todo Reminder",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+{
+    // Show WPF MessageBox or system notification
+_ = MessageBox.Show(
+message,
+"Todo Reminder",
+MessageBoxButton.OK,
+MessageBoxImage.Information);
 
-            // Also emit through the subject for reactive handling
-            _reminderSubject.OnNext(todo);
-        }));
+    // Also emit through the subject for reactive handling
+_reminderSubject.OnNext(todo);
+});
+            return RxVoid.Default;
+        });
 
     /// <summary>Checks for todos that need immediate reminders.</summary>
     /// <returns>An observable unit that signals when the check is complete.</returns>
-    public IObservable<Unit> CheckImmediateReminders() => GetTodosNeedingReminders()
+    public IObservable<RxVoid> CheckImmediateReminders() => GetTodosNeedingReminders()
             .SelectMany(todos => todos is null || todos.Count == 0
-                ? Observable.Return(Unit.Default)
+                ? Signal.Return(RxVoid.Default)
                 : todos.ToObservable()
                     .SelectMany(todo => SendNotification(todo, GetNotificationMessage(todo)))
-                    .DefaultIfEmpty(Unit.Default)
+                    .DefaultIfEmpty(RxVoid.Default)
                     .Take(1));
 
     /// <summary>Updates notification settings and reschedules reminders.</summary>
     /// <param name="settings">The new settings.</param>
     /// <returns>Observable unit.</returns>
-    public IObservable<Unit> UpdateSettings(AppSettings? settings)
+    public IObservable<RxVoid> UpdateSettings(AppSettings? settings)
     {
         if (settings is null)
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(settings)));
+            return Signal.Throw<RxVoid>(new ArgumentNullException(nameof(settings)));
         }
 
         _currentSettings = settings;
 
-        return !settings.NotificationsEnabled ? Observable.Return(Unit.Default) : TodoCacheService.GetAllTodos()
+        return !settings.NotificationsEnabled ? Signal.Return(RxVoid.Default) : TodoCacheService.GetAllTodos()
             .SelectMany(todos => todos is null || todos.Count == 0
-                ? Observable.Return(Unit.Default)
+                ? Signal.Return(RxVoid.Default)
                 : todos.ToObservable()
                     .Where(static todo => todo is { IsCompleted: false, DueDate: not null })
                     .SelectMany(ScheduleReminder)
-                    .DefaultIfEmpty(Unit.Default)
+                    .DefaultIfEmpty(RxVoid.Default)
                     .Take(1));
     }
 

@@ -4,7 +4,11 @@
 
 using System.Buffers.Binary;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core;
+#else
 namespace Akavache.Core;
+#endif
 
 /// <summary>Helpers for identifying BSON-shaped payloads.</summary>
 internal static class BsonDataHelper

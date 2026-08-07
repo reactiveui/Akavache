@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.EncryptedSqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests for the <see cref="EncryptedSqliteBlobCache"/> class. The class also pulls in the
@@ -59,7 +59,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     private static readonly byte[] SurvivingEntryPayload = [9];
 
     /// <summary>
-    /// Verifies the <see cref="EncryptedSqliteBlobCache(IAkavacheConnection, ISerializer, IScheduler?)"/>
+    /// Verifies the <see cref="EncryptedSqliteBlobCache(IAkavacheConnection, ISerializer, ISequencer)"/>
     /// constructor accepts an <see cref="InMemoryAkavacheConnection"/> and round-trips data —
     /// exercises the constructor + <c>Insert</c> + <c>Get</c> code paths in the encrypted
     /// assembly's compiled <c>SqliteBlobCache</c>.
@@ -69,8 +69,8 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionInsertAndGetShouldRoundTrip()
     {
         InMemoryAkavacheConnection connection = new();
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
-        cache.Insert("k", RoundTripPayload).SubscribeAndComplete();
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
+        cache.Insert("k", RoundTripPayload).WaitForCompletion();
         var data = cache.Get("k").SubscribeGetValue();
         await Assert.That(data).IsEquivalentTo(RoundTripPayload);
     }
@@ -84,10 +84,10 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionTypedFlowShouldExerciseAllTypeMethods()
     {
         InMemoryAkavacheConnection connection = new();
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
-        cache.Insert("a", [1], typeof(string)).SubscribeAndComplete();
-        cache.Insert("b", SecondEntryPayload, typeof(string)).SubscribeAndComplete();
-        cache.Insert("c", ThirdEntryPayload, typeof(int)).SubscribeAndComplete();
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
+        cache.Insert("a", [1], typeof(string)).WaitForCompletion();
+        cache.Insert("b", SecondEntryPayload, typeof(string)).WaitForCompletion();
+        cache.Insert("c", ThirdEntryPayload, typeof(int)).WaitForCompletion();
 
         var typedKeys = cache.GetAllKeys(typeof(string)).ToList().SubscribeGetValue();
         await Assert.That(typedKeys!.Count).IsEqualTo(StringTypedEntryCount);
@@ -107,9 +107,9 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         var bulkCreatedAt = cache.GetCreatedAt(["a", "b"], typeof(string)).ToList().SubscribeGetValue();
         await Assert.That(bulkCreatedAt!.Count).IsEqualTo(BulkKeyCount);
 
-        cache.Invalidate("a", typeof(string)).SubscribeAndComplete();
-        cache.Invalidate(["b"], typeof(string)).SubscribeAndComplete();
-        cache.InvalidateAll(typeof(int)).SubscribeAndComplete();
+        cache.Invalidate("a", typeof(string)).WaitForCompletion();
+        cache.Invalidate(["b"], typeof(string)).WaitForCompletion();
+        cache.InvalidateAll(typeof(int)).WaitForCompletion();
 
         var remaining = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(remaining).IsEmpty();
@@ -125,10 +125,10 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionNonTypedFlowShouldExerciseAllMethods()
     {
         InMemoryAkavacheConnection connection = new();
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
-        cache.Insert("a", [1]).SubscribeAndComplete();
-        cache.Insert("b", SecondEntryPayload).SubscribeAndComplete();
-        cache.Insert([new("c", ThirdEntryPayload)]).SubscribeAndComplete();
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
+        cache.Insert("a", [1]).WaitForCompletion();
+        cache.Insert("b", SecondEntryPayload).WaitForCompletion();
+        cache.Insert([new("c", ThirdEntryPayload)]).WaitForCompletion();
 
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keys!.Count).IsEqualTo(NonTypedEntryCount);
@@ -145,18 +145,18 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         var bulkCreatedAt = cache.GetCreatedAt(["a", "b"]).ToList().SubscribeGetValue();
         await Assert.That(bulkCreatedAt!.Count).IsEqualTo(BulkKeyCount);
 
-        cache.UpdateExpiration("a", TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
-        cache.UpdateExpiration("b", typeof(string), TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
-        cache.UpdateExpiration(["a"], TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
-        cache.UpdateExpiration(["b"], typeof(string), TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration("a", TimeProvider.System.GetUtcNow().AddHours(1)).WaitForCompletion();
+        cache.UpdateExpiration("b", typeof(string), TimeProvider.System.GetUtcNow().AddHours(1)).WaitForCompletion();
+        cache.UpdateExpiration(["a"], TimeProvider.System.GetUtcNow().AddHours(1)).WaitForCompletion();
+        cache.UpdateExpiration(["b"], typeof(string), TimeProvider.System.GetUtcNow().AddHours(1)).WaitForCompletion();
 
-        cache.Flush().SubscribeAndComplete();
-        cache.Flush(typeof(string)).SubscribeAndComplete();
-        cache.Vacuum().SubscribeAndComplete();
+        cache.Flush().WaitForCompletion();
+        cache.Flush(typeof(string)).WaitForCompletion();
+        cache.Vacuum().WaitForCompletion();
 
-        cache.Invalidate("a").SubscribeAndComplete();
-        cache.Invalidate(["b"]).SubscribeAndComplete();
-        cache.InvalidateAll().SubscribeAndComplete();
+        cache.Invalidate("a").WaitForCompletion();
+        cache.Invalidate(["b"]).WaitForCompletion();
+        cache.InvalidateAll().WaitForCompletion();
 
         var remaining = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(remaining).IsEmpty();
@@ -172,7 +172,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionDisposedShouldThrowForAllOperations()
     {
         InMemoryAkavacheConnection connection = new();
-        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         cache.Dispose();
 
         await AssertDisposedForReadOperations(cache);
@@ -185,7 +185,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionNullArgsShouldThrow()
     {
         InMemoryAkavacheConnection connection = new();
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         var error = cache.Get((IEnumerable<string>)null!).ToList().SubscribeGetError();
         await Assert.That(error).IsTypeOf<ArgumentNullException>();
@@ -241,7 +241,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         InMemoryAkavacheConnection connection = new();
         connection.LegacyV10Store[LegacyKey] = LegacyPayload;
 
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         var data = cache.Get(LegacyKey).SubscribeGetValue();
         await Assert.That(data).IsEquivalentTo(LegacyPayload);
 
@@ -255,7 +255,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionGetMissingShouldThrowKeyNotFound()
     {
         using InMemoryAkavacheConnection connection = new();
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         var error = cache.Get("missing").SubscribeGetError();
         await Assert.That(error).IsTypeOf<KeyNotFoundException>();
@@ -273,10 +273,10 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionFlushSwallowsCheckpointFailure()
     {
         using InMemoryAkavacheConnection connection = new() { FailCheckpoint = true };
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
-            cache.Flush().SubscribeAndComplete();
+            cache.Flush().WaitForCompletion();
             await Assert.That(connection.CheckpointCount).IsGreaterThanOrEqualTo(1);
         }
         finally
@@ -294,7 +294,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionDisposeShouldFallBackToCompactWhenCheckpointFails()
     {
         InMemoryAkavacheConnection connection = new() { FailCheckpoint = true };
-        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         cache.Dispose();
 
@@ -311,7 +311,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionSyncDisposeRunsCleanupPath()
     {
         InMemoryAkavacheConnection connection = new();
-        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         cache.Dispose();
 
@@ -359,9 +359,9 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedBeforeWriteToDiskFilterShouldReturnDataWhenNotDisposed()
     {
         InMemoryAkavacheConnection connection = new();
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         byte[] input = [10, 20, 30];
-        var result = cache.BeforeWriteToDiskFilter(input, ImmediateScheduler.Instance).SubscribeGetValue();
+        var result = cache.BeforeWriteToDiskFilter(input, ImmediateSequencer.Instance).SubscribeGetValue();
         await Assert.That(result).IsEquivalentTo(input);
     }
 
@@ -374,7 +374,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedTypedInsertSurfacesUpsertFailure()
     {
         InMemoryAkavacheConnection connection = new() { FailUpsert = true };
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         var error = cache.Insert("k", [1], typeof(string)).SubscribeGetError();
 
@@ -393,17 +393,17 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedUpdateExpirationOverloadsShouldMutateEntries()
     {
         InMemoryAkavacheConnection connection = new();
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
-        cache.Insert("k1", [1]).SubscribeAndComplete();
-        cache.Insert("k2", SecondEntryPayload).SubscribeAndComplete();
-        cache.Insert("k3", ThirdEntryPayload, typeof(string)).SubscribeAndComplete();
-        cache.Insert("k4", FourthEntryPayload, typeof(string)).SubscribeAndComplete();
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
+        cache.Insert("k1", [1]).WaitForCompletion();
+        cache.Insert("k2", SecondEntryPayload).WaitForCompletion();
+        cache.Insert("k3", ThirdEntryPayload, typeof(string)).WaitForCompletion();
+        cache.Insert("k4", FourthEntryPayload, typeof(string)).WaitForCompletion();
 
         var expiry = TimeProvider.System.GetUtcNow().AddHours(1);
-        cache.UpdateExpiration("k1", expiry).SubscribeAndComplete();
-        cache.UpdateExpiration(["k2"], expiry).SubscribeAndComplete();
-        cache.UpdateExpiration("k3", typeof(string), expiry).SubscribeAndComplete();
-        cache.UpdateExpiration(["k4"], typeof(string), expiry).SubscribeAndComplete();
+        cache.UpdateExpiration("k1", expiry).WaitForCompletion();
+        cache.UpdateExpiration(["k2"], expiry).WaitForCompletion();
+        cache.UpdateExpiration("k3", typeof(string), expiry).WaitForCompletion();
+        cache.UpdateExpiration(["k4"], typeof(string), expiry).WaitForCompletion();
 
         await Assert.That(connection.Store["k1"].ExpiresAt!.Value).IsEqualTo(expiry.UtcDateTime);
         await Assert.That(connection.Store["k2"].ExpiresAt!.Value).IsEqualTo(expiry.UtcDateTime);
@@ -416,7 +416,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public void EncryptedSyncDisposeTolerantOfAllFailures()
     {
         InMemoryAkavacheConnection connection = new() { FailCheckpoint = true };
-        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         // Should not throw.
         cache.Dispose();
@@ -428,7 +428,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedDisposeTolerantOfAllTeardownFailures()
     {
         InMemoryAkavacheConnection connection = new() { FailCheckpoint = true, FailCompact = true };
-        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         cache.Dispose();
     }
@@ -453,7 +453,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
             "good",
             new("good", typeof(string).FullName, SurvivingEntryPayload, TimeProvider.System.GetUtcNow().UtcDateTime, ExpiresAt: null));
 
-        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         // Bulk Get/GetAll filter by BOTH null Id and null Value, so only "good" passes.
         var bulk = cache.Get([NullIdKey, NullValueKey, "good"]).ToList().SubscribeGetValue();
@@ -480,7 +480,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
 
     /// <inheritdoc/>
     protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) =>
-        new EncryptedSqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        new EncryptedSqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateSequencer.Instance);
 
     /// <summary>Asserts every read-shaped operation on a disposed cache surfaces <see cref="ObjectDisposedException"/>.</summary>
     /// <param name="cache">A cache that has already been disposed.</param>
@@ -577,7 +577,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         error = cache.UpdateExpiration(["k"], typeof(string), TimeProvider.System.GetLocalNow()).SubscribeGetError();
         await Assert.That(error).IsTypeOf<ObjectDisposedException>();
 
-        error = cache.BeforeWriteToDiskFilter(RoundTripPayload, ImmediateScheduler.Instance).SubscribeGetError();
+        error = cache.BeforeWriteToDiskFilter(RoundTripPayload, ImmediateSequencer.Instance).SubscribeGetError();
         await Assert.That(error).IsTypeOf<ObjectDisposedException>();
     }
 }

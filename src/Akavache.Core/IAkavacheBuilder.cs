@@ -3,13 +3,16 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Core;
 #if NET6_0_OR_GREATER
 #endif
 
 using System.Diagnostics.CodeAnalysis;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Interface for building and configuring BlobCache instances.</summary>
 public interface IAkavacheBuilder : IAkavacheInstance

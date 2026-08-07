@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for relative time extension methods.</summary>
 [Category("Akavache")]
@@ -44,7 +45,7 @@ public class RelativeTimeExtensionsTests
         SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
             // Use a longer expiration to avoid CI timing issues
             var expiration = TimeSpan.FromMinutes(ExpirationMinutes);
@@ -78,7 +79,7 @@ public class RelativeTimeExtensionsTests
         SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             var testObject = (Name: "Test", Value: SampleValue);
             var expiration = TimeSpan.FromMinutes(1);
             var beforeInsert = TimeProvider.System.GetLocalNow();
@@ -224,7 +225,7 @@ public class RelativeTimeExtensionsTests
         using (Utility.WithEmptyDirectory(out _))
         {
             SystemJsonSerializer serializer = new();
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             var expiration = TimeSpan.FromSeconds(seconds);
             var beforeInsert = TimeProvider.System.GetLocalNow();
 
@@ -252,7 +253,7 @@ public class RelativeTimeExtensionsTests
         SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             var expiration = TimeSpan.Zero;
 
             // Act - Zero timespan should set expiration to current time (immediate expiration)
@@ -275,7 +276,7 @@ public class RelativeTimeExtensionsTests
         SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             var expiration = TimeSpan.FromSeconds(-1); // Past expiration
 
             // Act - Negative timespan should set expiration to past time
@@ -298,7 +299,7 @@ public class RelativeTimeExtensionsTests
         try
         {
             byte[] payload = [1, 2, 3];
-            cache.Insert("k", payload, TimeSpan.FromMinutes(1)).SubscribeAndComplete();
+            cache.Insert("k", payload, TimeSpan.FromMinutes(1)).WaitForCompletion();
             var data = cache.Get("k").SubscribeGetValue();
             await Assert.That(data).IsNotNull();
         }
@@ -316,7 +317,7 @@ public class RelativeTimeExtensionsTests
         var cache = CreateCache();
         try
         {
-            cache.InsertObject("k", "value", TimeSpan.FromMinutes(1)).SubscribeAndComplete();
+            cache.InsertObject("k", "value", TimeSpan.FromMinutes(1)).WaitForCompletion();
             var result = cache.GetObject<string>("k").SubscribeGetValue();
             await Assert.That(result).IsEqualTo("value");
         }
@@ -362,8 +363,8 @@ public class RelativeTimeExtensionsTests
         var cache = CreateCache();
         try
         {
-            cache.Insert("k", [1]).SubscribeAndComplete();
-            cache.UpdateExpiration("k", TimeSpan.FromMinutes(1)).SubscribeAndComplete();
+            cache.Insert("k", [1]).WaitForCompletion();
+            cache.UpdateExpiration("k", TimeSpan.FromMinutes(1)).WaitForCompletion();
             var data = cache.Get("k").SubscribeGetValue();
             await Assert.That(data).IsNotNull();
         }
@@ -383,9 +384,9 @@ public class RelativeTimeExtensionsTests
         {
             byte[] firstPayload = [1];
             byte[] secondPayload = [2];
-            cache.Insert("k1", firstPayload).SubscribeAndComplete();
-            cache.Insert("k2", secondPayload).SubscribeAndComplete();
-            cache.UpdateExpiration(["k1", "k2"], TimeSpan.FromMinutes(1)).SubscribeAndComplete();
+            cache.Insert("k1", firstPayload).WaitForCompletion();
+            cache.Insert("k2", secondPayload).WaitForCompletion();
+            cache.UpdateExpiration(["k1", "k2"], TimeSpan.FromMinutes(1)).WaitForCompletion();
 
             var d1 = cache.Get("k1").SubscribeGetValue();
             var d2 = cache.Get("k2").SubscribeGetValue();
@@ -449,8 +450,8 @@ public class RelativeTimeExtensionsTests
         var cache = CreateCache();
         try
         {
-            cache.Insert("k", [1], typeof(string)).SubscribeAndComplete();
-            cache.UpdateExpiration("k", typeof(string), TimeSpan.FromHours(1)).SubscribeAndComplete();
+            cache.Insert("k", [1], typeof(string)).WaitForCompletion();
+            cache.UpdateExpiration("k", typeof(string), TimeSpan.FromHours(1)).WaitForCompletion();
 
             var data = cache.Get("k", typeof(string)).SubscribeGetValue();
             await Assert.That(data).IsNotNull();
@@ -474,10 +475,10 @@ public class RelativeTimeExtensionsTests
         {
             byte[] firstPayload = [1];
             byte[] secondPayload = [2];
-            cache.Insert("k1", firstPayload, typeof(string)).SubscribeAndComplete();
-            cache.Insert("k2", secondPayload, typeof(string)).SubscribeAndComplete();
+            cache.Insert("k1", firstPayload, typeof(string)).WaitForCompletion();
+            cache.Insert("k2", secondPayload, typeof(string)).WaitForCompletion();
 
-            cache.UpdateExpiration(["k1", "k2"], typeof(string), TimeSpan.FromHours(1)).SubscribeAndComplete();
+            cache.UpdateExpiration(["k1", "k2"], typeof(string), TimeSpan.FromHours(1)).WaitForCompletion();
 
             var d1 = cache.Get("k1", typeof(string)).SubscribeGetValue();
             var d2 = cache.Get("k2", typeof(string)).SubscribeGetValue();
@@ -501,7 +502,7 @@ public class RelativeTimeExtensionsTests
         var cache = CreateCache();
         try
         {
-            cache.SaveLogin("user", "pass", "host", TimeSpan.FromHours(1)).SubscribeAndComplete();
+            cache.SaveLogin("user", "pass", "host", TimeSpan.FromHours(1)).WaitForCompletion();
 
             var login = cache.GetLogin("host").SubscribeGetValue();
             await Assert.That(login).IsNotNull();
@@ -530,7 +531,7 @@ public class RelativeTimeExtensionsTests
         try
         {
             const string url = "http://example.invalid/data";
-            cache.Insert(url, StringOverloadCachedPayload).SubscribeAndComplete();
+            cache.Insert(url, StringOverloadCachedPayload).WaitForCompletion();
 
             var data = cache.DownloadUrl(url, HttpMethod.Get, TimeSpan.FromHours(1)).SubscribeGetValue();
 
@@ -554,7 +555,7 @@ public class RelativeTimeExtensionsTests
         try
         {
             Uri url = new("http://example.invalid/data");
-            cache.Insert(url.ToString(), UriOverloadCachedPayload).SubscribeAndComplete();
+            cache.Insert(url.ToString(), UriOverloadCachedPayload).WaitForCompletion();
 
             var data = cache.DownloadUrl(url, HttpMethod.Get, TimeSpan.FromHours(1)).SubscribeGetValue();
 
@@ -566,8 +567,8 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>Creates a fresh in-memory cache wired to <see cref="ImmediateScheduler"/>.</summary>
+    /// <summary>Creates a fresh in-memory cache wired to <see cref="ImmediateSequencer"/>.</summary>
     /// <returns>A new <see cref="InMemoryBlobCache"/>.</returns>
     private static InMemoryBlobCache CreateCache() =>
-        new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 }

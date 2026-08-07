@@ -6,7 +6,11 @@
 using System.Net.Http;
 #endif
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Represents a service that provides HTTP functionality for downloading and caching web resources.</summary>
 public interface IHttpService

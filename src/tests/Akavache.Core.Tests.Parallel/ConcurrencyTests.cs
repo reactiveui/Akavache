@@ -3,9 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using Akavache.SystemTextJson;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for concurrent operations on InMemoryBlobCache.</summary>
 [Category("Akavache")]
@@ -44,7 +47,7 @@ public sealed class ConcurrencyTests
     public async Task InMemoryBlobCache_ConcurrentInsertObject_ShouldNotThrowIndexOutOfRangeException()
     {
         // Arrange
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const int threadCount = 10;
         const int operationsPerThread = 100;
         ConcurrentBag<Exception> exceptions = [];
@@ -109,7 +112,7 @@ public sealed class ConcurrencyTests
     public async Task InMemoryBlobCache_HighVolumeStressTest_ShouldNotThrowIndexOutOfRangeException()
     {
         // Arrange
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const int threadCount = 50;
         const int operationsPerThread = 500;
         ConcurrentBag<Exception> exceptions = [];
@@ -167,7 +170,7 @@ public sealed class ConcurrencyTests
     [Test]
     public async Task InMemoryBlobCache_ConcurrentWritesShouldNotCorrupt()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var localCache = cache;
 
         var writeTasks = Enumerable.Range(0, ConcurrentWriteCount)

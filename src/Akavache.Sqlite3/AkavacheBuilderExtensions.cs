@@ -2,12 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.Helpers;
-
 using SQLitePCL;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Sqlite3;
+#else
 namespace Akavache.Sqlite3;
+#endif
 
 /// <summary>Provides extension methods for configuring Akavache to use SQLite-based blob caches.</summary>
 public static class AkavacheBuilderExtensions

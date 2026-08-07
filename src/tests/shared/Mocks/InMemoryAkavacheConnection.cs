@@ -4,7 +4,11 @@
 
 using System.Collections.Concurrent;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests.Mocks;
+#else
 namespace Akavache.Tests.Mocks;
+#endif
 
 /// <summary>
 /// A dictionary-backed implementation of <see cref="IAkavacheConnection"/> for unit
@@ -13,7 +17,7 @@ namespace Akavache.Tests.Mocks;
 /// tests to exercise <c>SqliteBlobCache</c> logic without a real SQLite database.
 /// </summary>
 /// <remarks>
-/// Every method returns a deferred <see cref="Observable.Defer{TResult}(Func{IObservable{TResult}})"/>
+/// Every method returns a deferred <see cref="Signal.Defer{T}(Func{IObservable{T}})"/>
 /// chain so the dispose check and the in-memory mutation happen at subscribe time,
 /// matching the real sqlite-backed connection's semantics (nothing fires until the
 /// downstream pipeline subscribes). Counter-and-flag properties
@@ -75,53 +79,53 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
     internal bool BypassPredicate { get; set; }
 
     /// <inheritdoc/>
-    public IObservable<Unit> CreateSchema() =>
-        Observable.Defer(() =>
+    public IObservable<RxVoid> CreateSchema() =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             if (FailCreateTable)
             {
-                return Observable.Throw<Unit>(new InvalidOperationException("Simulated CreateTable failure."));
+                return Signal.Throw<RxVoid>(new InvalidOperationException("Simulated CreateTable failure."));
             }
 
             _schemaCreated = true;
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         });
 
     /// <inheritdoc/>
     public IObservable<bool> TableExists(string tableName) =>
-        Observable.Defer(() =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
-            return Observable.Return(_schemaCreated && string.Equals(tableName, "CacheEntry", StringComparison.OrdinalIgnoreCase));
+            return Signal.Return(_schemaCreated && string.Equals(tableName, "CacheEntry", StringComparison.OrdinalIgnoreCase));
         });
 
     /// <inheritdoc/>
     public IObservable<CacheEntry?> Get(string key, string? typeFullName, DateTimeOffset now) =>
-        Observable.Defer(() =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             if (FailGet)
             {
-                return Observable.Throw<CacheEntry?>(new InvalidOperationException("Simulated Get failure."));
+                return Signal.Throw<CacheEntry?>(new InvalidOperationException("Simulated Get failure."));
             }
 
             if (!_store.TryGetValue(key, out var entry))
             {
-                return Observable.Return<CacheEntry?>(null);
+                return Signal.Return<CacheEntry?>(null);
             }
 
             if (!BypassPredicate && !IsUnexpired(entry, now))
             {
-                return Observable.Return<CacheEntry?>(null);
+                return Signal.Return<CacheEntry?>(null);
             }
 
-            return typeFullName is not null && !string.Equals(entry.TypeName, typeFullName, StringComparison.Ordinal) ? Observable.Return<CacheEntry?>(null) : Observable.Return<CacheEntry?>(entry);
+            return typeFullName is not null && !string.Equals(entry.TypeName, typeFullName, StringComparison.Ordinal) ? Signal.Return<CacheEntry?>(null) : Signal.Return<CacheEntry?>(entry);
         });
 
     /// <inheritdoc/>
     public IObservable<CacheEntry> GetMany(IReadOnlyList<string> keys, string? typeFullName, DateTimeOffset now) =>
-        Observable.Defer(() =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             var rows = new List<CacheEntry>(keys.Count);
@@ -150,7 +154,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
 
     /// <inheritdoc/>
     public IObservable<CacheEntry> GetAll(string? typeFullName, DateTimeOffset now) =>
-        Observable.Defer(() =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             var rows = new List<CacheEntry>();
@@ -174,7 +178,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
 
     /// <inheritdoc/>
     public IObservable<string> GetAllKeys(string? typeFullName, DateTimeOffset now) =>
-        Observable.Defer(() =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             var keys = new List<string>();
@@ -200,13 +204,13 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
-    public IObservable<Unit> Upsert(IReadOnlyList<CacheEntry> entries) =>
-        Observable.Defer(() =>
+    public IObservable<RxVoid> Upsert(IReadOnlyList<CacheEntry> entries) =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             if (FailUpsert)
             {
-                return Observable.Throw<Unit>(new InvalidOperationException("Simulated upsert failure."));
+                return Signal.Throw<RxVoid>(new InvalidOperationException("Simulated upsert failure."));
             }
 
             for (var i = 0; i < entries.Count; i++)
@@ -218,12 +222,12 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
                 }
             }
 
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         });
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(IReadOnlyList<string> keys, string? typeFullName) =>
-        Observable.Defer(() =>
+    public IObservable<RxVoid> Invalidate(IReadOnlyList<string> keys, string? typeFullName) =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             for (var i = 0; i < keys.Count; i++)
@@ -241,18 +245,18 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
                 }
             }
 
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         });
 
     /// <inheritdoc/>
-    public IObservable<Unit> InvalidateAll(string? typeFullName) =>
-        Observable.Defer(() =>
+    public IObservable<RxVoid> InvalidateAll(string? typeFullName) =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             if (typeFullName is null)
             {
                 _store.Clear();
-                return Observable.Return(Unit.Default);
+                return Signal.Return(RxVoid.Default);
             }
 
             foreach (var kvp in _store.ToArray())
@@ -263,31 +267,31 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
                 }
             }
 
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         });
 
     /// <inheritdoc/>
-    public IObservable<Unit> SetExpiry(string key, string? typeFullName, DateTimeOffset? expiresAt) =>
-        Observable.Defer(() =>
+    public IObservable<RxVoid> SetExpiry(string key, string? typeFullName, DateTimeOffset? expiresAt) =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             if (!_store.TryGetValue(key, out var entry))
             {
-                return Observable.Return(Unit.Default);
+                return Signal.Return(RxVoid.Default);
             }
 
             if (typeFullName is not null && !string.Equals(entry.TypeName, typeFullName, StringComparison.Ordinal))
             {
-                return Observable.Return(Unit.Default);
+                return Signal.Return(RxVoid.Default);
             }
 
             _store[key] = new(entry.Id, entry.TypeName, entry.Value, entry.CreatedAt, expiresAt);
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         });
 
     /// <inheritdoc/>
-    public IObservable<Unit> VacuumExpired(DateTimeOffset now) =>
-        Observable.Defer(() =>
+    public IObservable<RxVoid> VacuumExpired(DateTimeOffset now) =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             foreach (var kvp in _store.ToArray())
@@ -298,52 +302,52 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
                 }
             }
 
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         });
 
     /// <inheritdoc/>
-    public IObservable<Unit> Checkpoint(CheckpointMode mode)
+    public IObservable<RxVoid> Checkpoint(CheckpointMode mode)
     {
         if (ThrowOnCheckpointCall)
         {
             throw new InvalidOperationException("Simulated synchronous checkpoint failure.");
         }
 
-        return Observable.Defer(() =>
+        return Signal.Defer(() =>
         {
             ThrowIfDisposed();
             CheckpointCount++;
             LastCheckpointMode = mode;
             return FailCheckpoint
-                ? Observable.Throw<Unit>(new InvalidOperationException("Simulated checkpoint failure."))
-                : Observable.Return(Unit.Default);
+                ? Signal.Throw<RxVoid>(new InvalidOperationException("Simulated checkpoint failure."))
+                : Signal.Return(RxVoid.Default);
         });
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Compact() =>
-        Observable.Defer(() =>
+    public IObservable<RxVoid> Compact() =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             CompactCount++;
             return FailCompact
-                ? Observable.Throw<Unit>(new InvalidOperationException("Simulated compact failure."))
-                : Observable.Return(Unit.Default);
+                ? Signal.Throw<RxVoid>(new InvalidOperationException("Simulated compact failure."))
+                : Signal.Return(RxVoid.Default);
         });
 
     /// <inheritdoc/>
     public IObservable<byte[]?> TryReadLegacyV10Value(string key, DateTimeOffset now, Type? type) =>
-        Observable.Defer(() =>
+        Signal.Defer(() =>
         {
             ThrowIfDisposed();
             if (FailLegacyRead)
             {
-                return Observable.Throw<byte[]?>(new InvalidOperationException("Simulated legacy read failure."));
+                return Signal.Throw<byte[]?>(new InvalidOperationException("Simulated legacy read failure."));
             }
 
             return LegacyV10Store.TryGetValue(key, out var value)
-                ? Observable.Return<byte[]?>(value)
-                : Observable.Return<byte[]?>(null);
+                ? Signal.Return<byte[]?>(value)
+                : Signal.Return<byte[]?>(null);
         });
 
     /// <inheritdoc/>

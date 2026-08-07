@@ -3,12 +3,14 @@
 // See the LICENSE file in the project root for full license information.
 
 // System directives first per style rules
-using Akavache.NewtonsoftJson;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
+
 using Newtonsoft.Json;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Skeleton tests for BSON serializers edge cases.</summary>
 [Category("Serialization")]

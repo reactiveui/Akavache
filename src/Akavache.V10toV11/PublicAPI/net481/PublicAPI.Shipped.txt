@@ -1,0 +1,31 @@
+#nullable enable
+Akavache.V10toV11.AkavacheBuilderExtensions
+Akavache.V10toV11.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!)
+Akavache.V10toV11.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).MigrateFromV10() -> Akavache.IAkavacheBuilder!
+Akavache.V10toV11.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).MigrateFromV10(System.Action<Akavache.V10toV11.V10MigrationOptions!>? configure) -> Akavache.IAkavacheBuilder!
+Akavache.V10toV11.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithV10FileNames() -> Akavache.IAkavacheBuilder!
+Akavache.V10toV11.V10MigrationOptions
+Akavache.V10toV11.V10MigrationOptions.<Clone>$() -> Akavache.V10toV11.V10MigrationOptions!
+Akavache.V10toV11.V10MigrationOptions.Deconstruct(out bool DeleteOldFiles, out bool ReserializeToCurrentFormat, out bool MigrateLocalMachine, out bool MigrateUserAccount, out bool MigrateSecure, out System.Action<string!>? Logger) -> void
+Akavache.V10toV11.V10MigrationOptions.DeleteOldFiles.get -> bool
+Akavache.V10toV11.V10MigrationOptions.DeleteOldFiles.init -> void
+Akavache.V10toV11.V10MigrationOptions.Equals(Akavache.V10toV11.V10MigrationOptions? other) -> bool
+Akavache.V10toV11.V10MigrationOptions.Logger.get -> System.Action<string!>?
+Akavache.V10toV11.V10MigrationOptions.Logger.init -> void
+Akavache.V10toV11.V10MigrationOptions.MigrateLocalMachine.get -> bool
+Akavache.V10toV11.V10MigrationOptions.MigrateLocalMachine.init -> void
+Akavache.V10toV11.V10MigrationOptions.MigrateSecure.get -> bool
+Akavache.V10toV11.V10MigrationOptions.MigrateSecure.init -> void
+Akavache.V10toV11.V10MigrationOptions.MigrateUserAccount.get -> bool
+Akavache.V10toV11.V10MigrationOptions.MigrateUserAccount.init -> void
+Akavache.V10toV11.V10MigrationOptions.ReserializeToCurrentFormat.get -> bool
+Akavache.V10toV11.V10MigrationOptions.ReserializeToCurrentFormat.init -> void
+Akavache.V10toV11.V10MigrationOptions.V10MigrationOptions(bool DeleteOldFiles = false, bool ReserializeToCurrentFormat = true, bool MigrateLocalMachine = true, bool MigrateUserAccount = true, bool MigrateSecure = true, System.Action<string!>? Logger = null) -> void
+override Akavache.V10toV11.V10MigrationOptions.Equals(object? obj) -> bool
+override Akavache.V10toV11.V10MigrationOptions.GetHashCode() -> int
+override Akavache.V10toV11.V10MigrationOptions.ToString() -> string!
+static Akavache.V10toV11.AkavacheBuilderExtensions.MigrateFromV10(this Akavache.IAkavacheBuilder! builder) -> Akavache.IAkavacheBuilder!
+static Akavache.V10toV11.AkavacheBuilderExtensions.MigrateFromV10(this Akavache.IAkavacheBuilder! builder, System.Action<Akavache.V10toV11.V10MigrationOptions!>? configure) -> Akavache.IAkavacheBuilder!
+static Akavache.V10toV11.AkavacheBuilderExtensions.WithV10FileNames(this Akavache.IAkavacheBuilder! builder) -> Akavache.IAkavacheBuilder!
+static Akavache.V10toV11.V10MigrationOptions.operator !=(Akavache.V10toV11.V10MigrationOptions? left, Akavache.V10toV11.V10MigrationOptions? right) -> bool
+static Akavache.V10toV11.V10MigrationOptions.operator ==(Akavache.V10toV11.V10MigrationOptions? left, Akavache.V10toV11.V10MigrationOptions? right) -> bool

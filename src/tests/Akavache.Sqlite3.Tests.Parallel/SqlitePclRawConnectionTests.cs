@@ -2,12 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
 using SQLitePCL;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for <see cref="SqlitePclRawConnection"/> covering static helpers and typed query paths.</summary>
 [Category("Akavache")]
@@ -1417,5 +1418,5 @@ public class SqlitePclRawConnectionTests
     /// <param name="path">The directory for the database file.</param>
     /// <returns>A new <see cref="SqliteBlobCache"/>.</returns>
     private static SqliteBlobCache CreateCache(string path) =>
-        new(Path.Combine(path, $"test_{Guid.NewGuid():N}.db"), new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        new(Path.Combine(path, $"test_{Guid.NewGuid():N}.db"), new SystemJsonSerializer(), ImmediateSequencer.Instance);
 }

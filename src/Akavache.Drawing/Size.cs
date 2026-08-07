@@ -4,7 +4,11 @@
 
 using System.Diagnostics;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Drawing;
+#else
 namespace Akavache.Drawing;
+#endif
 
 /// <summary>Represents the size dimensions of an image with width and height values.</summary>
 /// <remarks>

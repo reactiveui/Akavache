@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Net;
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-using Akavache.Tests.Helpers;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>
 /// Tests for HttpService functionality.
@@ -123,7 +124,7 @@ public class HttpServiceTests
         // Arrange
         SystemJsonSerializer serializer = new();
         HttpService httpService = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         Uri? nullUri = null;
 
         try
@@ -150,7 +151,7 @@ public class HttpServiceTests
         // Arrange
         SystemJsonSerializer serializer = new();
         HttpService httpService = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -220,7 +221,7 @@ public class HttpServiceTests
         // Arrange
         SystemJsonSerializer serializer = new();
         HttpService httpService = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -253,7 +254,7 @@ public class HttpServiceTests
         // Arrange
         SystemJsonSerializer serializer = new();
         HttpService httpService = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -291,7 +292,7 @@ public class HttpServiceTests
         // Arrange
         SystemJsonSerializer serializer = new();
         using HttpService httpService = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Act - Should create different observables based on fetchAlways
         var cachedObservable = httpService.DownloadUrl(
@@ -327,7 +328,7 @@ public class HttpServiceTests
         // Arrange
         SystemJsonSerializer serializer = new();
         HttpService httpService = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var expiration = TimeProvider.System.GetLocalNow().AddHours(1);
 
         try
@@ -372,7 +373,7 @@ public class HttpServiceTests
     public async Task DownloadUrlUriShouldThrowOnNullUri()
     {
         HttpService service = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => service.DownloadUrl(cache, (Uri)null!))
@@ -418,11 +419,11 @@ public class HttpServiceTests
     public async Task DownloadUrlKeyStringShouldReturnCachedValue()
     {
         HttpService service = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             byte[] expected = [1, 2, 3];
-            cache.Insert("cached-key", expected).SubscribeAndComplete();
+            cache.Insert("cached-key", expected).WaitForCompletion();
 
             var result = service.DownloadUrl(cache, "cached-key", UnreachableHostUrl).SubscribeGetValue();
 
@@ -440,11 +441,11 @@ public class HttpServiceTests
     public async Task DownloadUrlKeyUriShouldReturnCachedValue()
     {
         HttpService service = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             byte[] expected = [4, 5, 6];
-            cache.Insert("cached-uri-key", expected).SubscribeAndComplete();
+            cache.Insert("cached-uri-key", expected).WaitForCompletion();
 
             var result = service.DownloadUrl(cache, "cached-uri-key", new Uri(UnreachableHostUrl))
                 .SubscribeGetValue();
@@ -469,8 +470,8 @@ public class HttpServiceTests
     public async Task DownloadUrlKeyStringFetchAlwaysShouldBypassCache()
     {
         HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromMilliseconds(FailFastTimeoutMilliseconds));
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
-        cache.Insert("fetch-always-key", "\t\t\t"u8.ToArray()).SubscribeAndComplete();
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
+        cache.Insert("fetch-always-key", "\t\t\t"u8.ToArray()).WaitForCompletion();
 
         Exception? error = null;
         ManualResetEventSlim mre = new(false);
@@ -498,9 +499,9 @@ public class HttpServiceTests
     public async Task DownloadUrlKeyUriFetchAlwaysShouldBypassCache()
     {
         HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromMilliseconds(FailFastTimeoutMilliseconds));
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         byte[] stalePayload = [7, 7, 7];
-        cache.Insert("fetch-always-uri-key", stalePayload).SubscribeAndComplete();
+        cache.Insert("fetch-always-uri-key", stalePayload).WaitForCompletion();
 
         Exception? error = null;
         ManualResetEventSlim mre = new(false);
@@ -618,7 +619,7 @@ public class HttpServiceTests
     {
         SystemJsonSerializer serializer = new();
         HttpService httpService = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -673,7 +674,7 @@ public class HttpServiceTests
     {
         SystemJsonSerializer serializer = new();
         HttpService httpService = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -1078,130 +1079,130 @@ public class HttpServiceTests
         public ISerializer Serializer { get; } = new SystemJsonSerializer();
 
         /// <inheritdoc/>
-        public IScheduler Scheduler => ImmediateScheduler.Instance;
+        public ISequencer Scheduler => ImmediateSequencer.Instance;
 
         /// <inheritdoc/>
         public DateTimeKind? ForcedDateTimeKind { get; set; }
 
         /// <inheritdoc/>
-        public IObservable<byte[]?> Get(string key) => Observable.Return<byte[]?>(null);
+        public IObservable<byte[]?> Get(string key) => Signal.Return<byte[]?>(null);
 
         /// <inheritdoc/>
-        public IObservable<byte[]?> Get(string key, Type type) => Observable.Return<byte[]?>(null);
+        public IObservable<byte[]?> Get(string key, Type type) => Signal.Return<byte[]?>(null);
 
         /// <inheritdoc/>
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) =>
-            Observable.Empty<KeyValuePair<string, byte[]>>();
+            Signal.Empty<KeyValuePair<string, byte[]>>();
 
         /// <inheritdoc/>
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) =>
-            Observable.Empty<KeyValuePair<string, byte[]>>();
+            Signal.Empty<KeyValuePair<string, byte[]>>();
 
         /// <inheritdoc/>
         public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) =>
-            Observable.Empty<KeyValuePair<string, byte[]>>();
+            Signal.Empty<KeyValuePair<string, byte[]>>();
 
         /// <inheritdoc/>
-        public IObservable<string> GetAllKeys() => Observable.Empty<string>();
+        public IObservable<string> GetAllKeys() => Signal.Empty<string>();
 
         /// <inheritdoc/>
-        public IObservable<string> GetAllKeys(Type type) => Observable.Empty<string>();
+        public IObservable<string> GetAllKeys(Type type) => Signal.Empty<string>();
 
         /// <inheritdoc/>
-        public IObservable<DateTimeOffset?> GetCreatedAt(string key) => Observable.Return<DateTimeOffset?>(null);
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key) => Signal.Return<DateTimeOffset?>(null);
 
         /// <inheritdoc/>
         public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) =>
-            Observable.Return<DateTimeOffset?>(null);
+            Signal.Return<DateTimeOffset?>(null);
 
         /// <inheritdoc/>
         public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) =>
-            Observable.Empty<(string Key, DateTimeOffset? Time)>();
+            Signal.Empty<(string Key, DateTimeOffset? Time)>();
 
         /// <inheritdoc/>
         public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) =>
-            Observable.Empty<(string Key, DateTimeOffset? Time)>();
+            Signal.Empty<(string Key, DateTimeOffset? Time)>();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data) =>
             Insert(key, data, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
-            Observable.Return(Unit.Default);
+        public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
+            Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
             Insert(key, data, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit>
+        public IObservable<RxVoid>
             Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
-            Observable.Return(Unit.Default);
+            Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
             Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
+        public IObservable<RxVoid> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
-            DateTimeOffset? absoluteExpiration) => Observable.Return(Unit.Default);
+            DateTimeOffset? absoluteExpiration) => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
             Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
+        public IObservable<RxVoid> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             Type type,
-            DateTimeOffset? absoluteExpiration) => Observable.Return(Unit.Default);
+            DateTimeOffset? absoluteExpiration) => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key) => Observable.Return(Unit.Default);
+        public IObservable<RxVoid> Invalidate(string key) => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key, Type type) => Observable.Return(Unit.Default);
+        public IObservable<RxVoid> Invalidate(string key, Type type) => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => Observable.Return(Unit.Default);
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys) => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => Observable.Return(Unit.Default);
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type) => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll() => Observable.Return(Unit.Default);
+        public IObservable<RxVoid> InvalidateAll() => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll(Type type) => Observable.Return(Unit.Default);
+        public IObservable<RxVoid> InvalidateAll(Type type) => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush() => InvalidateAll();
+        public IObservable<RxVoid> Flush() => InvalidateAll();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush(Type type) => InvalidateAll(type);
+        public IObservable<RxVoid> Flush(Type type) => InvalidateAll(type);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Vacuum() => Flush();
+        public IObservable<RxVoid> Vacuum() => Flush();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
-            Observable.Return(Unit.Default);
+        public IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
+            Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
-            Observable.Return(Unit.Default);
+        public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
+            Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
-            Observable.Return(Unit.Default);
+        public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
+            Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(
+        public IObservable<RxVoid> UpdateExpiration(
             IEnumerable<string> keys,
             Type type,
-            DateTimeOffset? absoluteExpiration) => Observable.Return(Unit.Default);
+            DateTimeOffset? absoluteExpiration) => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
         public void Dispose()

@@ -2,12 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.NewtonsoftJson;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests.TestBases;
+#else
 namespace Akavache.Tests.TestBases;
+#endif
 
 /// <summary>Base class for tests associated with object based bulk operations.</summary>
 public abstract class ObjectBulkOperationsTestBase : IDisposable
@@ -44,7 +43,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
 
             foreach (var v in keys)
             {
-                fixture.InsertObject(v, data).SubscribeAndComplete();
+                fixture.InsertObject(v, data).WaitForCompletion();
             }
 
             var allKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
@@ -79,7 +78,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
 
             foreach (var v in keys)
             {
-                fixture.InsertObject(v, data, DateTimeOffset.MinValue).SubscribeAndComplete();
+                fixture.InsertObject(v, data, DateTimeOffset.MinValue).WaitForCompletion();
             }
 
             var allData = fixture.GetObjects<Tuple<string, int>>(keys).ToList().SubscribeGetValue();
@@ -113,7 +112,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
             var data = Tuple.Create("Foo", TuplePayloadValue);
             string[] keys = ["Foo", "Bar", "Baz"];
 
-            fixture.InsertObjects(keys.ToDictionary(static k => k, _ => data)).SubscribeAndComplete();
+            fixture.InsertObjects(keys.ToDictionary(static k => k, _ => data)).WaitForCompletion();
 
             var allKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(allKeys).Count().IsEqualTo(keys.Length);
@@ -147,13 +146,13 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
 
             foreach (var v in keys)
             {
-                fixture.InsertObject(v, data).SubscribeAndComplete();
+                fixture.InsertObject(v, data).WaitForCompletion();
             }
 
             var allKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(allKeys).Count().IsEqualTo(keys.Length);
 
-            fixture.InvalidateObjects<Tuple<string, int>>(keys).SubscribeAndComplete();
+            fixture.InvalidateObjects<Tuple<string, int>>(keys).WaitForCompletion();
 
             var remainingKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(remainingKeys).IsEmpty();
@@ -184,19 +183,19 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
             // Insert both tuples and strings with same keys
             foreach (var key in keys)
             {
-                fixture.InsertObject(key, tupleData).SubscribeAndComplete();
+                fixture.InsertObject(key, tupleData).WaitForCompletion();
             }
 
             foreach (var key in keys)
             {
-                fixture.InsertObject($"str_{key}", stringData).SubscribeAndComplete();
+                fixture.InsertObject($"str_{key}", stringData).WaitForCompletion();
             }
 
             var allKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(allKeys).Count().IsEqualTo(keys.Length * StoredTypesPerKey);
 
             // Invalidate only the tuple objects
-            fixture.InvalidateObjects<Tuple<string, int>>(keys).SubscribeAndComplete();
+            fixture.InvalidateObjects<Tuple<string, int>>(keys).WaitForCompletion();
 
             // Should still have the string objects
             var remainingKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();

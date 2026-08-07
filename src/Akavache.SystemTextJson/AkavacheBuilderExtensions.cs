@@ -5,9 +5,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
-using Akavache.Core;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.SystemTextJson;
+#else
 namespace Akavache.SystemTextJson;
+#endif
 
 /// <summary>Provides extension methods for configuring Akavache to use System.Text.Json serialization.</summary>
 public static class AkavacheBuilderExtensions

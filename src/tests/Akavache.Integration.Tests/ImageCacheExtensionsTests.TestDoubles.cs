@@ -4,7 +4,11 @@
 
 using Splat;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Bitmap and HTTP test doubles used by the Akavache.Drawing ImageCacheExtensions tests.</summary>
 public partial class ImageCacheExtensionsTests
@@ -82,7 +86,7 @@ public partial class ImageCacheExtensionsTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Throw<byte[]>(new HttpRequestException(DownloadFailureMessage));
+            Signal.Throw<byte[]>(new HttpRequestException(DownloadFailureMessage));
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, bool fetchAlways) =>
@@ -112,7 +116,7 @@ public partial class ImageCacheExtensionsTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Throw<byte[]>(new HttpRequestException(DownloadFailureMessage));
+            Signal.Throw<byte[]>(new HttpRequestException(DownloadFailureMessage));
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, bool fetchAlways) =>
@@ -143,7 +147,7 @@ public partial class ImageCacheExtensionsTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Throw<byte[]>(new HttpRequestException(DownloadFailureMessage));
+            Signal.Throw<byte[]>(new HttpRequestException(DownloadFailureMessage));
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, bool fetchAlways) =>
@@ -174,7 +178,7 @@ public partial class ImageCacheExtensionsTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Throw<byte[]>(new HttpRequestException(DownloadFailureMessage));
+            Signal.Throw<byte[]>(new HttpRequestException(DownloadFailureMessage));
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, bool fetchAlways) =>
@@ -211,7 +215,7 @@ public partial class ImageCacheExtensionsTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Return(Payload);
+            Signal.Return(Payload);
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, bool fetchAlways) =>
@@ -241,7 +245,7 @@ public partial class ImageCacheExtensionsTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Return(Payload);
+            Signal.Return(Payload);
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, bool fetchAlways) =>
@@ -272,7 +276,7 @@ public partial class ImageCacheExtensionsTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Return(Payload);
+            Signal.Return(Payload);
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, bool fetchAlways) =>
@@ -303,7 +307,7 @@ public partial class ImageCacheExtensionsTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Return(Payload);
+            Signal.Return(Payload);
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, bool fetchAlways) =>

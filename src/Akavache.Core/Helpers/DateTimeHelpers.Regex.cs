@@ -4,7 +4,11 @@
 
 using System.Text.RegularExpressions;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Helpers;
+#else
 namespace Akavache.Helpers;
+#endif
 
 /// <summary>
 /// ISO 8601 regex partial for <see cref="DateTimeHelpers"/>. On net7+ the <c>[GeneratedRegex]</c>

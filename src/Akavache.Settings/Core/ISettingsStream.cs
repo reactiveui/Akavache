@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Core;
+#else
 namespace Akavache.Settings.Core;
+#endif
 
 /// <summary>
 /// Non-generic handle over a <see cref="SettingsStream{T}"/> so <see cref="SettingsStorage"/>
@@ -14,10 +18,10 @@ internal interface ISettingsStream : IDisposable
 {
     /// <summary>
     /// Starts the one-time cold load from disk if it hasn't already begun, and returns an
-    /// observable that fires <see cref="Unit"/> when the load finishes (or immediately if
+    /// observable that fires <see cref="RxVoid"/> when the load finishes (or immediately if
     /// it was already done). The returned observable never errors — failures during the
     /// cold load are swallowed so callers can treat it as "best-effort warm-up".
     /// </summary>
     /// <returns>A one-shot <c>Unit</c> observable that completes when the cold load is done.</returns>
-    IObservable<Unit> EnsureLoaded();
+    IObservable<RxVoid> EnsureLoaded();
 }

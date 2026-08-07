@@ -2,10 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
 using Splat;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests;
+#else
 namespace Akavache.Settings.Tests;
+#endif
 
 /// <summary>
 /// Tests for the static helper decomposition of
@@ -51,7 +54,7 @@ public class SettingsBaseHelperTests
     public async Task TryGetFromBlobCacheRegistryShouldReturnExactMatch()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_RegistryExact");
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         CacheDatabase.CurrentInstance!.BlobCaches["KnownClass"] = cache;
 
         var result = SettingsBase.TryGetFromBlobCacheRegistry("KnownClass");
@@ -65,7 +68,7 @@ public class SettingsBaseHelperTests
     public async Task TryGetFromBlobCacheRegistryShouldFallBackToFirstEntry()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_RegistryFallback");
-        InMemoryBlobCache fallback = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache fallback = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         CacheDatabase.CurrentInstance!.BlobCaches["RenamedDatabase"] = fallback;
 
         var result = SettingsBase.TryGetFromBlobCacheRegistry("DifferentClassName");
@@ -92,7 +95,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromCacheDatabaseShouldReturnUserAccountWhenResolverSucceeds()
     {
-        InMemoryBlobCache userAccount = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache userAccount = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         var result = SettingsBase.TryGetFromCacheDatabase(
             () => userAccount,
@@ -110,7 +113,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromCacheDatabaseShouldFallBackToLocalMachineWhenUserAccountThrows()
     {
-        InMemoryBlobCache localMachine = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache localMachine = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         var result = SettingsBase.TryGetFromCacheDatabase(
             ThrowingResolver,
@@ -128,7 +131,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromCacheDatabaseShouldFallBackToInMemoryWhenOthersThrow()
     {
-        InMemoryBlobCache inMemory = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache inMemory = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         var result = SettingsBase.TryGetFromCacheDatabase(
             ThrowingResolver,
@@ -159,7 +162,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryReadAmbientCacheShouldReturnValueFromSuccessfulResolver()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         var result = SettingsBase.TryReadAmbientCache(() => cache);
 
@@ -185,7 +188,7 @@ public class SettingsBaseHelperTests
     public async Task GetBlobCacheForClassShouldUseInjectedResolvers()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_InjectedResolvers");
-        InMemoryBlobCache userAccount = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache userAccount = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         var result = SettingsBase.GetBlobCacheForClass(
             "AnyClass",
@@ -207,7 +210,7 @@ public class SettingsBaseHelperTests
     public async Task InjectableResolverConstructorShouldUseFallbackResolvers()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_InjectableResolverCtor");
-        InMemoryBlobCache userAccount = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache userAccount = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         using ResolverInjectedSettings settings = new(
             nameof(ResolverInjectedSettings),
@@ -255,8 +258,8 @@ public class SettingsBaseHelperTests
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_NoCacheFoundRegistered");
         var registry = CacheDatabase.CurrentInstance!.BlobCaches;
-        registry["AlphaCache"] = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
-        registry["BetaCache"] = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        registry["AlphaCache"] = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
+        registry["BetaCache"] = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         var exception = SettingsBase.CreateNoCacheFoundException(UnresolvedClassName);
 
@@ -315,7 +318,7 @@ public class SettingsBaseHelperTests
     public async Task GetBlobCacheForClassShouldShortCircuitToRegistry()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_RegistryShortCircuit");
-        InMemoryBlobCache registered = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache registered = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         CacheDatabase.CurrentInstance!.BlobCaches["MyClass"] = registered;
 
         var result = SettingsBase.GetBlobCacheForClass("MyClass");

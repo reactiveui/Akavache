@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for the <see cref="SqliteBlobCache"/> class interface implementation. Uses <see cref="InMemoryAkavacheConnection"/> so native SQLite is not touched.</summary>
 [InheritsTests]
@@ -13,5 +14,5 @@ public class SqliteBlobCacheInterfaceTests : BlobCacheTestsBase
 {
     /// <inheritdoc />
     protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) =>
-        new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateSequencer.Instance);
 }

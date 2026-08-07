@@ -3,13 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Threading.Tasks;
 
-using Akavache.Core;
-using Akavache.Core.Observables;
-using Akavache.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Provides extension methods for serializer operations on blob caches.</summary>
 public static class SerializerExtensions
@@ -24,7 +23,7 @@ public static class SerializerExtensions
         /// <returns>An observable that signals when the operation is complete.</returns>
         [RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
-        public IObservable<Unit> InsertObjects<T>(IEnumerable<KeyValuePair<string, T>> keyValuePairs) =>
+        public IObservable<RxVoid> InsertObjects<T>(IEnumerable<KeyValuePair<string, T>> keyValuePairs) =>
             blobCache.InsertObjects(keyValuePairs, (DateTimeOffset?)null);
 
         /// <summary>Inserts multiple objects into the cache with their associated keys.</summary>
@@ -34,7 +33,7 @@ public static class SerializerExtensions
         /// <returns>An observable that signals when the operation is complete.</returns>
         [RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
-        public IObservable<Unit> InsertObjects<T>(IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration)
+        public IObservable<RxVoid> InsertObjects<T>(IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
@@ -46,7 +45,7 @@ public static class SerializerExtensions
         /// <returns>A Future result representing the completion of the insert.</returns>
         [RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
-        public IObservable<Unit> InsertObjects(IDictionary<string, object> keyValuePairs) =>
+        public IObservable<RxVoid> InsertObjects(IDictionary<string, object> keyValuePairs) =>
             blobCache.InsertObjects(keyValuePairs, (DateTimeOffset?)null);
 
         /// <summary>Insert several objects of mixed types into the cache.</summary>
@@ -55,18 +54,18 @@ public static class SerializerExtensions
         /// <returns>A Future result representing the completion of the insert.</returns>
         [RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
-        public IObservable<Unit> InsertObjects(IDictionary<string, object> keyValuePairs, DateTimeOffset? absoluteExpiration)
+        public IObservable<RxVoid> InsertObjects(IDictionary<string, object> keyValuePairs, DateTimeOffset? absoluteExpiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             ArgumentExceptionHelper.ThrowIfNull(keyValuePairs);
 
             if (keyValuePairs.Count == 0)
             {
-                return Core.CachedObservables.UnitDefault;
+                return ImmutableReturnRxVoidSignal.Instance;
             }
 
             // For mixed object types, we need to serialize each one individually and use its specific type.
-            var insertOperations = new IObservable<Unit>[keyValuePairs.Count];
+            var insertOperations = new IObservable<RxVoid>[keyValuePairs.Count];
             var index = 0;
             foreach (var kvp in keyValuePairs)
             {
@@ -105,7 +104,7 @@ public static class SerializerExtensions
         /// <returns>An observable that signals when the insertion is complete.</returns>
         [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization.")]
-        public IObservable<Unit> InsertObject<T>(string key, T value) =>
+        public IObservable<RxVoid> InsertObject<T>(string key, T value) =>
             blobCache.InsertObject(key, value, (DateTimeOffset?)null);
 
         /// <summary>Inserts an object into the cache using the configured serializer.</summary>
@@ -116,7 +115,7 @@ public static class SerializerExtensions
         /// <returns>An observable that signals when the insertion is complete.</returns>
         [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization.")]
-        public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration)
+        public IObservable<RxVoid> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             ArgumentValidation.ThrowIfNullOrWhiteSpace(key);
@@ -232,7 +231,7 @@ public static class SerializerExtensions
             "Design",
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-        public IObservable<Unit> InvalidateObject<T>(string key)
+        public IObservable<RxVoid> InvalidateObject<T>(string key)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             ArgumentValidation.ThrowIfNullOrWhiteSpace(key);
@@ -252,7 +251,7 @@ public static class SerializerExtensions
             "Design",
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-        public IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys)
+        public IObservable<RxVoid> InvalidateObjects<T>(IEnumerable<string> keys)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             ArgumentExceptionHelper.ThrowIfNull(keys);
@@ -267,7 +266,7 @@ public static class SerializerExtensions
             "Design",
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-        public IObservable<Unit> InvalidateAllObjects<T>()
+        public IObservable<RxVoid> InvalidateAllObjects<T>()
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             return blobCache.InvalidateAll(typeof(T));
@@ -282,7 +281,7 @@ public static class SerializerExtensions
         /// <returns>A Future result representing the completion of the insert.</returns>
         [RequiresUnreferencedCode("Using InsertAllObjects requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertAllObjects requires types to be preserved for serialization.")]
-        public IObservable<Unit> InsertAllObjects<T>(IEnumerable<KeyValuePair<string, T>> keyValuePairs) =>
+        public IObservable<RxVoid> InsertAllObjects<T>(IEnumerable<KeyValuePair<string, T>> keyValuePairs) =>
             blobCache.InsertAllObjects(keyValuePairs, (DateTimeOffset?)null);
 
         /// <summary>
@@ -295,7 +294,7 @@ public static class SerializerExtensions
         /// <returns>A Future result representing the completion of the insert.</returns>
         [RequiresUnreferencedCode("Using InsertAllObjects requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertAllObjects requires types to be preserved for serialization.")]
-        public IObservable<Unit> InsertAllObjects<T>(IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration)
+        public IObservable<RxVoid> InsertAllObjects<T>(IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             return blobCache.Insert(SerializeValues(blobCache, keyValuePairs), absoluteExpiration);
@@ -635,7 +634,7 @@ public static class SerializerExtensions
             bool shouldInvalidateOnError,
             Func<T, bool>? cacheValidationPredicate)
         {
-            var fetch = Observable.Defer(() => blobCache.GetObjectCreatedAt<T>(key))
+            var fetch = Signal.Defer(() => blobCache.GetObjectCreatedAt<T>(key))
                 .Select(x => ShouldRefetchCachedValue(fetchPredicate, x))
                 .Where(static x => x)
                 .SelectMany(_ =>
@@ -644,27 +643,27 @@ public static class SerializerExtensions
                     {
                         var shouldInvalidate = shouldInvalidateOnError
                             ? blobCache.InvalidateObject<T>(key)
-                            : Core.CachedObservables.UnitDefault;
-                        return shouldInvalidate.SelectMany(_ => Observable.Throw<T>(ex));
+                            : ImmutableReturnRxVoidSignal.Instance;
+                        return shouldInvalidate.SelectMany(_ => new ImmediateThrowSignal<T>(ex));
                     });
 
                     return fetchObs
                         .SelectMany(x =>
                             cacheValidationPredicate is not null && !cacheValidationPredicate(x)
-                                ? Observable.Return(default(T))
+                                ? Signal.Return(default(T))
                                 : blobCache.InvalidateObject<T>(key).SelectConstant(x))
                         .SelectMany(x =>
                             cacheValidationPredicate is not null && !cacheValidationPredicate(x!)
-                                ? Observable.Return(default(T))
+                                ? Signal.Return(default(T))
                                 : blobCache.InsertObject(key, x, absoluteExpiration).SelectConstant(x));
                 });
 
             var result = blobCache.GetObject<T>(key).Select(static x => (x, true))
-                .Catch(Observable.Return((default(T), false)));
+                .Catch<(T?, bool), Exception>(static _ => Signal.Return((default(T), false)));
 
-            return result.SelectMany(static x => x.Item2 ? Observable.Return(x.Item1) : Observable.Empty<T>())
+            return result.SelectMany(static x => x.Item2 ? Signal.Return(x.Item1) : ImmutableEmptySignal<T>.Instance)
                 .Concat(fetch)
-                .Multicast(new ReplaySubject<T?>())
+                .Multicast(new ReplaySignal<T?>())
                 .RefCount();
         }
 
@@ -875,7 +874,7 @@ public static class SerializerExtensions
                 {
                     // Log the exception and return empty sequence instead of crashing
                     System.Diagnostics.Debug.WriteLine($"GetAllKeysSafe caught exception: {ex.Message}");
-                    return Observable.Empty<string>();
+                    return ImmutableEmptySignal<string>.Instance;
                 });
         }
 
@@ -896,7 +895,7 @@ public static class SerializerExtensions
                 {
                     // Log the exception and return empty sequence instead of crashing
                     System.Diagnostics.Debug.WriteLine($"GetAllKeysSafe caught exception: {ex.Message}");
-                    return Observable.Empty<string>();
+                    return ImmutableEmptySignal<string>.Instance;
                 });
         }
 

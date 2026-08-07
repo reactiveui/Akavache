@@ -5,7 +5,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
-using Akavache.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
@@ -14,7 +13,11 @@ using Newtonsoft.Json.Bson;
 using NewtonsoftJsonException = Newtonsoft.Json.JsonException;
 using SystemTextJsonException = System.Text.Json.JsonException;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.SystemTextJson;
+#else
 namespace Akavache.SystemTextJson;
+#endif
 
 /// <summary>
 /// A BSON serializer that uses Newtonsoft.Json.Bson for BSON encoding/decoding

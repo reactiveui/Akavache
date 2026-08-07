@@ -19,6 +19,16 @@
 
   <ItemGroup>
     <PackageReference Include="System.Text.Json" />
+    <PackageReference Include="ReactiveUI.Primitives" ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <!-- Akavache's own namespaces, turned into global usings by Directory.Build.targets (shifted to
+       Akavache.Reactive.* on the .Reactive leaf). -->
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.SystemTextJson" />
   </ItemGroup>
 
   <!-- Shared internals from Akavache.Core (see Akavache.Sqlite3.csproj for rationale). -->

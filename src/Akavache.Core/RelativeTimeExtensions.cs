@@ -4,7 +4,11 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Provides extension methods for setting cache expiration times based on relative time intervals from the current time.</summary>
 public static class RelativeTimeExtensions
@@ -18,7 +22,7 @@ public static class RelativeTimeExtensions
         /// <param name="data">The data to store in the cache entry.</param>
         /// <param name="expiration">A time span that will be added to the current time to determine expiration.</param>
         /// <returns>An observable that signals when the item is added to the cache.</returns>
-        public IObservable<Unit> Insert(string key, byte[] data, TimeSpan expiration)
+        public IObservable<RxVoid> Insert(string key, byte[] data, TimeSpan expiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             return blobCache.Insert(key, data, blobCache.Scheduler.Now + expiration);
@@ -32,7 +36,7 @@ public static class RelativeTimeExtensions
         /// <returns>An observable that signals when the item is added to the cache.</returns>
         [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]
-        public IObservable<Unit> InsertObject<T>(string key, T value, TimeSpan expiration)
+        public IObservable<RxVoid> InsertObject<T>(string key, T value, TimeSpan expiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             return blobCache.InsertObject(key, value, blobCache.Scheduler.Now + expiration);
@@ -45,7 +49,7 @@ public static class RelativeTimeExtensions
         /// <param name="key">The key of the cache entry to update.</param>
         /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
         /// <returns>A signal indicating when the operation is complete.</returns>
-        public IObservable<Unit> UpdateExpiration(string key, TimeSpan expiration)
+        public IObservable<RxVoid> UpdateExpiration(string key, TimeSpan expiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             return blobCache.UpdateExpiration(key, blobCache.Scheduler.Now + expiration);
@@ -59,7 +63,7 @@ public static class RelativeTimeExtensions
         /// <param name="type">The type of the cached object.</param>
         /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
         /// <returns>A signal indicating when the operation is complete.</returns>
-        public IObservable<Unit> UpdateExpiration(string key, Type type, TimeSpan expiration)
+        public IObservable<RxVoid> UpdateExpiration(string key, Type type, TimeSpan expiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             return blobCache.UpdateExpiration(key, type, blobCache.Scheduler.Now + expiration);
@@ -72,7 +76,7 @@ public static class RelativeTimeExtensions
         /// <param name="keys">The keys of the cache entries to update.</param>
         /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
         /// <returns>A signal indicating when the operation is complete.</returns>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, TimeSpan expiration)
+        public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, TimeSpan expiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             return blobCache.UpdateExpiration(keys, blobCache.Scheduler.Now + expiration);
@@ -86,7 +90,7 @@ public static class RelativeTimeExtensions
         /// <param name="type">The type of the cached objects.</param>
         /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
         /// <returns>A signal indicating when the operation is complete.</returns>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, TimeSpan expiration)
+        public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, Type type, TimeSpan expiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             return blobCache.UpdateExpiration(keys, type, blobCache.Scheduler.Now + expiration);
@@ -105,7 +109,7 @@ public static class RelativeTimeExtensions
         /// <returns>A observable which will signal when the item is added.</returns>
         [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
-        public IObservable<Unit> SaveLogin(string user, string password, string host, TimeSpan expiration)
+        public IObservable<RxVoid> SaveLogin(string user, string password, string host, TimeSpan expiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             return blobCache.SaveLogin(user, password, host, blobCache.Scheduler.Now + expiration);

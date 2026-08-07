@@ -6,9 +6,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Akavache;
 
@@ -47,7 +44,7 @@ namespace Akavache.Samples
             private static IObservable<UserProfile> FetchUserProfileFromApi()
             {
                 // Simulate API call
-                return Observable.FromAsync(async () =>
+                return Signal.FromAsync(async () =>
                 {
                     await Task.Delay(1000); // Simulate network delay
                     return new UserProfile 
@@ -122,7 +119,7 @@ namespace Akavache.Samples
 
             private static IObservable<List<Message>> FetchMessagesFromApi(int ticketId)
             {
-                return Observable.FromAsync(async () =>
+                return Signal.FromAsync(async () =>
                 {
                     await Task.Delay(800); // Simulate API call
                     return new List<Message>
@@ -143,7 +140,7 @@ namespace Akavache.Samples
         {
             public class NewsService
             {
-                private readonly Subject<NewsUpdateEvent> _updateEvents = new();
+                private readonly Signal<NewsUpdateEvent> _updateEvents = new();
                 private readonly List<NewsItem> _currentNews = new();
                 private bool _hasCachedData = false;
 
@@ -245,7 +242,7 @@ namespace Akavache.Samples
 
             private static IObservable<List<NewsItem>> FetchNewsFromApi()
             {
-                return Observable.FromAsync(async () =>
+                return Signal.FromAsync(async () =>
                 {
                     await Task.Delay(1200); // Simulate API call
                     return new List<NewsItem>
@@ -269,14 +266,14 @@ namespace Akavache.Samples
                 public IObservable<DataState<List<Product>>> GetProducts()
                 {
                     // Start with loading state
-                    var loadingState = Observable.Return(DataState<List<Product>>.Loading());
+                    var loadingState = Signal.Return(DataState<List<Product>>.Loading());
                     
                     // Get cached and fresh data
                     var dataStream = CacheDatabase.LocalMachine.GetAndFetchLatest("products",
                         () => FetchProductsFromApi())
                         .Select(products => DataState<List<Product>>.Success(products, products.Count))
                         .Catch<DataState<List<Product>>, Exception>(ex => 
-                            Observable.Return(DataState<List<Product>>.Error(ex)));
+                            Signal.Return(DataState<List<Product>>.Error(ex)));
                     
                     // Combine loading state with data stream
                     return loadingState.Concat(dataStream);
@@ -326,7 +323,7 @@ namespace Akavache.Samples
 
             private static IObservable<List<Product>> FetchProductsFromApi()
             {
-                return Observable.FromAsync(async () =>
+                return Signal.FromAsync(async () =>
                 {
                     await Task.Delay(2000); // Simulate slow API
                     return new List<Product>
@@ -383,7 +380,7 @@ namespace Akavache.Samples
 
             private static IObservable<WeatherData> FetchWeatherFromApi()
             {
-                return Observable.FromAsync(async () =>
+                return Signal.FromAsync(async () =>
                 {
                     await Task.Delay(500);
                     return new WeatherData { Temperature = 22, Humidity = 65 };
@@ -392,7 +389,7 @@ namespace Akavache.Samples
 
             private static IObservable<UserSettings> FetchUserSettingsFromApi()
             {
-                return Observable.FromAsync(async () =>
+                return Signal.FromAsync(async () =>
                 {
                     await Task.Delay(300);
                     return new UserSettings { Theme = "Dark", NotificationsEnabled = true };
@@ -401,7 +398,7 @@ namespace Akavache.Samples
 
             private static IObservable<LargeDataset> FetchLargeDatasetFromApi()
             {
-                return Observable.FromAsync(async () =>
+                return Signal.FromAsync(async () =>
                 {
                     await Task.Delay(3000); // Simulate large download
                     return new LargeDataset { Items = Enumerable.Range(1, 1000).ToList() };
@@ -481,7 +478,7 @@ namespace Akavache.Samples
 
             private static IObservable<List<string>> FetchDataFromApi()
             {
-                return Observable.Return(new List<string> { "item1", "item2", "item3" });
+                return Signal.Return(new List<string> { "item1", "item2", "item3" });
             }
 
             private static void UpdateUI(List<string> items)
@@ -643,7 +640,7 @@ namespace Akavache.Samples
 
         private static IObservable<AppData> FetchInitialAppData()
         {
-            return Observable.FromAsync(async () => 
+            return Signal.FromAsync(async () => 
             {
                 // Simulate API call for initial app data
                 await Task.Delay(1500);
@@ -658,7 +655,7 @@ namespace Akavache.Samples
 
         private static IObservable<UserSettings> FetchUserSettingsFromServer()
         {
-            return Observable.FromAsync(async () => 
+            return Signal.FromAsync(async () => 
             {
                 // Simulate settings API call
                 await Task.Delay(800);

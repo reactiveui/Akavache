@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core.Observables;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for <see cref="FirstMatchFromCandidatesObservable{TKey, TRaw, TResult}"/>.</summary>
 [Category("Akavache")]
@@ -47,7 +49,7 @@ public class FirstMatchFromCandidatesObservableTests
     {
         var sut = new FirstMatchFromCandidatesObservable<string, int, int>(
             [],
-            static _ => Observable.Return(1),
+            static _ => Signal.Return(1),
             static x => x,
             static _ => true,
             -1);
@@ -65,7 +67,7 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
             keys,
-            static k => Observable.Return(k.ToUpperInvariant()),
+            static k => Signal.Return(k.ToUpperInvariant()),
             static x => x,
             static v => v == "A",
             "none");
@@ -87,7 +89,7 @@ public class FirstMatchFromCandidatesObservableTests
             k =>
             {
                 projected.Add(k);
-                return Observable.Return(k);
+                return Signal.Return(k);
             },
             static x => x,
             static v => v == "z",
@@ -107,7 +109,7 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<int, int, int>(
             keys,
-            Observable.Return,
+            Signal.Return,
             static x => x,
             static _ => false,
             NoMatchFallbackValue);
@@ -126,8 +128,8 @@ public class FirstMatchFromCandidatesObservableTests
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
             keys,
             static k => k == "boom"
-                ? Observable.Throw<string>(new InvalidOperationException("bang"))
-                : Observable.Return(k),
+                ? Signal.Throw<string>(new InvalidOperationException("bang"))
+                : Signal.Return(k),
             static x => x,
             static v => v == "ok",
             "none");
@@ -147,7 +149,7 @@ public class FirstMatchFromCandidatesObservableTests
             keys,
             static k => k == "throw"
                 ? throw new InvalidOperationException("factory boom")
-                : Observable.Return(k),
+                : Signal.Return(k),
             static x => x,
             static v => v == "ok",
             "none");
@@ -165,7 +167,7 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<int, int, string>(
             keys,
-            Observable.Return,
+            Signal.Return,
             static k => k == 1 ? throw new InvalidOperationException("transform boom") : k.ToString(),
             static _ => true,
             "none");
@@ -183,7 +185,7 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<int, int, int>(
             keys,
-            static _ => Observable.Throw<int>(new InvalidOperationException("all fail")),
+            static _ => Signal.Throw<int>(new InvalidOperationException("all fail")),
             static x => x,
             static _ => true,
             -1);
@@ -201,7 +203,7 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
             keys,
-            Observable.Return,
+            Signal.Return,
             static x => x,
             static _ => false, // never match — would normally exhaust all candidates
             FallbackText);
@@ -230,7 +232,7 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
             keys,
-            static _ => Observable.Return("found"),
+            static _ => Signal.Return("found"),
             static x => x,
             static _ => true,
             "none");
@@ -255,7 +257,7 @@ public class FirstMatchFromCandidatesObservableTests
     [Test]
     public async Task AsyncCandidateEmitsMatch_ForwardsValueAndCompletes()
     {
-        using Subject<string> pending = new();
+        using Signal<string> pending = new();
         List<string> keys = [PendingCandidateKey];
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
@@ -293,12 +295,12 @@ public class FirstMatchFromCandidatesObservableTests
     [Test]
     public async Task AsyncCandidateCompletesEmpty_AdvancesToNextCandidate()
     {
-        using Subject<string> pending = new();
+        using Signal<string> pending = new();
         List<string> keys = [PendingCandidateKey, InlineCandidateKey];
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
             keys,
-            k => k == PendingCandidateKey ? pending : Observable.Return(InlineCandidateValue),
+            k => k == PendingCandidateKey ? pending : Signal.Return(InlineCandidateValue),
             static x => x,
             static v => v == InlineCandidateValue,
             "none");
@@ -327,12 +329,12 @@ public class FirstMatchFromCandidatesObservableTests
     [Test]
     public async Task AsyncCandidateErrors_AdvancesToNextCandidate()
     {
-        using Subject<string> pending = new();
+        using Signal<string> pending = new();
         List<string> keys = [PendingCandidateKey, InlineCandidateKey];
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
             keys,
-            k => k == PendingCandidateKey ? pending : Observable.Return(InlineCandidateValue),
+            k => k == PendingCandidateKey ? pending : Signal.Return(InlineCandidateValue),
             static x => x,
             static v => v == InlineCandidateValue,
             "none");
@@ -360,7 +362,7 @@ public class FirstMatchFromCandidatesObservableTests
     [Test]
     public async Task AsyncCandidatesExhausted_EmitsFallback()
     {
-        using Subject<string> pending = new();
+        using Signal<string> pending = new();
         List<string> keys = [PendingCandidateKey];
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
@@ -391,7 +393,7 @@ public class FirstMatchFromCandidatesObservableTests
     [Test]
     public async Task DisposeDuringAsyncCandidate_UnsubscribesFromSource()
     {
-        using Subject<string> pending = new();
+        using Signal<string> pending = new();
         List<string> keys = [PendingCandidateKey];
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
@@ -432,14 +434,14 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<int, int, int>(
             keys,
-            static k => Observable.Return(k * ProjectionMultiplier),
+            static k => Signal.Return(k * ProjectionMultiplier),
             static x => x,
             static v => v == MatchingProjectedValue,
             -1);
 
         int? result = null;
         var completed = false;
-        _ = sut.TrySyncLoop(Observer.Create<int>(
+        _ = sut.TrySyncLoop(Witness.Create<int>(
             v => result = v,
             static _ => { },
             () => completed = true));
@@ -457,13 +459,13 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<int, int, int>(
             keys,
-            static _ => Observable.Throw<int>(new InvalidOperationException("fail")),
+            static _ => Signal.Throw<int>(new InvalidOperationException("fail")),
             static x => x,
             static _ => true,
             AllErrorsFallbackValue);
 
         int? result = null;
-        _ = sut.TrySyncLoop(Observer.Create<int>(
+        _ = sut.TrySyncLoop(Witness.Create<int>(
             v => result = v,
             static _ => { },
             static () => { }));

@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables.Fluent;
 using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Media;
@@ -152,16 +151,16 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     public Brush ForegroundBrush => _foregroundBrush.Value;
 
     /// <summary>Gets the command to toggle completion status.</summary>
-    public ReactiveCommand<Unit, Unit> ToggleCompletedCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ToggleCompletedCommand { get; }
 
     /// <summary>Gets the command to delete the todo.</summary>
-    public ReactiveCommand<Unit, Unit> DeleteCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> DeleteCommand { get; }
 
     /// <summary>Gets the command to edit the todo.</summary>
-    public ReactiveCommand<Unit, Unit> EditCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> EditCommand { get; }
 
     /// <summary>Gets the command to schedule a reminder.</summary>
-    public ReactiveCommand<Unit, Unit> ScheduleReminderCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ScheduleReminderCommand { get; }
 
     /// <summary>Gets the priority color indicator brush.</summary>
     public Brush PriorityBrush => TodoItem.Priority switch
@@ -189,8 +188,10 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     /// <summary>Toggles the todo's completion state and persists the change.</summary>
     /// <returns>An observable that signals when the toggle and save operation is complete.</returns>
-    private IObservable<Unit> ExecuteToggleCompleted() =>
-        Observable.FromAsync(async () => await Application.Current.Dispatcher.InvokeAsync(() =>
+    private IObservable<RxVoid> ExecuteToggleCompleted() =>
+        Signal.FromAsync(async () =>
+        {
+            await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 TodoItem.IsCompleted = !TodoItem.IsCompleted;
 
@@ -201,7 +202,9 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged();
-            }))
+            });
+            return RxVoid.Default;
+        })
         .SelectMany(_ => SaveTodoItem())
         .SelectMany(_ =>
 
@@ -210,56 +213,61 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     /// <summary>Deletes this todo from its parent collection and the cache.</summary>
     /// <returns>An observable that signals when the deletion operation is complete.</returns>
-    private IObservable<Unit> ExecuteDelete() =>
-        Observable.FromAsync(async () =>
+    private IObservable<RxVoid> ExecuteDelete() =>
+        Signal.FromAsync(async () =>
         {
             // Remove from parent collection first
             await Application.Current.Dispatcher.InvokeAsync(() => DeleteAction?.Invoke(this));
 
             // Then invalidate cache
             await TodoCacheService.InvalidateTodo(TodoItem.Id);
+            return RxVoid.Default;
         });
 
     /// <summary>Opens the edit dialog and applies the resulting changes.</summary>
     /// <returns>An observable that signals when the edit operation is complete.</returns>
-    private IObservable<Unit> ExecuteEdit() =>
-        Observable.FromAsync(async () => await Application.Current.Dispatcher.InvokeAsync(() =>
+    private IObservable<RxVoid> ExecuteEdit() =>
+        Signal.FromAsync(async () =>
         {
-            EditTodoDialog dialog = new(TodoItem);
-            if (dialog.ShowDialog() != true)
-            {
-                return;
-            }
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+{
+EditTodoDialog dialog = new(TodoItem);
+if (dialog.ShowDialog() != true)
+{
+return;
+}
 
-            var updatedTodo = dialog.UpdatedTodo;
-            if (updatedTodo is null)
-            {
-                return;
-            }
+var updatedTodo = dialog.UpdatedTodo;
+if (updatedTodo is null)
+{
+return;
+}
 
-            TodoItem.Title = updatedTodo.Title;
-            TodoItem.Description = updatedTodo.Description;
-            TodoItem.DueDate = updatedTodo.DueDate;
-            TodoItem.Priority = updatedTodo.Priority;
+TodoItem.Title = updatedTodo.Title;
+TodoItem.Description = updatedTodo.Description;
+TodoItem.DueDate = updatedTodo.DueDate;
+TodoItem.Priority = updatedTodo.Priority;
 
-            // Trigger property notifications for ALL relevant properties
-            this.RaisePropertyChanged();
-            this.RaisePropertyChanged();
-            this.RaisePropertyChanged();
-            this.RaisePropertyChanged();
-            this.RaisePropertyChanged();
-            this.RaisePropertyChanged();
+    // Trigger property notifications for ALL relevant properties
+this.RaisePropertyChanged();
+this.RaisePropertyChanged();
+this.RaisePropertyChanged();
+this.RaisePropertyChanged();
+this.RaisePropertyChanged();
+this.RaisePropertyChanged();
 
-            _ = SaveTodoItem().Subscribe();
-        }));
+_ = SaveTodoItem().Subscribe();
+});
+            return RxVoid.Default;
+        });
 
     /// <summary>Schedules a reminder for this todo if it has a due date.</summary>
     /// <returns>An observable that signals when the reminder has been scheduled.</returns>
-    private IObservable<Unit> ExecuteScheduleReminder() => !TodoItem.DueDate.HasValue ? Observable.Return(Unit.Default) : _notificationService.ScheduleReminder(TodoItem);
+    private IObservable<RxVoid> ExecuteScheduleReminder() => !TodoItem.DueDate.HasValue ? Signal.Return(RxVoid.Default) : _notificationService.ScheduleReminder(TodoItem);
 
     /// <summary>Persists this todo back to the cached collection.</summary>
     /// <returns>An observable that signals when the save operation is complete.</returns>
-    private IObservable<Unit> SaveTodoItem() =>
+    private IObservable<RxVoid> SaveTodoItem() =>
         TodoCacheService.GetAllTodos()
             .Take(1)
             .SelectMany(todos =>

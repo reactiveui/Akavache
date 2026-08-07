@@ -4,12 +4,11 @@
 
 using System.Diagnostics;
 
-using Akavache.Core;
-using Akavache.NewtonsoftJson;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>A base class for tests about bulk operations.</summary>
 public abstract class BlobCacheTestsBase : IDisposable
@@ -63,12 +62,12 @@ public abstract class BlobCacheTestsBase : IDisposable
             Func<IObservable<Tuple<string, string>>> fetcher = new(() =>
             {
                 fetchCount++;
-                return Observable.Return(new Tuple<string, string>("Foo", "Bar"));
+                return Signal.Return(new Tuple<string, string>("Foo", "Bar"));
             });
 
             try
             {
-                var result = fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance)
+                var result = fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateSequencer.Instance)
                     .WaitForValue(TimeSpan.FromSeconds(FetchTimeoutSeconds));
 
                 await Assert.That(result).IsNotNull();
@@ -81,7 +80,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 await Assert.That(fetchCount).IsGreaterThanOrEqualTo(1);
 
                 var initialFetchCount = fetchCount;
-                result = fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance)
+                result = fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateSequencer.Instance)
                     .WaitForValue(TimeSpan.FromSeconds(FetchTimeoutSeconds));
                 await Assert.That(result).IsNotNull();
                 using (Assert.Multiple())
@@ -130,11 +129,11 @@ public abstract class BlobCacheTestsBase : IDisposable
             var fetcher = () =>
             {
                 fetchCount++;
-                return Observable.Return(new Tuple<string, int>("Foo", fetchCount));
+                return Signal.Return(new Tuple<string, int>("Foo", fetchCount));
             };
 
             var result = fixture.GetAndFetchLatest("Test", fetcher)
-                .ObserveOn(ImmediateScheduler.Instance)
+                .ObserveOn(ImmediateSequencer.Instance)
                 .WaitForValue(TimeSpan.FromSeconds(FetchTimeoutSeconds));
 
             using (Assert.Multiple())
@@ -149,9 +148,8 @@ public abstract class BlobCacheTestsBase : IDisposable
             List<Tuple<string, int>?> results = [];
             var initialFetchCount = fetchCount;
             await fixture.GetAndFetchLatest("Test", fetcher)
-                .ObserveOn(ImmediateScheduler.Instance)
-                .Take(CachedAndLatestEmissionCount) // Take at most the cached value plus the latest
-                .ForEachAsync(results.Add);
+                .ObserveOn(ImmediateSequencer.Instance)
+                .Take(CachedAndLatestEmissionCount).Do(results.Add).LastOrDefaultAsync();
 
             // Results validation
             using (Assert.Multiple())

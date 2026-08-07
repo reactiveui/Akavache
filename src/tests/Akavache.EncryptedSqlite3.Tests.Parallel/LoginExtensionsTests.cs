@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.EncryptedSqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for login extension methods.</summary>
 [Category("Akavache")]
@@ -191,12 +191,12 @@ public class LoginExtensionsTests
         const string host = "null-login-host";
         const string key = $"login:{host}";
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Writing an empty byte[] under the typed key causes GetObject<LoginInfo>
         // to emit a null value (it interprets empty payloads as stored nulls) so
         // the null branch of LoginExtensions.GetLogin's Select throw runs.
-        cache.Insert(key, [], typeof(LoginInfo)).SubscribeAndComplete();
+        cache.Insert(key, [], typeof(LoginInfo)).WaitForCompletion();
 
         var getError = cache.GetLogin(host).SubscribeGetError();
         await Assert.That(getError).IsTypeOf<KeyNotFoundException>();
@@ -215,14 +215,14 @@ public class LoginExtensionsTests
         const string namedHost = "named.example.com";
         const string namedUser = "nameduser";
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Save against the default host explicitly, so erasing it can only succeed if the
         // host-less overload resolves to that same host.
-        cache.SaveLogin("defaultuser", "defaultpassword", LoginExtensions.DefaultHost).SubscribeAndComplete();
-        cache.SaveLogin(namedUser, "namedpassword", namedHost).SubscribeAndComplete();
+        cache.SaveLogin("defaultuser", "defaultpassword", LoginExtensions.DefaultHost).WaitForCompletion();
+        cache.SaveLogin(namedUser, "namedpassword", namedHost).WaitForCompletion();
 
-        cache.EraseLogin().SubscribeAndComplete();
+        cache.EraseLogin().WaitForCompletion();
 
         var defaultError = cache.GetLogin(LoginExtensions.DefaultHost).SubscribeGetError();
         await Assert.That(defaultError).IsTypeOf<KeyNotFoundException>();

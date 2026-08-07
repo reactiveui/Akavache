@@ -2,12 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.NewtonsoftJson;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for the UpdateExpiration functionality across all IBlobCache implementations.</summary>
 public class UpdateExpirationTests : IDisposable
@@ -221,7 +220,7 @@ public class UpdateExpirationTests : IDisposable
 
     /// <summary>
     /// Tests that the type-scoped single-key
-    /// <see cref="Sqlite3.SqliteBlobCache.UpdateExpiration(string, Type, DateTimeOffset?)"/>
+    /// <see cref="SqliteBlobCache.UpdateExpiration(string, Type, DateTimeOffset?)"/>
     /// accepts a null absolute expiration and leaves the stored value intact.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
@@ -236,14 +235,14 @@ public class UpdateExpirationTests : IDisposable
             const string key = "typed-null-exp-key";
             fixture.InsertObject(key, "value", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
 
-            fixture.UpdateExpiration(key, typeof(string), null).SubscribeAndComplete();
+            fixture.UpdateExpiration(key, typeof(string), null).WaitForCompletion();
 
             var value = fixture.GetObject<string>(key).WaitForValue();
             await Assert.That(value).IsEqualTo("value");
         }
     }
 
-    /// <summary>Tests that the multi-key <see cref="Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, DateTimeOffset?)"/> accepts a null absolute expiration.</summary>
+    /// <summary>Tests that the multi-key <see cref="SqliteBlobCache.UpdateExpiration(IEnumerable{string}, DateTimeOffset?)"/> accepts a null absolute expiration.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task UpdateExpirationKeysWithNullExpirationShouldSucceed()
@@ -257,7 +256,7 @@ public class UpdateExpirationTests : IDisposable
             fixture.InsertObject(keys[0], "v1", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
             fixture.InsertObject(keys[1], "v2", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
 
-            fixture.UpdateExpiration(keys, null).SubscribeAndComplete();
+            fixture.UpdateExpiration(keys, null).WaitForCompletion();
 
             var first = fixture.GetObject<string>(keys[0]).WaitForValue();
             var second = fixture.GetObject<string>(keys[1]).WaitForValue();
@@ -266,7 +265,7 @@ public class UpdateExpirationTests : IDisposable
         }
     }
 
-    /// <summary>Tests that the type-scoped multi-key <see cref="Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, Type, DateTimeOffset?)"/> accepts a null absolute expiration.</summary>
+    /// <summary>Tests that the type-scoped multi-key <see cref="SqliteBlobCache.UpdateExpiration(IEnumerable{string}, Type, DateTimeOffset?)"/> accepts a null absolute expiration.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task UpdateExpirationKeysWithTypeNullExpirationShouldSucceed()
@@ -280,7 +279,7 @@ public class UpdateExpirationTests : IDisposable
             fixture.InsertObject(keys[0], "v1", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
             fixture.InsertObject(keys[1], "v2", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
 
-            fixture.UpdateExpiration(keys, typeof(string), null).SubscribeAndComplete();
+            fixture.UpdateExpiration(keys, typeof(string), null).WaitForCompletion();
 
             var first = fixture.GetObject<string>(keys[0]).WaitForValue();
             var second = fixture.GetObject<string>(keys[1]).WaitForValue();
@@ -312,7 +311,7 @@ public class UpdateExpirationTests : IDisposable
     /// <param name="path">The path for the cache.</param>
     /// <param name="serializer">The serializer to use.</param>
     /// <returns>A new SqliteBlobCache instance.</returns>
-    private static Sqlite3.SqliteBlobCache CreateBlobCache(string path, ISerializer serializer)
+    private static SqliteBlobCache CreateBlobCache(string path, ISerializer serializer)
     {
         // Create separate database files for each serializer to ensure compatibility
         var serializerName = serializer.GetType().Name ?? "Unknown";

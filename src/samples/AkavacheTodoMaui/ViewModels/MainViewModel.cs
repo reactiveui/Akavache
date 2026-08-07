@@ -5,8 +5,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reactive.Disposables;
-using System.Reactive.Disposables.Fluent;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
 using ReactiveUI;
@@ -121,28 +119,29 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
         ];
 
         _isLoading = commandExecutionStates
-            .CombineLatest(AnyExecuting)
+            .CombineLatestValuesAreAllFalse()
+            .Select(static allIdle => !allIdle)
             .ToProperty(this, static x => x.IsLoading);
 
         // Enhanced statistics calculation that responds to individual todo property changes
-        _todoStats = Observable.Merge(
-            this.WhenAnyValue(static x => x.Todos.Count).Select(static _ => Unit.Default),
-            Observable.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(1)).Select(static _ => Unit.Default),
-            this.WhenAnyValue(static x => x.TodoStats).Select(static _ => Unit.Default).Skip(1))
+        _todoStats = Signal.Merge(
+            this.WhenAnyValue(static x => x.Todos.Count).Select(static _ => RxVoid.Default),
+            Signal.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(1)).Select(static _ => RxVoid.Default),
+            this.WhenAnyValue(static x => x.TodoStats).Select(static _ => RxVoid.Default).Skip(1))
             .Throttle(TimeSpan.FromMilliseconds(StatsThrottleMilliseconds))
             .SelectMany(static _ => TodoCacheService.GetTodoStats())
-            .Catch(Observable.Return(new TodoStats()))
+            .Catch<TodoStats?, Exception>(static _ => Signal.Return<TodoStats?>(new()))
             .ObserveOn(RxSchedulers.MainThreadScheduler)
             .ToProperty(this, static x => x.TodoStats);
 
         // Setup cache info with reduced frequency and better error handling
-        _cacheInfo = Observable.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(CacheInfoRefreshMinutes))
+        _cacheInfo = Signal.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(CacheInfoRefreshMinutes))
             .SelectMany(static _ => TodoCacheService.GetCacheInfo())
             .Retry(CacheInfoRetryCount)
             .Catch(static (Exception ex) =>
             {
                 System.Diagnostics.Debug.WriteLine($"Cache info failed: {ex}");
-                return Observable.Return(new CacheInfo { UserAccountKeys = 0, LocalMachineKeys = 0, SecureKeys = 0, TotalKeys = 0, LastChecked = TimeProvider.System.GetUtcNow() });
+                return Signal.Return(new CacheInfo { UserAccountKeys = 0, LocalMachineKeys = 0, SecureKeys = 0, TotalKeys = 0, LastChecked = TimeProvider.System.GetUtcNow() });
             })
             .ObserveOn(RxSchedulers.MainThreadScheduler)
             .ToProperty(this, static x => x.CacheInfo);
@@ -178,29 +177,29 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     public TodoPriority[] PriorityOptions { get; }
 
     /// <summary>Gets the command to add a new todo.</summary>
-    public ReactiveCommand<Unit, Unit> AddTodoCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> AddTodoCommand { get; }
 
     /// <summary>Gets the command to refresh all data.</summary>
-    public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> RefreshCommand { get; }
 
     /// <summary>Gets the command to clear completed todos.</summary>
-    public ReactiveCommand<Unit, Unit> ClearCompletedCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ClearCompletedCommand { get; }
 
     /// <summary>Gets the command to save settings.</summary>
-    public ReactiveCommand<Unit, Unit> SaveSettingsCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> SaveSettingsCommand { get; }
 
     /// <summary>Gets the command to cleanup cache.</summary>
-    public ReactiveCommand<Unit, Unit> CleanupCacheCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> CleanupCacheCommand { get; }
 
     /// <summary>Gets the command to load sample data.</summary>
-    public ReactiveCommand<Unit, Unit> LoadSampleDataCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> LoadSampleDataCommand { get; }
 
     /// <summary>Gets the command to test date setting functionality.</summary>
-    public ReactiveCommand<Unit, Unit> TestDateCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> TestDateCommand { get; }
 
     /// <summary>Saves application state when shutting down.</summary>
     /// <returns>Observable unit.</returns>
-    public IObservable<Unit> SaveApplicationState() => Observable.Merge(
+    public IObservable<RxVoid> SaveApplicationState() => Signal.Merge(
             SaveCurrentTodos(),
             TodoCacheService.SaveSettings(Settings),
             TodoCacheService.SaveApplicationState());
@@ -249,22 +248,6 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
         ];
     }
 
-    /// <summary>Reports whether any of the tracked commands is currently executing.</summary>
-    /// <param name="executionStates">The latest execution state of every tracked command.</param>
-    /// <returns>True when at least one command is running; otherwise, false.</returns>
-    private static bool AnyExecuting(IList<bool> executionStates)
-    {
-        foreach (var executing in executionStates)
-        {
-            if (executing)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /// <summary>Splits a comma-separated tag list into trimmed, non-empty tags.</summary>
     /// <param name="tagsString">The raw comma-separated text typed by the user.</param>
     /// <returns>The parsed tags, which is empty when nothing usable was entered.</returns>
@@ -293,7 +276,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <param name="disposables">The composite disposable used to tie subscriptions to the activation lifetime.</param>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private void SetupBindings(CompositeDisposable disposables)
+    private void SetupBindings(MultipleDisposable disposables)
     {
         // Dispose the property helpers when deactivated
         _ = _isLoading.DisposeWith(disposables);
@@ -325,7 +308,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
             .DisposeWith(disposables);
 
         // Handle command errors globally
-        _ = Observable.Merge(
+        _ = Signal.Merge(
             AddTodoCommand.ThrownExceptions,
             RefreshCommand.ThrownExceptions,
             ClearCompletedCommand.ThrownExceptions,
@@ -343,8 +326,8 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
 
     /// <summary>Refreshes the time-dependent todo properties (IsOverdue, IsDueSoon) once a minute.</summary>
     /// <param name="disposables">The composite disposable used to tie subscriptions to the activation lifetime.</param>
-    private void TrackTimeDependentProperties(CompositeDisposable disposables) =>
-        _ = Observable.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(1))
+    private void TrackTimeDependentProperties(MultipleDisposable disposables) =>
+        _ = Signal.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(1))
             .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Subscribe(_ =>
             {
@@ -368,8 +351,8 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <param name="disposables">The composite disposable used to tie subscriptions to the activation lifetime.</param>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private void TrackCompletionChanges(CompositeDisposable disposables) =>
-        _ = Observable.FromEventPattern<System.Collections.Specialized.NotifyCollectionChangedEventHandler, System.Collections.Specialized.NotifyCollectionChangedEventArgs>(
+    private void TrackCompletionChanges(MultipleDisposable disposables) =>
+        _ = Signal.FromEventPattern<System.Collections.Specialized.NotifyCollectionChangedEventHandler, System.Collections.Specialized.NotifyCollectionChangedEventArgs>(
                 handler => Todos.CollectionChanged += handler,
                 handler => Todos.CollectionChanged -= handler)
             .Subscribe(args =>
@@ -412,7 +395,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
 
     /// <summary>Mirrors reminder notifications into the list shown in the UI, de-duplicated by todo.</summary>
     /// <param name="disposables">The composite disposable used to tie subscriptions to the activation lifetime.</param>
-    private void TrackNotifications(CompositeDisposable disposables) =>
+    private void TrackNotifications(MultipleDisposable disposables) =>
         _ = _notificationService.ReminderNotifications
             .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Subscribe(todo =>
@@ -457,7 +440,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <returns>An observable that completes when loading finishes.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private IObservable<Unit> LoadInitialData()
+    private IObservable<RxVoid> LoadInitialData()
     {
         StatusMessage = "Loading data...";
 
@@ -470,7 +453,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <returns>An observable that completes when the load is done.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private IObservable<Unit> LoadTodos() => TodoCacheService.GetAllTodos()
+    private IObservable<RxVoid> LoadTodos() => TodoCacheService.GetAllTodos()
             .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Do(todos =>
             {
@@ -489,7 +472,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
                     Todos.Add(new(todo, _notificationService, RemoveTodoFromCollection));
                 }
             })
-            .Select(static _ => Unit.Default);
+            .Select(static _ => RxVoid.Default);
 
     /// <summary>Removes a todo from the collection and updates the cache.</summary>
     /// <param name="todoViewModel">The todo view model to remove.</param>
@@ -509,16 +492,16 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <returns>An observable that completes when settings are loaded.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private IObservable<Unit> LoadSettings() => TodoCacheService.GetSettings()
+    private IObservable<RxVoid> LoadSettings() => TodoCacheService.GetSettings()
             .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Do(settings => Settings = settings)
-            .Select(static _ => Unit.Default);
+            .Select(static _ => RxVoid.Default);
 
     /// <summary>Saves the current todo collection to cache.</summary>
     /// <returns>An observable that completes when the save is done.</returns>
     [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
     [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
-    private IObservable<Unit> SaveCurrentTodos()
+    private IObservable<RxVoid> SaveCurrentTodos()
     {
         List<TodoItem> todos = new(Todos.Count);
         foreach (var todoViewModel in Todos)
@@ -534,13 +517,13 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <returns>An observable that completes when the todo has been added and saved.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private IObservable<Unit> ExecuteAddTodo()
+    private IObservable<RxVoid> ExecuteAddTodo()
     {
         // Validate required fields
         if (string.IsNullOrWhiteSpace(NewTodoTitle))
         {
             StatusMessage = "Title is required";
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         }
 
         // Debug what we have for date input
@@ -556,7 +539,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
         {
             StatusMessage = $"Invalid date/time format: {ex.Message}";
             System.Diagnostics.Debug.WriteLine($"Date parsing error: {ex}");
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         }
 
         TodoItem newTodo = new()
@@ -574,7 +557,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
 
         TodoItemViewModel viewModel = new(newTodo, _notificationService, RemoveTodoFromCollection);
 
-        return Observable.Start(
+        return Signal.Start(
             () =>
             MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -638,7 +621,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <returns>An observable that completes when refresh is done.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private IObservable<Unit> ExecuteRefresh()
+    private IObservable<RxVoid> ExecuteRefresh()
     {
         StatusMessage = "Refreshing...";
         return LoadInitialData();
@@ -646,8 +629,8 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
 
     /// <summary>Command handler that removes all completed todos.</summary>
     /// <returns>An observable that completes when the clear operation is done.</returns>
-    private IObservable<Unit> ExecuteClearCompleted() =>
-        Observable.FromAsync(async () =>
+    private IObservable<RxVoid> ExecuteClearCompleted() =>
+        Signal.FromAsync(async () =>
         {
             List<TodoItemViewModel> completedTodos = [];
             foreach (var todoViewModel in Todos)
@@ -667,17 +650,18 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
             });
 
             StatusMessage = $"Removed {completedTodos.Count} completed todos";
+            return RxVoid.Default;
         });
 
     /// <summary>Command handler that saves settings and updates notification state.</summary>
     /// <returns>An observable that completes when settings have been saved.</returns>
-    private IObservable<Unit> ExecuteSaveSettings() => TodoCacheService.SaveSettings(Settings)
+    private IObservable<RxVoid> ExecuteSaveSettings() => TodoCacheService.SaveSettings(Settings)
             .SelectMany(_ => _notificationService.UpdateSettings(Settings))
             .Do(_ => StatusMessage = "Settings saved");
 
     /// <summary>Command handler that vacuums the cache.</summary>
     /// <returns>An observable that completes when cleanup is done.</returns>
-    private IObservable<Unit> ExecuteCleanupCache()
+    private IObservable<RxVoid> ExecuteCleanupCache()
     {
         StatusMessage = "Cleaning up cache...";
         return TodoCacheService.CleanupCache()
@@ -688,18 +672,22 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <returns>An observable that completes when the sample data is saved.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private IObservable<Unit> ExecuteLoadSampleData()
+    private IObservable<RxVoid> ExecuteLoadSampleData()
     {
         var sampleTodos = CreateSampleTodos();
 
-        return Observable.FromAsync(async () => await MainThread.InvokeOnMainThreadAsync(() =>
+        return Signal.FromAsync(async () =>
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 Todos.Clear();
                 foreach (var todo in sampleTodos)
                 {
                     Todos.Add(new(todo, _notificationService, RemoveTodoFromCollection));
                 }
-            }))
+            });
+            return RxVoid.Default;
+        })
         .SelectMany(_ => SaveCurrentTodos())
         .Do(_ => StatusMessage = $"Loaded {sampleTodos.Count} sample todos");
     }
@@ -708,7 +696,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <returns>An observable that completes immediately.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    private IObservable<Unit> ExecuteTestDate()
+    private IObservable<RxVoid> ExecuteTestDate()
     {
         // Create a test todo with a specific due date for verification
         var testDate = DateTime.Today.AddDays(1).AddHours(TestTodoDueHour);
@@ -728,7 +716,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
         this.RaisePropertyChanged();
 
         StatusMessage = $"Pre-filled form with test data - Due: {testDate:MMM dd, yyyy} at 2:00 PM";
-        return Observable.Return(Unit.Default);
+        return Signal.Return(RxVoid.Default);
     }
 
     /// <summary>Orders two todos using the sort order currently configured in the settings.</summary>

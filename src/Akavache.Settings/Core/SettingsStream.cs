@@ -3,9 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Akavache.Core.Observables;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Core;
+#else
 namespace Akavache.Settings.Core;
+#endif
 
 /// <summary>
 /// Live observable stream backing a single settings property. Wraps a
@@ -46,7 +49,7 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
     private readonly Lock _gate = new();
 
     /// <summary>Cached single-fire cold-load observable — created on first <c>EnsureLoaded</c>/<c>Subscribe</c> so every subsequent caller sees the same completion.</summary>
-    private IObservable<Unit>? _coldLoad;
+    private IObservable<RxVoid>? _coldLoad;
 
     /// <summary>Initializes a new instance of the <see cref="SettingsStream{T}"/> class.</summary>
     /// <param name="cache">The blob cache this stream reads from and writes to.</param>
@@ -74,7 +77,7 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
     public IDisposable Subscribe(IObserver<T> observer) => _current.Subscribe(observer);
 
     /// <inheritdoc/>
-    public IObservable<Unit> EnsureLoaded()
+    public IObservable<RxVoid> EnsureLoaded()
     {
         lock (_gate)
         {
@@ -91,10 +94,10 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
             // uses a null-forgiving cast rather than producing a CS8622 warning.
             var load = _cache.GetObject<T>(_storageKey)
                 .Do(loaded => _current.OnNext(loaded!))
-                .Select(static _ => Unit.Default)
+                .Select(static _ => RxVoid.Default)
                 .CatchReturnUnit();
 
-            var published = load.PublishLast();
+            var published = load.Multicast(new AsyncSignal<RxVoid>());
             _ = published.Connect();
             _coldLoad = published;
             return _coldLoad;
@@ -107,21 +110,21 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
     /// <summary>
     /// Updates the current value: pushes it to every live subscriber via the backing
     /// <see cref="SettingsValueSubject{T}"/> and enqueues a background write to the blob
-    /// cache. Returns an observable that emits <see cref="Unit"/> when the write has
+    /// cache. Returns an observable that emits <see cref="RxVoid"/> when the write has
     /// been accepted by the cache (propagates errors from the underlying insert).
     /// </summary>
     /// <param name="value">The new value.</param>
     /// <returns>A one-shot observable that fires when the persistent write completes.</returns>
-    internal IObservable<Unit> Set(T value)
+    internal IObservable<RxVoid> Set(T value)
     {
         // Mark the cold load as satisfied so a future subscribe doesn't overwrite the
         // just-set value with whatever was on disk before (common ctor-then-set pattern).
         lock (_gate)
         {
-            _coldLoad ??= Observable.Return(Unit.Default);
+            _coldLoad ??= ImmutableReturnRxVoidSignal.Instance;
         }
 
         _current.OnNext(value);
-        return _cache.InsertObject(_storageKey, value).Select(static _ => Unit.Default);
+        return _cache.InsertObject(_storageKey, value).Select(static _ => RxVoid.Default);
     }
 }

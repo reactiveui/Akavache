@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// End-to-end smoke tests for <see cref="SqliteBlobCache"/> that exercise the full stack —
@@ -41,7 +41,7 @@ public class SqliteBlobCacheSmokeTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, "smoke.db");
-            SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer(), System.Reactive.Concurrency.ImmediateScheduler.Instance);
+            SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer(), ImmediateSequencer.Instance);
             try
             {
                 cache.Insert("k", RoundTripPayload).WaitForCompletion();
@@ -112,7 +112,7 @@ public class SqliteBlobCacheSmokeTests
         {
             var dbPath = Path.Combine(path, "sync_over_async.db");
 
-            SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer(), System.Reactive.Concurrency.ImmediateScheduler.Instance);
+            SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer(), ImmediateSequencer.Instance);
             try
             {
                 cache.Insert("k", RoundTripPayload).WaitForCompletion();
@@ -141,7 +141,7 @@ public class SqliteBlobCacheSmokeTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, "vacuum.db");
-            SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer(), System.Reactive.Concurrency.ImmediateScheduler.Instance);
+            SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer(), ImmediateSequencer.Instance);
             try
             {
                 cache.Insert("expired", ExpiredPayload, TimeProvider.System.GetUtcNow().AddDays(-1)).WaitForCompletion();

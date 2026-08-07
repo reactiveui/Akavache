@@ -1,0 +1,52 @@
+#nullable enable
+Akavache.Reactive.Sqlite3.AkavacheBuilderExtensions
+Akavache.Reactive.Sqlite3.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!)
+Akavache.Reactive.Sqlite3.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!).WithSqliteDefaults() -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.Sqlite3.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!).WithSqliteProvider() -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.Sqlite3.SqliteBlobCache
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Connection.get -> Akavache.Reactive.IAkavacheConnection!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Dispose() -> void
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Flush() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Flush(System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.ForcedDateTimeKind.get -> System.DateTimeKind?
+Akavache.Reactive.Sqlite3.SqliteBlobCache.ForcedDateTimeKind.set -> void
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Get(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Get(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Get(string! key) -> System.IObservable<byte[]?>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Get(string! key, System.Type! type) -> System.IObservable<byte[]!>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.GetAll(System.Type! type) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.GetAllKeys() -> System.IObservable<string!>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.GetAllKeys(System.Type! type) -> System.IObservable<string!>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.GetCreatedAt(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<(string! Key, System.DateTimeOffset? Time)>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.GetCreatedAt(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<(string! Key, System.DateTimeOffset? Time)>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.GetCreatedAt(string! key) -> System.IObservable<System.DateTimeOffset?>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.GetCreatedAt(string! key, System.Type! type) -> System.IObservable<System.DateTimeOffset?>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Insert(string! key, byte[]! data) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Insert(string! key, byte[]! data, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Insert(string! key, byte[]! data, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Insert(string! key, byte[]! data, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Invalidate(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Invalidate(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Invalidate(string! key) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Invalidate(string! key, System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.InvalidateAll() -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.InvalidateAll(System.Type! type) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Scheduler.get -> System.Reactive.Concurrency.IScheduler!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Serializer.get -> Akavache.Reactive.ISerializer!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.SqliteBlobCache(Akavache.Reactive.IAkavacheConnection! connection, Akavache.Reactive.ISerializer! serializer) -> void
+Akavache.Reactive.Sqlite3.SqliteBlobCache.SqliteBlobCache(Akavache.Reactive.IAkavacheConnection! connection, Akavache.Reactive.ISerializer! serializer, System.Reactive.Concurrency.IScheduler! scheduler) -> void
+Akavache.Reactive.Sqlite3.SqliteBlobCache.SqliteBlobCache(string! fileName, Akavache.Reactive.ISerializer! serializer) -> void
+Akavache.Reactive.Sqlite3.SqliteBlobCache.SqliteBlobCache(string! fileName, Akavache.Reactive.ISerializer! serializer, System.Reactive.Concurrency.IScheduler! scheduler) -> void
+Akavache.Reactive.Sqlite3.SqliteBlobCache.UpdateExpiration(System.Collections.Generic.IEnumerable<string!>! keys, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.UpdateExpiration(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.UpdateExpiration(string! key, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.UpdateExpiration(string! key, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<System.Reactive.Unit>!
+Akavache.Reactive.Sqlite3.SqliteBlobCache.Vacuum() -> System.IObservable<System.Reactive.Unit>!
+static Akavache.Reactive.Sqlite3.AkavacheBuilderExtensions.WithSqliteDefaults(this Akavache.Reactive.IAkavacheBuilder! builder) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.Sqlite3.AkavacheBuilderExtensions.WithSqliteProvider(this Akavache.Reactive.IAkavacheBuilder! builder) -> Akavache.Reactive.IAkavacheBuilder!
+virtual Akavache.Reactive.Sqlite3.SqliteBlobCache.BeforeWriteToDiskFilter(byte[]! data, System.Reactive.Concurrency.IScheduler! scheduler) -> System.IObservable<byte[]!>!
+virtual Akavache.Reactive.Sqlite3.SqliteBlobCache.Dispose(bool isDisposing) -> void

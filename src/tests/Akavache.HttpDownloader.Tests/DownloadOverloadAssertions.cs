@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>
 /// Scenarios shared by the tests for the download overloads that exist only to forward to a fuller
@@ -37,7 +38,7 @@ internal static class DownloadOverloadAssertions
         IEnumerable<KeyValuePair<string, string>>? expectedHeaders)
     {
         using RecordingHttpService service = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         cache.SetHttpService(service);
 
         var downloaded = download(cache, service).WaitForValue();
@@ -75,7 +76,7 @@ internal static class DownloadOverloadAssertions
         IEnumerable<KeyValuePair<string, string>>? expectedHeaders)
     {
         using RecordingHttpService service = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         cache.SetHttpService(service);
 
         var downloaded = download(cache, service).WaitForValue();
@@ -118,7 +119,7 @@ internal static class DownloadOverloadAssertions
         IEnumerable<KeyValuePair<string, string>>? expectedHeaders)
     {
         using RecordingHttpService service = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         cache.SetHttpService(service);
 
         var downloaded = download(cache, service).WaitForValue();

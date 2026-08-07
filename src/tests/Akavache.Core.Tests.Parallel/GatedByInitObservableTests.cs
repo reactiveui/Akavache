@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core.Observables;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests for <see cref="GatedByInitObservable{T}"/> and <see cref="InitSignal"/> covering
@@ -52,8 +54,8 @@ public class GatedByInitObservableTests
         int? received = null;
         var completed = false;
 
-        var gated = signal.Gate(static () => Observable.Return(FactoryValue));
-        _ = gated.Subscribe(Observer.Create<int>(
+        var gated = signal.Gate(static () => Signal.Return(FactoryValue));
+        _ = gated.Subscribe(Witness.Create<int>(
             v => received = v,
             static _ => { },
             () => completed = true));
@@ -73,8 +75,8 @@ public class GatedByInitObservableTests
 
         Exception? caught = null;
 
-        var gated = signal.Gate(static () => Observable.Return(0));
-        _ = gated.Subscribe(Observer.Create<int>(
+        var gated = signal.Gate(static () => Signal.Return(0));
+        _ = gated.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -94,8 +96,8 @@ public class GatedByInitObservableTests
         int? received = null;
         var completed = false;
 
-        var gated = signal.Gate(static () => Observable.Return(ParkedFactoryValue));
-        _ = gated.Subscribe(Observer.Create<int>(
+        var gated = signal.Gate(static () => Signal.Return(ParkedFactoryValue));
+        _ = gated.Subscribe(Witness.Create<int>(
             v => received = v,
             static _ => { },
             () => completed = true));
@@ -116,8 +118,8 @@ public class GatedByInitObservableTests
         var signal = new InitSignal();
         Exception? caught = null;
 
-        var gated = signal.Gate(static () => Observable.Return(0));
-        _ = gated.Subscribe(Observer.Create<int>(
+        var gated = signal.Gate(static () => Signal.Return(0));
+        _ = gated.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -145,7 +147,7 @@ public class GatedByInitObservableTests
         // SubscribeToInner (which catches and routes to OnError) rather than the
         // InitSignal.Gate fast-path (which lets the throw propagate to the caller).
         var gated = new GatedByInitObservable<int>(signal, static () => throw new InvalidOperationException(FactoryFailureMessage));
-        _ = gated.Subscribe(Observer.Create<int>(
+        _ = gated.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -167,7 +169,7 @@ public class GatedByInitObservableTests
         await Assert.That(signal.IsCompleted).IsTrue();
 
         // Gate still works as if ready.
-        var value = await signal.Gate(static () => Observable.Return(LateFailGateValue));
+        var value = await signal.Gate(static () => Signal.Return(LateFailGateValue));
         await Assert.That(value).IsEqualTo(LateFailGateValue);
     }
 
@@ -213,10 +215,10 @@ public class GatedByInitObservableTests
         var gated = new GatedByInitObservable<int>(signal, () =>
         {
             factoryCalled = true;
-            return Observable.Return(1);
+            return Signal.Return(1);
         });
 
-        var sub = gated.Subscribe(Observer.Create<int>(
+        var sub = gated.Subscribe(Witness.Create<int>(
             static _ => { },
             static _ => { },
             static () => { }));
@@ -237,7 +239,7 @@ public class GatedByInitObservableTests
         Exception? caught = null;
 
         var gated = new GatedByInitObservable<int>(signal, static () => throw new InvalidOperationException("parked-factory-boom"));
-        _ = gated.Subscribe(Observer.Create<int>(
+        _ = gated.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -267,8 +269,8 @@ public class GatedByInitObservableTests
         int? received = null;
         var completed = false;
 
-        var gated = new GatedByInitObservable<int>(signal, static () => Observable.Return(RaceWindowValue));
-        _ = gated.Subscribe(Observer.Create<int>(
+        var gated = new GatedByInitObservable<int>(signal, static () => Signal.Return(RaceWindowValue));
+        _ = gated.Subscribe(Witness.Create<int>(
             v => received = v,
             static _ => { },
             () => completed = true));
@@ -291,7 +293,7 @@ public class GatedByInitObservableTests
         Exception? caught = null;
 
         var gated = new GatedByInitObservable<int>(signal, static () => throw new InvalidOperationException("race-factory-boom"));
-        _ = gated.Subscribe(Observer.Create<int>(
+        _ = gated.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -314,8 +316,8 @@ public class GatedByInitObservableTests
         int? received = null;
         var completed = false;
 
-        var gated = new GatedByInitObservable<int>(signal, static () => Observable.Return(ReadyInlineValue));
-        _ = gated.Subscribe(Observer.Create<int>(
+        var gated = new GatedByInitObservable<int>(signal, static () => Signal.Return(ReadyInlineValue));
+        _ = gated.Subscribe(Witness.Create<int>(
             v => received = v,
             static _ => { },
             () => completed = true));
@@ -338,7 +340,7 @@ public class GatedByInitObservableTests
         Exception? caught = null;
 
         var gated = new GatedByInitObservable<int>(signal, static () => throw new InvalidOperationException("ready-factory-boom"));
-        _ = gated.Subscribe(Observer.Create<int>(
+        _ = gated.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -403,8 +405,8 @@ public class GatedByInitObservableTests
         for (var i = 0; i < ParkedSubscriptionCount; i++)
         {
             var index = i;
-            var gated = new GatedByInitObservable<int>(signal, () => Observable.Return(index * ParkedValueMultiplier));
-            _ = gated.Subscribe(Observer.Create<int>(
+            var gated = new GatedByInitObservable<int>(signal, () => Signal.Return(index * ParkedValueMultiplier));
+            _ = gated.Subscribe(Witness.Create<int>(
                 v =>
                 {
                     received[index] = v;
@@ -438,8 +440,8 @@ public class GatedByInitObservableTests
         for (var i = 0; i < ParkedSubscriptionCount; i++)
         {
             var index = i;
-            var gated = new GatedByInitObservable<int>(signal, static () => Observable.Return(0));
-            _ = gated.Subscribe(Observer.Create<int>(
+            var gated = new GatedByInitObservable<int>(signal, static () => Signal.Return(0));
+            _ = gated.Subscribe(Witness.Create<int>(
                 static _ => { },
                 ex => caught[index] = ex,
                 static () => { }));
@@ -460,8 +462,8 @@ public class GatedByInitObservableTests
         var signal = new InitSignal();
         Exception? caught = null;
 
-        var gated = new GatedByInitObservable<int>(signal, static () => Observable.Return(0));
-        _ = gated.Subscribe(Observer.Create<int>(
+        var gated = new GatedByInitObservable<int>(signal, static () => Signal.Return(0));
+        _ = gated.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -522,11 +524,11 @@ public class GatedByInitObservableTests
 
         // Now the signal is failed. Subscribe will hit IsReady=false,
         // IsCompleted=true, SubscribeAfterPark(null) which calls SubscribeToInner.
-        var gated = new GatedByInitObservable<int>(signal, static () => Observable.Return(FactoryValue));
+        var gated = new GatedByInitObservable<int>(signal, static () => Signal.Return(FactoryValue));
         int? received = null;
         var completed = false;
 
-        _ = gated.Subscribe(Observer.Create<int>(
+        _ = gated.Subscribe(Witness.Create<int>(
             v => received = v,
             ex => caught = ex,
             () => completed = true));
@@ -558,9 +560,9 @@ public class GatedByInitObservableTests
         var signal = new InitSignal();
         var errorReceived = false;
 
-        var gated = new GatedByInitObservable<int>(signal, static () => Observable.Return(1));
+        var gated = new GatedByInitObservable<int>(signal, static () => Signal.Return(1));
 
-        var sub = gated.Subscribe(Observer.Create<int>(
+        var sub = gated.Subscribe(Witness.Create<int>(
             static _ => { },
             _ => errorReceived = true,
             static () => { }));
@@ -604,8 +606,8 @@ public class GatedByInitObservableTests
             // transitions between IsCompleted and TryPark.
             barrier.Set();
 
-            var gated = new GatedByInitObservable<int>(signal, static () => Observable.Return(FactoryValue));
-            _ = gated.Subscribe(Observer.Create<int>(
+            var gated = new GatedByInitObservable<int>(signal, static () => Signal.Return(FactoryValue));
+            _ = gated.Subscribe(Witness.Create<int>(
                 static _ => { },
                 ex => caught = ex,
                 static () => { }));
@@ -626,7 +628,7 @@ public class GatedByInitObservableTests
     internal async Task DeliverError_ForwardsExceptionToObserver()
     {
         Exception? caught = null;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { });
@@ -635,7 +637,7 @@ public class GatedByInitObservableTests
         var disposable = GatedByInitObservable<int>.DeliverError(observer, expected);
 
         await Assert.That(caught).IsSameReferenceAs(expected);
-        await Assert.That(disposable).IsSameReferenceAs(System.Reactive.Disposables.Disposable.Empty);
+        await Assert.That(disposable).IsSameReferenceAs(Scope.Empty);
     }
 
     /// <summary>SubscribeToInner with a successful factory subscribes the observer.</summary>
@@ -644,13 +646,13 @@ public class GatedByInitObservableTests
     internal async Task SubscribeToInner_SuccessfulFactory_SubscribesObserver()
     {
         int? received = null;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             v => received = v,
             static _ => { },
             static () => { });
 
         var disposable = GatedByInitObservable<int>.SubscribeToInner(
-            static () => Observable.Return(FactoryValue),
+            static () => Signal.Return(FactoryValue),
             observer);
 
         await Assert.That(received).IsEqualTo(FactoryValue);
@@ -663,7 +665,7 @@ public class GatedByInitObservableTests
     internal async Task SubscribeToInner_ThrowingFactory_DeliversOnError()
     {
         Exception? caught = null;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { });
@@ -674,7 +676,7 @@ public class GatedByInitObservableTests
             observer);
 
         await Assert.That(caught).IsSameReferenceAs(expected);
-        await Assert.That(disposable).IsSameReferenceAs(System.Reactive.Disposables.Disposable.Empty);
+        await Assert.That(disposable).IsSameReferenceAs(Scope.Empty);
     }
 
     /// <summary>SubscribeAfterPark with null error subscribes to inner factory.</summary>
@@ -683,13 +685,13 @@ public class GatedByInitObservableTests
     internal async Task SubscribeAfterPark_NullError_SubscribesToInner()
     {
         int? received = null;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             v => received = v,
             static _ => { },
             static () => { });
 
         var disposable = GatedByInitObservable<int>.SubscribeAfterPark(
-            static () => Observable.Return(ParkedFactoryValue),
+            static () => Signal.Return(ParkedFactoryValue),
             observer,
             capturedError: null);
 
@@ -703,19 +705,19 @@ public class GatedByInitObservableTests
     internal async Task SubscribeAfterPark_WithError_DeliversOnError()
     {
         Exception? caught = null;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { });
 
         var expected = new InvalidOperationException("park-error");
         var disposable = GatedByInitObservable<int>.SubscribeAfterPark(
-            static () => Observable.Empty<int>(),
+            static () => Signal.Empty<int>(),
             observer,
             expected);
 
         await Assert.That(caught).IsSameReferenceAs(expected);
-        await Assert.That(disposable).IsSameReferenceAs(System.Reactive.Disposables.Disposable.Empty);
+        await Assert.That(disposable).IsSameReferenceAs(Scope.Empty);
     }
 
     /// <summary>HandleParkResult when parked returns the inner disposable.</summary>
@@ -723,13 +725,13 @@ public class GatedByInitObservableTests
     [Test]
     internal async Task HandleParkResult_Parked_ReturnsInner()
     {
-        using var inner = new System.Reactive.Disposables.SingleAssignmentDisposable();
-        var observer = System.Reactive.Observer.Create<int>(static _ => { });
+        using var inner = new MutableDisposable();
+        var observer = Witness.Create<int>(static _ => { });
 
         var result = GatedByInitObservable<int>.HandleParkResult(
             parked: true,
             inner,
-            static () => Observable.Empty<int>(),
+            static () => Signal.Empty<int>(),
             observer,
             error: null);
 
@@ -742,7 +744,7 @@ public class GatedByInitObservableTests
     internal async Task HandleParkResult_NotParked_WithError_DeliversError()
     {
         Exception? caught = null;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { });
@@ -750,13 +752,13 @@ public class GatedByInitObservableTests
         var expected = new InvalidOperationException("park-race");
         var result = GatedByInitObservable<int>.HandleParkResult(
             parked: false,
-            System.Reactive.Disposables.Disposable.Empty,
-            static () => Observable.Empty<int>(),
+            Scope.Empty,
+            static () => Signal.Empty<int>(),
             observer,
             expected);
 
         await Assert.That(caught).IsSameReferenceAs(expected);
-        await Assert.That(result).IsSameReferenceAs(System.Reactive.Disposables.Disposable.Empty);
+        await Assert.That(result).IsSameReferenceAs(Scope.Empty);
     }
 
     /// <summary>HandleParkResult when not parked without error subscribes to inner factory.</summary>
@@ -765,15 +767,15 @@ public class GatedByInitObservableTests
     internal async Task HandleParkResult_NotParked_NullError_SubscribesToInner()
     {
         int? received = null;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             v => received = v,
             static _ => { },
             static () => { });
 
         var result = GatedByInitObservable<int>.HandleParkResult(
             parked: false,
-            System.Reactive.Disposables.Disposable.Empty,
-            static () => Observable.Return(RaceWindowValue),
+            Scope.Empty,
+            static () => Signal.Return(RaceWindowValue),
             observer,
             error: null);
 

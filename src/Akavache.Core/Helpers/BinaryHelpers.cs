@@ -7,7 +7,11 @@ using System.Buffers.Binary;
 #endif
 using System.Runtime.CompilerServices;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Helpers;
+#else
 namespace Akavache.Helpers;
+#endif
 
 /// <summary>
 /// Endian-explicit binary helpers wrapping <c>System.Buffers.Binary.BinaryPrimitives</c>

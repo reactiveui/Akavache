@@ -3,12 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
 using SQLitePCL;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests for the V10 compatibility reads on <see cref="SqlitePclRawConnection"/> — the paths that
@@ -242,7 +243,7 @@ public class SqlitePclRawConnectionLegacyV10Tests
     /// <param name="path">The directory for the database file.</param>
     /// <returns>A new <see cref="SqliteBlobCache"/>.</returns>
     private static SqliteBlobCache CreateCache(string path) =>
-        new(Path.Combine(path, $"test_{Guid.NewGuid():N}.db"), new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        new(Path.Combine(path, $"test_{Guid.NewGuid():N}.db"), new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
     /// <summary>Creates the legacy V10 CacheElement table using a direct SQLite connection.</summary>
     /// <param name="dbPath">The database file path.</param>

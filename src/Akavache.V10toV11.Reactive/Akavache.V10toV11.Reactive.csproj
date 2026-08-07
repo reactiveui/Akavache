@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Akavache.V10toV11.Reactive</AssemblyName>
+    <RootNamespace>Akavache.Reactive.V10toV11</RootNamespace>
+    <PackageId>Akavache.V10toV11.Reactive</PackageId>
+    <PackageDescription>Akavache.V10toV11 recompiled against System.Reactive's Unit and IScheduler, for consumers already on the System.Reactive stack.</PackageDescription>
+    <PackageReleaseNotes>Compatibility shim for one-time V10 to V11 database migration. New applications should use Akavache.Sqlite3.Reactive directly.</PackageReleaseNotes>
+    <PackageTags>akavache;cache;sqlite;migration;deprecated</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Reactive\Akavache.Reactive.csproj" />
+    <ProjectReference Include="..\Akavache.Sqlite3.Reactive\Akavache.Sqlite3.Reactive.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI.Primitives.Reactive" ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <!-- The same source the lean Akavache.V10toV11 package ships, recompiled here under REACTIVE_SHIM. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.V10toV11\**\*.cs"
+             Exclude="..\Akavache.V10toV11\obj\**\*.cs;..\Akavache.V10toV11\bin\**\*.cs"
+             Link="Akavache.V10toV11\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Mirrors the lean project's shared-internals set; see Akavache.Sqlite3.csproj for the rationale. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentValidation.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Helpers\BsonDataHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\SecureBlobCacheWrapper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\SqliteProviderGate.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\ISqliteOperation.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteOperation.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteRowStreamOperation.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteShutdownOperation.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteReplyObservable.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteRowObservable.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteOperationQueue.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqlitePclRawConnection.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\V10LegacyRow.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
+    <AkavacheInternalUsing Include="Akavache.Sqlite3" />
+    <AkavacheInternalUsing Include="Akavache.V10toV11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel.Reactive" />
+  </ItemGroup>
+</Project>

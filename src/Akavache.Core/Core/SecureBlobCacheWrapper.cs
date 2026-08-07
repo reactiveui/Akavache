@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core;
+#else
 namespace Akavache.Core;
+#endif
 
 /// <summary>A wrapper that implements <see cref="ISecureBlobCache"/> by delegating to an <see cref="IBlobCache"/>.</summary>
 /// <remarks>
@@ -34,41 +38,41 @@ internal sealed class SecureBlobCacheWrapper : ISecureBlobCache, IWrappedBlobCac
     }
 
     /// <inheritdoc/>
-    public IScheduler Scheduler => InnerCache.Scheduler;
+    public ISequencer Scheduler => InnerCache.Scheduler;
 
     /// <inheritdoc/>
     public ISerializer Serializer => InnerCache.Serializer ?? throw new InvalidOperationException("The inner cache's Serializer is null.");
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
         Insert(keyValuePairs, (DateTimeOffset?)null);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration) =>
         InnerCache.Insert(keyValuePairs, absoluteExpiration);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data) =>
         Insert(key, data, (DateTimeOffset?)null);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
         InnerCache.Insert(key, data, absoluteExpiration);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
         Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration) =>
         InnerCache.Insert(keyValuePairs, type, absoluteExpiration);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
         Insert(key, data, type, (DateTimeOffset?)null);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
         InnerCache.Insert(key, data, type, absoluteExpiration);
 
     /// <inheritdoc/>
@@ -105,43 +109,43 @@ internal sealed class SecureBlobCacheWrapper : ISecureBlobCache, IWrappedBlobCac
     public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => InnerCache.GetCreatedAt(key, type);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Flush() => InnerCache.Flush();
+    public IObservable<RxVoid> Flush() => InnerCache.Flush();
 
     /// <inheritdoc/>
-    public IObservable<Unit> Flush(Type type) => InnerCache.Flush(type);
+    public IObservable<RxVoid> Flush(Type type) => InnerCache.Flush(type);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(string key) => InnerCache.Invalidate(key);
+    public IObservable<RxVoid> Invalidate(string key) => InnerCache.Invalidate(key);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(string key, Type type) => InnerCache.Invalidate(key, type);
+    public IObservable<RxVoid> Invalidate(string key, Type type) => InnerCache.Invalidate(key, type);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(IEnumerable<string> keys) => InnerCache.Invalidate(keys);
+    public IObservable<RxVoid> Invalidate(IEnumerable<string> keys) => InnerCache.Invalidate(keys);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => InnerCache.Invalidate(keys, type);
+    public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type) => InnerCache.Invalidate(keys, type);
 
     /// <inheritdoc/>
-    public IObservable<Unit> InvalidateAll(Type type) => InnerCache.InvalidateAll(type);
+    public IObservable<RxVoid> InvalidateAll(Type type) => InnerCache.InvalidateAll(type);
 
     /// <inheritdoc/>
-    public IObservable<Unit> InvalidateAll() => InnerCache.InvalidateAll();
+    public IObservable<RxVoid> InvalidateAll() => InnerCache.InvalidateAll();
 
     /// <inheritdoc/>
-    public IObservable<Unit> Vacuum() => InnerCache.Vacuum();
+    public IObservable<RxVoid> Vacuum() => InnerCache.Vacuum();
 
     /// <inheritdoc/>
-    public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(key, absoluteExpiration);
+    public IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(key, absoluteExpiration);
 
     /// <inheritdoc/>
-    public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(key, type, absoluteExpiration);
+    public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(key, type, absoluteExpiration);
 
     /// <inheritdoc/>
-    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(keys, absoluteExpiration);
+    public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(keys, absoluteExpiration);
 
     /// <inheritdoc/>
-    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(keys, type, absoluteExpiration);
+    public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(keys, type, absoluteExpiration);
 
     /// <inheritdoc/>
     public void Dispose()

@@ -4,9 +4,12 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using Akavache.Settings;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Represents a configured Akavache instance with access to all cache types and configuration.</summary>
 public interface IAkavacheInstance

@@ -3,9 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Threading.Tasks;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings;
+#else
 namespace Akavache.Settings;
+#endif
 
 /// <summary>
 /// Task-based compatibility wrappers around the <see cref="ISettingsStorage"/> surface.

@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Splat;
 using Splat.Builder;
 
@@ -25,9 +24,13 @@ using Splat.Builder;
 // no test ends up in a per-key bucket that would let it overlap with another
 // global-state test.
 [assembly: NotInParallel]
-[assembly: TestExecutor<Akavache.Tests.Executors.AkavacheTestExecutor>]
+[assembly: TestExecutor<AkavacheTestExecutor>]
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>
 /// Assembly-level hooks that reset every piece of Akavache global static state

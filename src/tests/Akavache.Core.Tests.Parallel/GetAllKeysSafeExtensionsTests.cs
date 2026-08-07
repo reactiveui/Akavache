@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests for the GetAllKeysSafe methods that provide safe alternatives to GetAllKeys()
@@ -43,8 +45,8 @@ public class GetAllKeysSafeExtensionsTests
         using var cache = CreateCache();
         byte[] firstPayload = [1, 2, 3];
         byte[] secondPayload = [4, 5, 6];
-        cache.Insert("key1", firstPayload).SubscribeAndComplete();
-        cache.Insert("key2", secondPayload).SubscribeAndComplete();
+        cache.Insert("key1", firstPayload).WaitForCompletion();
+        cache.Insert("key2", secondPayload).WaitForCompletion();
 
         var keys = cache.GetAllKeysSafe().ToList().SubscribeGetValue();
 
@@ -71,8 +73,8 @@ public class GetAllKeysSafeExtensionsTests
     public async Task GetAllKeysSafe_WithType_ShouldReturnKeysForSpecificType()
     {
         using var cache = CreateCache();
-        cache.InsertObject(StringEntryKey, "value").SubscribeAndComplete();
-        cache.InsertObject(IntEntryKey, IntEntryValue).SubscribeAndComplete();
+        cache.InsertObject(StringEntryKey, "value").WaitForCompletion();
+        cache.InsertObject(IntEntryKey, IntEntryValue).WaitForCompletion();
 
         var stringKeys = cache.GetAllKeysSafe(typeof(string)).ToList().SubscribeGetValue();
         var intKeys = cache.GetAllKeysSafe(typeof(int)).ToList().SubscribeGetValue();
@@ -102,8 +104,8 @@ public class GetAllKeysSafeExtensionsTests
     public async Task GetAllKeysSafe_Generic_ShouldReturnKeysForSpecificType()
     {
         using var cache = CreateCache();
-        cache.InsertObject(StringEntryKey, "value").SubscribeAndComplete();
-        cache.InsertObject(IntEntryKey, IntEntryValue).SubscribeAndComplete();
+        cache.InsertObject(StringEntryKey, "value").WaitForCompletion();
+        cache.InsertObject(IntEntryKey, IntEntryValue).WaitForCompletion();
 
         var stringKeys = cache.GetAllKeysSafe<string>().ToList().SubscribeGetValue();
 
@@ -150,5 +152,5 @@ public class GetAllKeysSafeExtensionsTests
 
     /// <summary>Creates a fresh in-memory cache with ImmediateScheduler.</summary>
     /// <returns>A new <see cref="InMemoryBlobCache"/>.</returns>
-    private static InMemoryBlobCache CreateCache() => new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+    private static InMemoryBlobCache CreateCache() => new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 }

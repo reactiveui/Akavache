@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core.Observables;
+#else
 namespace Akavache.Core.Observables;
+#endif
 
 /// <summary>
 /// Observable operator that walks a list of candidate keys sequentially, projects each
@@ -51,7 +53,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
         {
             observer.OnNext(fallback);
             observer.OnCompleted();
-            return Disposable.Empty;
+            return Scope.Empty;
         }
 
         // Fast-path: try each candidate synchronously. SyncProbe is a stack-only
@@ -63,7 +65,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
 
     /// <summary>
     /// Attempts to resolve every candidate synchronously. Returns
-    /// <see cref="Disposable.Empty"/> when the loop completes entirely on the
+    /// <see cref="Scope.Empty"/> when the loop completes entirely on the
     /// calling thread, or an <see cref="AsyncSink"/> subscription when a projection
     /// does not complete synchronously and async continuation is required.
     /// </summary>
@@ -124,13 +126,13 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
             {
                 observer.OnNext(transformed);
                 observer.OnCompleted();
-                return Disposable.Empty;
+                return Scope.Empty;
             }
         }
 
         observer.OnNext(fallback);
         observer.OnCompleted();
-        return Disposable.Empty;
+        return Scope.Empty;
     }
 
     /// <summary>

@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>
 /// An <see cref="IHttpService"/> stand-in that reproduces the cache-first contract of the real
@@ -164,14 +168,14 @@ internal sealed class CacheBackedHttpService : IHttpService
         LastFetchAlways = fetchAlways;
         LastAbsoluteExpiration = absoluteExpiration;
 
-        var fetch = Observable.Defer(() =>
+        var fetch = Signal.Defer(() =>
         {
             DownloadCount++;
-            return Observable.Return(DownloadedPayload);
+            return Signal.Return(DownloadedPayload);
         });
 
         return fetchAlways
             ? fetch
-            : blobCache.Get(key).Select(static bytes => bytes ?? []).Catch(fetch);
+            : blobCache.Get(key).Select(static bytes => bytes ?? []).Catch<byte[], Exception>(_ => fetch);
     }
 }

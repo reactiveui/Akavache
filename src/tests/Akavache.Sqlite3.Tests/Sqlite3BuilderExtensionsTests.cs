@@ -3,13 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Core;
-using Akavache.Settings;
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for Akavache.Sqlite3.AkavacheBuilderExtensions (non-encrypted).</summary>
 [Category("Akavache")]

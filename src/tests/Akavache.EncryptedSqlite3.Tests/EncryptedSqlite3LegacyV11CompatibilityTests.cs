@@ -2,15 +2,15 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.EncryptedSqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-
 using SQLitePCL;
 
 using static SQLitePCL.raw;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Backward-compatibility tests for the encrypted Sqlite cache. Akavache 11.x shipped
@@ -52,7 +52,7 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
         // First open: the modern-cipher fast path fails with SQLITE_NOTADB, the
         // SQLCipher-4 fallback succeeds, and the file is rekeyed forward in place.
         SystemJsonSerializer serializer = new();
-        using (EncryptedSqliteBlobCache cache = new(path, password, serializer, ImmediateScheduler.Instance))
+        using (EncryptedSqliteBlobCache cache = new(path, password, serializer, ImmediateSequencer.Instance))
         {
             var fetched = cache.Get(key).WaitForValue();
             await Assert.That(fetched).IsEquivalentTo(payload);
@@ -63,7 +63,7 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
         AssertReadableWithModernCipher(path, password);
 
         // And the public API still works after the rekey.
-        using EncryptedSqliteBlobCache rekeyedCache = new(path, password, serializer, ImmediateScheduler.Instance);
+        using EncryptedSqliteBlobCache rekeyedCache = new(path, password, serializer, ImmediateSequencer.Instance);
         var rekeyedFetch = rekeyedCache.Get(key).WaitForValue();
         await Assert.That(rekeyedFetch).IsEquivalentTo(payload);
     }
@@ -83,7 +83,7 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
         SystemJsonSerializer serializer = new();
         var ex = Assert.Throws<AkavacheSqliteException>(() =>
         {
-            using EncryptedSqliteBlobCache cache = new(path, wrongPassword, serializer, ImmediateScheduler.Instance);
+            using EncryptedSqliteBlobCache cache = new(path, wrongPassword, serializer, ImmediateSequencer.Instance);
             _ = cache.Get("k").WaitForValue();
         });
 

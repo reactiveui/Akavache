@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for the DownloadUrl extension methods on <see cref="IBlobCache"/>. Uses a local <see cref="TestHttpServer"/> to avoid external network dependencies.</summary>
 [Category("Akavache")]
@@ -30,7 +30,7 @@ public class DownloadUrlExtensionsTests
         await Assert.That(() => nullCache!.DownloadUrl(new Uri("http://example.com"))).Throws<ArgumentNullException>();
 
         // Null/empty URL
-        using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         await Assert.That(() => cache.DownloadUrl((string)null!)).Throws<ArgumentNullException>();
         await Assert.That(() => cache.DownloadUrl(string.Empty)).Throws<ArgumentException>();
 
@@ -51,7 +51,7 @@ public class DownloadUrlExtensionsTests
         using var server = new TestHttpServer();
         server.SetupDefaultResponses();
 
-        using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var bytes = cache.DownloadUrl($"{server.BaseUrl}html").WaitForValue();
 
         await Assert.That(bytes).IsNotNull();
@@ -66,7 +66,7 @@ public class DownloadUrlExtensionsTests
         using var server = new TestHttpServer();
         server.SetupDefaultResponses();
 
-        using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         Uri uri = new($"{server.BaseUrl}html");
         var bytes = cache.DownloadUrl(uri).WaitForValue();
 
@@ -82,7 +82,7 @@ public class DownloadUrlExtensionsTests
         using var server = new TestHttpServer();
         server.SetupDefaultResponses();
 
-        using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string key = "my-download-key";
         _ = cache.DownloadUrl(key, $"{server.BaseUrl}html").WaitForValue();
 
@@ -99,7 +99,7 @@ public class DownloadUrlExtensionsTests
         using var server = new TestHttpServer();
         server.SetupDefaultResponses();
 
-        using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string key = "my-uri-key";
         Uri uri = new($"{server.BaseUrl}html");
         _ = cache.DownloadUrl(key, uri).WaitForValue();
@@ -117,7 +117,7 @@ public class DownloadUrlExtensionsTests
         using var server = new TestHttpServer();
         server.SetupDefaultResponses();
 
-        using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string key = "fetch-always-key";
 
         // First download — populates cache
@@ -141,7 +141,7 @@ public class DownloadUrlExtensionsTests
         using var server = new TestHttpServer();
         server.SetupDefaultResponses();
 
-        using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string key = "fetch-always-uri-key";
         Uri uri = new($"{server.BaseUrl}html");
 
@@ -165,7 +165,7 @@ public class DownloadUrlExtensionsTests
         server.SetupResponse("/content2", "Content Two");
         server.SetupResponse("/content3", "Content Three");
 
-        using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         _ = cache.DownloadUrl("content1", new Uri($"{server.BaseUrl}content1")).WaitForValue();
         _ = cache.DownloadUrl("content2", new Uri($"{server.BaseUrl}content2")).WaitForValue();

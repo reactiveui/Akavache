@@ -20,6 +20,18 @@
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.core" />
     <PackageReference Include="SQLite3MC.PCLRaw.bundle" />
+    <PackageReference Include="ReactiveUI.Primitives" ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <!-- Akavache's own namespaces, turned into global usings by Directory.Build.targets (shifted to
+       Akavache.Reactive.* on the .Reactive leaf). -->
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Core.Observables" />
+    <AkavacheInternalUsing Include="Akavache.EncryptedSqlite3" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
   </ItemGroup>
 
   <!--
@@ -45,7 +57,6 @@
     <Compile Include="..\Akavache.Core\Helpers\ArgumentValidation.cs" Link="Shared\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\Helpers\DisposeHelper.cs" Link="Shared\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\Core\SecurityUtilities.cs" Link="Shared\%(Filename)%(Extension)" />
-    <Compile Include="..\Akavache.Core\Core\CachedObservables.cs" Link="Shared\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\SqliteProviderGate.cs" Link="Shared\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\Core\Observables\*.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />

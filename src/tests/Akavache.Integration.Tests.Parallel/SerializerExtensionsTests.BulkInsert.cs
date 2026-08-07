@@ -2,12 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-using Akavache.Tests.Helpers;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests covering bulk object insertion through the serializer extensions.</summary>
 public partial class SerializerExtensionsTests
@@ -33,7 +32,7 @@ public partial class SerializerExtensionsTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         Dictionary<string, object>? dict = null;
 
         try
@@ -57,7 +56,7 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             Dictionary<string, object> emptyDict = [];
 
             try
@@ -85,7 +84,7 @@ public partial class SerializerExtensionsTests
         using (Utility.WithEmptyDirectory(out _))
         {
             // Use 'using' for resource management
-            using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
             DateTime testDate = new(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
             Dictionary<string, object> mixedObjects = new()
@@ -131,7 +130,7 @@ public partial class SerializerExtensionsTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -196,7 +195,7 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
             try
             {
@@ -252,7 +251,7 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
             try
             {
@@ -319,7 +318,7 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
             try
             {
@@ -388,7 +387,7 @@ public partial class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
             try
             {
