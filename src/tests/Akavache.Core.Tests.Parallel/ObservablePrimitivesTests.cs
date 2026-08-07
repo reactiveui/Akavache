@@ -192,7 +192,10 @@ public class ObservablePrimitivesTests
         await Assert.That(failureResult).IsEquivalentTo(expectedFailure);
     }
 
-    /// <summary>Verifies that <see cref="WhereSelectObservable{TIn, TOut}"/> routes a throwing predicate to <see cref="IObserver{T}.OnError"/> on the downstream observer.</summary>
+    /// <summary>
+    /// Verifies that <see cref="ReactiveExtensions.WhereSelect{T, TOut}(IObservable{T}, Func{T, bool}, Func{T, TOut})"/>
+    /// routes a throwing predicate to <see cref="IObserver{T}.OnError"/> on the downstream observer.
+    /// </summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WhereSelect_ThrowingPredicate_ShouldRouteErrorDownstream()
@@ -210,7 +213,10 @@ public class ObservablePrimitivesTests
         await Assert.That(ex!.Message).IsEqualTo("predicate-boom");
     }
 
-    /// <summary>Verifies that <see cref="WhereSelectObservable{TIn, TOut}"/> routes a throwing selector to <see cref="IObserver{T}.OnError"/> on the downstream observer.</summary>
+    /// <summary>
+    /// Verifies that <see cref="ReactiveExtensions.WhereSelect{T, TOut}(IObservable{T}, Func{T, bool}, Func{T, TOut})"/>
+    /// routes a throwing selector to <see cref="IObserver{T}.OnError"/> on the downstream observer.
+    /// </summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WhereSelect_ThrowingSelector_ShouldRouteErrorDownstream()
@@ -228,10 +234,7 @@ public class ObservablePrimitivesTests
         await Assert.That(ex!.Message).IsEqualTo("selector-boom");
     }
 
-    /// <summary>
-    /// Verifies that <see cref="ReactiveExtensions.CatchReturn{T}(IObservable{T}, T)"/> with a non-Unit type
-    /// creates a <see cref="CatchReturnObservable{T}"/> that forwards the fallback on error.
-    /// </summary>
+    /// <summary>Verifies that <see cref="ReactiveExtensions.CatchReturn{T}(IObservable{T}, T)"/> forwards the fallback on error for a non-RxVoid type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CatchReturn_WithIntFallback_ShouldEmitFallbackOnError()
