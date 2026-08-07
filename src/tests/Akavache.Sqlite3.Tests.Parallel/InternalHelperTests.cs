@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for internal helper methods exposed for testability in the Sqlite3 package.</summary>
 [Category("Akavache")]
@@ -202,7 +204,7 @@ public class InternalHelperTests
     {
         var received = false;
         var completed = false;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             v => received = v == ReplayedValue,
             static _ => { },
             () => completed = true);
@@ -219,7 +221,7 @@ public class InternalHelperTests
     public async Task ReplayTo_Error_DeliversOnError()
     {
         Exception? caught = null;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { });
@@ -282,7 +284,7 @@ public class InternalHelperTests
         var op = new SqliteOperation<int>(static _ => 1, reply, coalescable: false);
 
         Exception? caught = null;
-        _ = reply.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = reply.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));

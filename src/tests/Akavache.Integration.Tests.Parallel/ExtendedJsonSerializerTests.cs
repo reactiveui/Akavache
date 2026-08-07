@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 // System first
-using Akavache.NewtonsoftJson;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Extended serialization tests for System.Text.Json and Newtonsoft.Json serializers.</summary>
 [Category("Serialization")]

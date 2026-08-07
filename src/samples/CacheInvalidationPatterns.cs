@@ -3,8 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Linq;
 using Akavache.Core;
 using Akavache.SystemTextJson;
 
@@ -38,7 +36,7 @@ public static class CacheInvalidationPatterns
         Func<IObservable<string>> fetchDataFunc = () =>
         {
             fetchCount++;
-            return Observable.Return($"fresh_data_{fetchCount}");
+            return Signal.Return($"fresh_data_{fetchCount}");
         };
 
         try
@@ -76,7 +74,7 @@ public static class CacheInvalidationPatterns
         // Simulate multiple related data sources
         Func<string, IObservable<string>> createFetchFunc = (keyName) =>
         {
-            return Observable.FromAsync(async () =>
+            return Signal.FromAsync(async () =>
             {
                 callCounts[keyName] = callCounts.GetValueOrDefault(keyName, 0) + 1;
                 // Simulate async operation
@@ -156,7 +154,7 @@ public static class CacheInvalidationPatterns
             Func<IObservable<UserData>> fetchUserFunc = () =>
             {
                 fetchCount++;
-                return Observable.Return(new UserData { Id = 3, Name = $"Charlie_{fetchCount}" });
+                return Signal.Return(new UserData { Id = 3, Name = $"Charlie_{fetchCount}" });
             };
 
             // Step 3: Initial fetch and cache
@@ -204,7 +202,7 @@ public static class CacheInvalidationPatterns
         // Simulate an API call that returns different data each time
         Func<IObservable<ApiResponse>> simulateApiCall = () =>
         {
-            return Observable.FromAsync(async () =>
+            return Signal.FromAsync(async () =>
             {
                 apiCallCount++;
                 await Task.Delay(50); // Simulate network delay
@@ -282,7 +280,7 @@ public static class CacheInvalidationPatterns
 
         Func<string, IObservable<string>> createFetchFunc = (cacheType) =>
         {
-            return Observable.FromAsync(async () =>
+            return Signal.FromAsync(async () =>
             {
                 fetchCounts[cacheType] = fetchCounts.GetValueOrDefault(cacheType, 0) + 1;
                 await Task.Delay(10);
@@ -392,7 +390,7 @@ public static class CacheInvalidationPatterns
             Func<IObservable<string>> verifyFunc = () =>
             {
                 verificationCount++;
-                return Observable.Return($"verified_{verificationCount}");
+                return Signal.Return($"verified_{verificationCount}");
             };
 
             // This should trigger fetch since we invalidated above

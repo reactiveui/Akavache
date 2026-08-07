@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Threading.Tasks;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using BenchmarkDotNet.Attributes;
@@ -115,12 +114,12 @@ public class CacheDatabaseComprehensiveBenchmarks
     {
         BlobCache?.Dispose();
         _directoryCleanup?.Dispose();
-        _ = CacheDatabase.Shutdown().FirstAsync().GetAwaiter().GetResult();
+        CacheDatabase.Shutdown().WaitForCompletion();
     }
 
     /// <summary> Clears the cache before each iteration so every measured run starts from an empty database. </summary>
     [IterationSetup]
-    public void IterationSetup() => BlobCache.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
+    public void IterationSetup() => BlobCache.InvalidateAll().WaitForCompletion();
 
     /// <summary> Measures <see cref="BenchmarkSize"/> get-or-fetch calls against keys that are never present, so every call pays the fetch plus the write that caches its result. </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -134,7 +133,7 @@ public class CacheDatabaseComprehensiveBenchmarks
             var testData = _testObjects[i % _testObjects.Count];
 
             await BlobCache.GetOrFetchObject(key, () =>
-                Observable.Return(testData));
+                Signal.Return(testData));
         }
     }
 
@@ -159,7 +158,7 @@ public class CacheDatabaseComprehensiveBenchmarks
             var testData = _testObjects[i % _testObjects.Count];
 
             var task = BlobCache.GetAndFetchLatest(key, () =>
-                    Observable.Return(testData))
+                    Signal.Return(testData))
                 .Take(1) // Just take the first result to avoid infinite waiting
                 .FirstAsync()
                 .ToTask();

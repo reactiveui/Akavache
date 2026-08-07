@@ -1,0 +1,124 @@
+#nullable enable
+Akavache.Sqlite3.AkavacheBuilderExtensions
+Akavache.Sqlite3.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!)
+Akavache.Sqlite3.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithSqliteDefaults() -> Akavache.IAkavacheBuilder!
+Akavache.Sqlite3.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithSqliteProvider() -> Akavache.IAkavacheBuilder!
+Akavache.Sqlite3.SqliteBlobCache
+Akavache.Sqlite3.SqliteBlobCache.Connection.get -> Akavache.IAkavacheConnection!
+Akavache.Sqlite3.SqliteBlobCache.Dispose() -> void
+Akavache.Sqlite3.SqliteBlobCache.Flush() -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Flush(System.Type! type) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.ForcedDateTimeKind.get -> System.DateTimeKind?
+Akavache.Sqlite3.SqliteBlobCache.ForcedDateTimeKind.set -> void
+Akavache.Sqlite3.SqliteBlobCache.Get(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Sqlite3.SqliteBlobCache.Get(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Sqlite3.SqliteBlobCache.Get(string! key) -> System.IObservable<byte[]?>!
+Akavache.Sqlite3.SqliteBlobCache.Get(string! key, System.Type! type) -> System.IObservable<byte[]!>!
+Akavache.Sqlite3.SqliteBlobCache.GetAll(System.Type! type) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>!
+Akavache.Sqlite3.SqliteBlobCache.GetAllKeys() -> System.IObservable<string!>!
+Akavache.Sqlite3.SqliteBlobCache.GetAllKeys(System.Type! type) -> System.IObservable<string!>!
+Akavache.Sqlite3.SqliteBlobCache.GetCreatedAt(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<(string! Key, System.DateTimeOffset? Time)>!
+Akavache.Sqlite3.SqliteBlobCache.GetCreatedAt(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<(string! Key, System.DateTimeOffset? Time)>!
+Akavache.Sqlite3.SqliteBlobCache.GetCreatedAt(string! key) -> System.IObservable<System.DateTimeOffset?>!
+Akavache.Sqlite3.SqliteBlobCache.GetCreatedAt(string! key, System.Type! type) -> System.IObservable<System.DateTimeOffset?>!
+Akavache.Sqlite3.SqliteBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.Type! type) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, byte[]!>>! keyValuePairs, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Insert(string! key, byte[]! data) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Insert(string! key, byte[]! data, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Insert(string! key, byte[]! data, System.Type! type) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Insert(string! key, byte[]! data, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Invalidate(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Invalidate(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Invalidate(string! key) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Invalidate(string! key, System.Type! type) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.InvalidateAll() -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.InvalidateAll(System.Type! type) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Scheduler.get -> ReactiveUI.Primitives.Concurrency.ISequencer!
+Akavache.Sqlite3.SqliteBlobCache.Serializer.get -> Akavache.ISerializer!
+Akavache.Sqlite3.SqliteBlobCache.SqliteBlobCache(Akavache.IAkavacheConnection! connection, Akavache.ISerializer! serializer) -> void
+Akavache.Sqlite3.SqliteBlobCache.SqliteBlobCache(Akavache.IAkavacheConnection! connection, Akavache.ISerializer! serializer, ReactiveUI.Primitives.Concurrency.ISequencer! scheduler) -> void
+Akavache.Sqlite3.SqliteBlobCache.SqliteBlobCache(string! fileName, Akavache.ISerializer! serializer) -> void
+Akavache.Sqlite3.SqliteBlobCache.SqliteBlobCache(string! fileName, Akavache.ISerializer! serializer, ReactiveUI.Primitives.Concurrency.ISequencer! scheduler) -> void
+Akavache.Sqlite3.SqliteBlobCache.UpdateExpiration(System.Collections.Generic.IEnumerable<string!>! keys, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.UpdateExpiration(System.Collections.Generic.IEnumerable<string!>! keys, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.UpdateExpiration(string! key, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.UpdateExpiration(string! key, System.Type! type, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Sqlite3.SqliteBlobCache.Vacuum() -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute.DoesNotReturnAttribute() -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute.DoesNotReturnIfAttribute(bool parameterValue) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute.ParameterValue.get -> bool (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.MemberNotNullAttribute(params string![]! members) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.MemberNotNullAttribute(string! member) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.Members.get -> string![]! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.NotNullAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.NotNullAttribute.NotNullAttribute() -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.ExcludeStatics.get -> bool (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.ExcludeStatics.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.Message.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.RequiresDynamicCodeAttribute(string! message) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.Url.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.Url.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.ExcludeStatics.get -> bool (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.ExcludeStatics.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.Message.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.RequiresUnreferencedCodeAttribute(string! message) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.Url.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.Url.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Category.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.CheckId.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Justification.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Justification.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.MessageId.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.MessageId.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Scope.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Scope.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Target.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Target.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.UnconditionalSuppressMessageAttribute(string! category, string! checkId) -> void (forwarded, contained in System.Runtime)
+System.HashCode (forwarded, contained in System.Runtime)
+System.HashCode.Add<T>(T value) -> void (forwarded, contained in System.Runtime)
+System.HashCode.Add<T>(T value, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void (forwarded, contained in System.Runtime)
+System.HashCode.AddBytes(System.ReadOnlySpan<byte> value) -> void (forwarded, contained in System.Runtime)
+System.HashCode.HashCode() -> void (forwarded, contained in System.Runtime)
+System.HashCode.ToHashCode() -> int (forwarded, contained in System.Runtime)
+System.Index (forwarded, contained in System.Runtime)
+System.Index.Equals(System.Index other) -> bool (forwarded, contained in System.Runtime)
+System.Index.GetOffset(int length) -> int (forwarded, contained in System.Runtime)
+System.Index.Index() -> void (forwarded, contained in System.Runtime)
+System.Index.Index(int value, bool fromEnd = false) -> void (forwarded, contained in System.Runtime)
+System.Index.IsFromEnd.get -> bool (forwarded, contained in System.Runtime)
+System.Index.Value.get -> int (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.CallerArgumentExpressionAttribute (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.CallerArgumentExpressionAttribute.CallerArgumentExpressionAttribute(string! parameterName) -> void (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.CallerArgumentExpressionAttribute.ParameterName.get -> string! (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.IsExternalInit (forwarded, contained in System.Runtime)
+override System.HashCode.Equals(object? obj) -> bool (forwarded, contained in System.Runtime)
+override System.HashCode.GetHashCode() -> int (forwarded, contained in System.Runtime)
+override System.Index.Equals(object? value) -> bool (forwarded, contained in System.Runtime)
+override System.Index.GetHashCode() -> int (forwarded, contained in System.Runtime)
+override System.Index.ToString() -> string! (forwarded, contained in System.Runtime)
+static Akavache.Sqlite3.AkavacheBuilderExtensions.WithSqliteDefaults(this Akavache.IAkavacheBuilder! builder) -> Akavache.IAkavacheBuilder!
+static Akavache.Sqlite3.AkavacheBuilderExtensions.WithSqliteProvider(this Akavache.IAkavacheBuilder! builder) -> Akavache.IAkavacheBuilder!
+static System.HashCode.Combine<T1, T2, T3, T4, T5, T6, T7, T8>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4, T5, T6, T7>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4, T5, T6>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4, T5>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4>(T1 value1, T2 value2, T3 value3, T4 value4) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3>(T1 value1, T2 value2, T3 value3) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2>(T1 value1, T2 value2) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1>(T1 value1) -> int (forwarded, contained in System.Runtime)
+static System.Index.End.get -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.FromEnd(int value) -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.FromStart(int value) -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.Start.get -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.implicit operator System.Index(int value) -> System.Index (forwarded, contained in System.Runtime)
+virtual Akavache.Sqlite3.SqliteBlobCache.BeforeWriteToDiskFilter(byte[]! data, ReactiveUI.Primitives.Concurrency.ISequencer! scheduler) -> System.IObservable<byte[]!>!
+virtual Akavache.Sqlite3.SqliteBlobCache.Dispose(bool isDisposing) -> void

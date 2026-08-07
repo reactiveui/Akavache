@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Exposes the underlying blob cache used by a secure-cache wrapper.</summary>
 public interface IWrappedBlobCache

@@ -4,10 +4,11 @@
 
 using System.Collections.Concurrent;
 
-using Akavache.EncryptedSqlite3;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests targeting uncovered lines in <see cref="SqliteOperationQueue"/> (encrypted variant):
@@ -84,7 +85,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
             var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
 
-            var replies = new List<IObservable<Unit>>();
+            var replies = new List<IObservable<RxVoid>>();
             for (var i = 0; i < writeCount; i++)
             {
                 replies.Add(conn.Upsert(
@@ -406,7 +407,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
             var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
 
-            var observables = new List<IObservable<Unit>>();
+            var observables = new List<IObservable<RxVoid>>();
             for (var i = 0; i < writeCount; i++)
             {
                 observables.Add(conn.Upsert(

@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Skeleton tests for HttpService error handling.</summary>
 [Category("HTTP")]
@@ -17,7 +19,7 @@ public class HttpServiceErrorHandlingTests
     {
         FakeHttpService service = new();
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         Exception? captured = null;
         _ = service.DownloadUrl(cache, "http://invalid").Subscribe(static _ => { }, ex => captured = ex);
         await Assert.That(captured).IsNotNull();
@@ -54,7 +56,7 @@ public class HttpServiceErrorHandlingTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Throw<byte[]>(new HttpRequestException(FailureMessage));
+            Signal.Throw<byte[]>(new HttpRequestException(FailureMessage));
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, bool fetchAlways) =>
@@ -84,7 +86,7 @@ public class HttpServiceErrorHandlingTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Throw<byte[]>(new HttpRequestException(FailureMessage));
+            Signal.Throw<byte[]>(new HttpRequestException(FailureMessage));
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, bool fetchAlways) =>
@@ -115,7 +117,7 @@ public class HttpServiceErrorHandlingTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Throw<byte[]>(new HttpRequestException(FailureMessage));
+            Signal.Throw<byte[]>(new HttpRequestException(FailureMessage));
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, bool fetchAlways) =>
@@ -146,7 +148,7 @@ public class HttpServiceErrorHandlingTests
             IEnumerable<KeyValuePair<string, string>>? headers,
             bool fetchAlways,
             DateTimeOffset? absoluteExpiration) =>
-            Observable.Throw<byte[]>(new HttpRequestException(FailureMessage));
+            Signal.Throw<byte[]>(new HttpRequestException(FailureMessage));
 
         /// <inheritdoc/>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, bool fetchAlways) =>

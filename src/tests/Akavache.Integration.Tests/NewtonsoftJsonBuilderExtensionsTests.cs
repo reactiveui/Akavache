@@ -2,12 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.NewtonsoftJson;
-using Akavache.Tests.Executors;
 using Newtonsoft.Json;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for NewtonsoftJson.AkavacheBuilderExtensions.</summary>
 [Category("Akavache")]
@@ -213,7 +214,7 @@ public class NewtonsoftJsonBuilderExtensionsTests
 
         // Force every registered factory lambda (including the static () => new ... ones)
         // to actually execute by enumerating alternatives against an unrelated primary.
-        var alternatives = UniversalSerializer.GetAvailableAlternativeSerializers(new SystemTextJson.SystemJsonSerializer());
+        var alternatives = UniversalSerializer.GetAvailableAlternativeSerializers(new SystemJsonSerializer());
 
         await Assert.That(alternatives.Count).IsGreaterThanOrEqualTo(ExpectedAlternativeSerializerCount);
 

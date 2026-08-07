@@ -1,13 +1,14 @@
 // Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-using Akavache.NewtonsoftJson;
-using Akavache.Settings;
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-using Akavache.Tests.Executors;
 
+using System.Runtime.CompilerServices;
+
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>
 /// Tests for CacheDatabase functionality and global configuration, including
@@ -38,21 +39,27 @@ public class CacheDatabaseTests
         // Assert
         await Assert.That(scheduler).IsNotNull();
 
-        // Test that it can schedule work
-        var workExecuted = false;
-        ManualResetEventSlim resetEvent = new(false);
+        // Test that it can schedule work. The flag travels as scheduler state rather than a
+        // captured local so the scheduled delegate stays allocation-free.
+        StrongBox<bool> workExecuted = new(false);
+        using ManualResetEventSlim resetEvent = new(false);
 
-        _ = scheduler.Schedule(() =>
-        {
-            workExecuted = true;
-            resetEvent.Set();
-        });
+        // Both sides of the seam expose this Func-returning overload, unlike the Action<TState> one,
+        // so the same call binds identically whichever scheduler contract is in play.
+        _ = scheduler.Schedule(
+            (Flag: workExecuted, Signal: resetEvent),
+            static (_, state) =>
+            {
+                state.Flag.Value = true;
+                state.Signal.Set();
+                return Scope.Empty;
+            });
 
         using (Assert.Multiple())
         {
             // Wait for work to complete
             await Assert.That(resetEvent.Wait(ScheduledWorkTimeoutMilliseconds)).IsTrue();
-            await Assert.That(workExecuted).IsTrue();
+            await Assert.That(workExecuted.Value).IsTrue();
         }
     }
 
@@ -257,7 +264,7 @@ public class CacheDatabaseTests
     [Test]
     public async Task TaskpoolSchedulerShouldBeOverridable()
     {
-        var customScheduler = ImmediateScheduler.Instance;
+        var customScheduler = ImmediateSequencer.Instance;
         CacheDatabase.TaskpoolScheduler = customScheduler;
         await Assert.That(CacheDatabase.TaskpoolScheduler).IsSameReferenceAs(customScheduler);
     }
@@ -274,7 +281,7 @@ public class CacheDatabaseTests
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_ShutdownDisposes");
 
-        InMemoryBlobCache liveBlob = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache liveBlob = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         FakeSettingsStorage liveStore = new();
 
         var instance = CacheDatabase.CurrentInstance!;
@@ -387,7 +394,7 @@ public class CacheDatabaseTests
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_ShutdownMerge");
 
         var result = await CacheDatabase.Shutdown().FirstAsync();
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
     }
 
     /// <summary>
@@ -419,7 +426,7 @@ public class CacheDatabaseTests
 
     /// <summary>
     /// Verifies that <see cref="CacheDatabase.Shutdown"/> returns immediately and yields
-    /// <see cref="Unit.Default"/> when CacheDatabase has not been initialized — covers the
+    /// <see cref="RxVoid.Default"/> when CacheDatabase has not been initialized — covers the
     /// early-return branch at the top of <c>Shutdown</c>.
     /// </summary>
     /// <returns>A task.</returns>
@@ -429,7 +436,7 @@ public class CacheDatabaseTests
         await CacheDatabase.ResetForTests();
 
         var result = await CacheDatabase.Shutdown().FirstAsync();
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
         await Assert.That(CacheDatabase.IsInitialized).IsFalse();
     }
 
@@ -498,7 +505,7 @@ public class CacheDatabaseTests
 
         /// <summary>Initializes the storage.</summary>
         /// <returns>A completed observable.</returns>
-        public IObservable<Unit> Initialize() => Observable.Return(Unit.Default);
+        public IObservable<RxVoid> Initialize() => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
         public void Dispose() => Disposed = true;
@@ -565,16 +572,16 @@ public class CacheDatabaseTests
         public ISerializer Serializer { get; } = new SystemJsonSerializer();
 
         /// <inheritdoc/>
-        public IScheduler Scheduler { get; } = ImmediateScheduler.Instance;
+        public ISequencer Scheduler { get; } = ImmediateSequencer.Instance;
 
         /// <inheritdoc/>
         public DateTimeKind? ForcedDateTimeKind { get; set; }
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush() => throw new InvalidOperationException("Simulated flush failure.");
+        public IObservable<RxVoid> Flush() => throw new InvalidOperationException("Simulated flush failure.");
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush(Type type) => throw new InvalidOperationException("Simulated flush failure.");
+        public IObservable<RxVoid> Flush(Type type) => throw new InvalidOperationException("Simulated flush failure.");
 
         /// <inheritdoc/>
         public void Dispose()
@@ -582,38 +589,38 @@ public class CacheDatabaseTests
         }
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
             Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
+        public IObservable<RxVoid> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data) =>
             Insert(key, data, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
             Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
+        public IObservable<RxVoid> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             Type type,
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
             Insert(key, data, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit>
+        public IObservable<RxVoid>
             Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
@@ -655,40 +662,40 @@ public class CacheDatabaseTests
         public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(string key) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key, Type type) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(string key, Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll(Type type) => throw new NotImplementedException();
+        public IObservable<RxVoid> InvalidateAll(Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll() => throw new NotImplementedException();
+        public IObservable<RxVoid> InvalidateAll() => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Vacuum() => throw new NotImplementedException();
+        public IObservable<RxVoid> Vacuum() => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(
+        public IObservable<RxVoid> UpdateExpiration(
             IEnumerable<string> keys,
             Type type,
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
@@ -705,18 +712,18 @@ public class CacheDatabaseTests
         public ISerializer Serializer { get; } = new SystemJsonSerializer();
 
         /// <inheritdoc/>
-        public IScheduler Scheduler { get; } = ImmediateScheduler.Instance;
+        public ISequencer Scheduler { get; } = ImmediateSequencer.Instance;
 
         /// <inheritdoc/>
         public DateTimeKind? ForcedDateTimeKind { get; set; }
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush() =>
-            Observable.Throw<Unit>(new InvalidOperationException("Simulated observable flush failure."));
+        public IObservable<RxVoid> Flush() =>
+            Signal.Throw<RxVoid>(new InvalidOperationException("Simulated observable flush failure."));
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush(Type type) =>
-            Observable.Throw<Unit>(new InvalidOperationException("Simulated observable flush failure."));
+        public IObservable<RxVoid> Flush(Type type) =>
+            Signal.Throw<RxVoid>(new InvalidOperationException("Simulated observable flush failure."));
 
         /// <inheritdoc/>
         public void Dispose()
@@ -724,38 +731,38 @@ public class CacheDatabaseTests
         }
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
             Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
+        public IObservable<RxVoid> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data) =>
             Insert(key, data, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
             Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
+        public IObservable<RxVoid> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             Type type,
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
             Insert(key, data, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit>
+        public IObservable<RxVoid>
             Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
@@ -797,40 +804,40 @@ public class CacheDatabaseTests
         public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(string key) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key, Type type) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(string key, Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll(Type type) => throw new NotImplementedException();
+        public IObservable<RxVoid> InvalidateAll(Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll() => throw new NotImplementedException();
+        public IObservable<RxVoid> InvalidateAll() => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Vacuum() => throw new NotImplementedException();
+        public IObservable<RxVoid> Vacuum() => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(
+        public IObservable<RxVoid> UpdateExpiration(
             IEnumerable<string> keys,
             Type type,
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();

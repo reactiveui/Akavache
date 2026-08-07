@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Core;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests;
+#else
 namespace Akavache.Settings.Tests;
+#endif
 
 /// <summary>
 /// Tests the <c>settings?.Invoke(settingsDb)</c> null branch in
@@ -22,7 +23,7 @@ public class SettingsBuilderExtensionsNullSettingsTests
     [Test]
     internal async Task WithSettingsStore_NullSettingsAction_DoesNotThrow()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         FakeAkavacheBuilder builder = new() { Serializer = new SystemJsonSerializer() };
 
         var result = builder.WithSettingsStore<ViewSettings>(cache, null!);

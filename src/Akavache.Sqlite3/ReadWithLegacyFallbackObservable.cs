@@ -2,12 +2,18 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-
 #if ENCRYPTED
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.EncryptedSqlite3;
+#else
 namespace Akavache.EncryptedSqlite3;
+#endif
+#else
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Sqlite3;
 #else
 namespace Akavache.Sqlite3;
+#endif
 #endif
 
 /// <summary>
@@ -22,7 +28,7 @@ namespace Akavache.Sqlite3;
 /// The primary read against the V11 <c>CacheEntry</c> table is the hot path — the
 /// fast exit returns <c>entry.Value</c> verbatim when present. Only cold misses (key
 /// absent from V11) subscribe to the legacy read; the intermediate
-/// <see cref="SerialDisposable"/> is reused so the caller's dispose
+/// <see cref="SwapDisposable"/> is reused so the caller's dispose
 /// handle wires transparently to whichever subscription is active at the time.
 /// </para>
 /// <para>
@@ -45,7 +51,7 @@ internal sealed class ReadWithLegacyFallbackObservable(IAkavacheConnection conne
         // The observer is handed the very disposable it will later replace, so this assignment
         // cannot fold into an object initializer: an initializer may not reference the variable
         // being declared. SST1193 is suppressed here because its fix does not compile.
-        var subscription = new SerialDisposable();
+        SwapDisposable subscription = new();
         subscription.Disposable = connection
             .Get(key, type?.FullName, now)
             .Subscribe(new PrimaryObserver(connection, key, type, now, observer, subscription));
@@ -69,7 +75,7 @@ internal sealed class ReadWithLegacyFallbackObservable(IAkavacheConnection conne
     /// <summary>
     /// Observes the V11 primary read. On a hit it emits the payload and completes;
     /// on a miss it transitions to <see cref="LegacyObserver"/> via a fresh
-    /// subscription installed on the shared <see cref="SingleAssignmentDisposable"/>.
+    /// subscription installed on the shared <see cref="MutableDisposable"/>.
     /// </summary>
     /// <param name="connection">The SQLite connection used for the legacy fallback read.</param>
     /// <param name="key">The cache key being looked up.</param>
@@ -83,7 +89,7 @@ internal sealed class ReadWithLegacyFallbackObservable(IAkavacheConnection conne
         Type? type,
         DateTimeOffset now,
         IObserver<byte[]> downstream,
-        SerialDisposable subscription) : IObserver<CacheEntry?>
+        SwapDisposable subscription) : IObserver<CacheEntry?>
     {
         /// <summary>Set on the first non-null payload; gates whether <see cref="OnCompleted"/> forwards the terminal or falls back to the V10 reader.</summary>
         private bool _emitted;

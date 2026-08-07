@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.Sqlite3;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.V10toV11;
+#else
 namespace Akavache.V10toV11;
+#endif
 
 /// <summary>Internal service that handles the one-time migration of data from V10 databases to V11 databases.</summary>
 internal static class V10MigrationService
@@ -31,7 +32,7 @@ internal static class V10MigrationService
     /// <see cref="SqliteBlobCache"/> instance. Authored as a pure observable pipeline:
     /// check-sentinel → probe-table → stream-rows → upsert → write-sentinel → close,
     /// with each stage feeding the next via <c>SelectMany</c>. The returned observable
-    /// emits a single <see cref="Unit"/> on success or the first stage error.
+    /// emits a single <see cref="RxVoid"/> on success or the first stage error.
     /// </summary>
     /// <param name="v10DbPath">Full path to the V10 database file.</param>
     /// <param name="v11Cache">The V11 cache instance to migrate data into.</param>
@@ -40,7 +41,7 @@ internal static class V10MigrationService
     /// <returns>A one-shot observable that fires when migration completes (or the file is absent / migration already ran).</returns>
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
-    internal static IObservable<Unit> Migrate(
+    internal static IObservable<RxVoid> Migrate(
         string v10DbPath,
         SqliteBlobCache v11Cache,
         ISerializer serializer,
@@ -49,7 +50,7 @@ internal static class V10MigrationService
         if (!File.Exists(v10DbPath))
         {
             options.Logger?.Invoke($"V10 database not found at '{v10DbPath}', skipping.");
-            return Observable.Return(Unit.Default);
+            return ImmutableReturnRxVoidSignal.Instance;
         }
 
         return IsMigrationComplete(v11Cache)
@@ -58,7 +59,7 @@ internal static class V10MigrationService
                 if (alreadyMigrated)
                 {
                     options.Logger?.Invoke($"Migration already completed for '{v10DbPath}', skipping.");
-                    return Observable.Return(Unit.Default);
+                    return ImmutableReturnRxVoidSignal.Instance;
                 }
 
                 options.Logger?.Invoke($"Starting migration from '{v10DbPath}'...");
@@ -80,7 +81,7 @@ internal static class V10MigrationService
     /// <returns>A one-shot observable that fires on migration completion.</returns>
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
-    internal static IObservable<Unit> MigrateCore(
+    internal static IObservable<RxVoid> MigrateCore(
         string v10DbPath,
         SqliteBlobCache v11Cache,
         ISerializer serializer,
@@ -94,7 +95,7 @@ internal static class V10MigrationService
                 if (!tableExists)
                 {
                     options.Logger?.Invoke($"No CacheElement table found in '{v10DbPath}', skipping.");
-                    return Observable.Return(Unit.Default);
+                    return ImmutableReturnRxVoidSignal.Instance;
                 }
 
                 return v10Connection.ReadAllLegacyV10Rows()
@@ -126,7 +127,7 @@ internal static class V10MigrationService
 
                         var upsert = converted.Count > 0
                             ? v11Cache.Connection.Upsert(converted)
-                            : Observable.Return(Unit.Default);
+                            : ImmutableReturnRxVoidSignal.Instance;
 
                         return upsert.SelectMany(_ => WriteMigrationSentinel(v11Cache));
                     });
@@ -139,7 +140,7 @@ internal static class V10MigrationService
                     TryDeleteV10Database(v10DbPath, options);
                 }
 
-                return Observable.Return(Unit.Default);
+                return ImmutableReturnRxVoidSignal.Instance;
             });
     }
 
@@ -155,7 +156,7 @@ internal static class V10MigrationService
         v11Cache.Connection
             .Get(MigrationSentinelKey, typeFullName: null, Clock.GetUtcNow())
             .Select(static sentinel => sentinel is not null)
-            .Catch<bool, Exception>(static _ => Observable.Return(false));
+            .Catch<bool, Exception>(static _ => ImmutableReturnFalseSignal.Instance);
 
     /// <summary>Converts a raw V10 legacy row into a V11 <see cref="CacheEntry"/>, optionally re-serializing the payload.</summary>
     /// <param name="row">The source V10 row.</param>
@@ -330,7 +331,7 @@ internal static class V10MigrationService
     /// </summary>
     /// <param name="v11Cache">The V11 cache to mark as migrated.</param>
     /// <returns>A one-shot observable that fires when the sentinel is committed.</returns>
-    internal static IObservable<Unit> WriteMigrationSentinel(SqliteBlobCache v11Cache)
+    internal static IObservable<RxVoid> WriteMigrationSentinel(SqliteBlobCache v11Cache)
     {
         var sentinel = new CacheEntry(
             MigrationSentinelKey,

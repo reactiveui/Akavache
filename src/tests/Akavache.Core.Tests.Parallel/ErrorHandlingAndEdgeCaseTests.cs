@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for error handling and edge case scenarios across Akavache functionality.</summary>
 [Category("Akavache")]
@@ -58,7 +59,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert some data first
         cache.InsertObject("test", SampleValue).SubscribeAndComplete();
@@ -85,7 +86,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Create very large data (10MB string)
         string largeData = new('X', LargeDataCharCount);
@@ -111,7 +112,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Act - Insert null object
         cache.InsertObject<string?>("null_key", null).SubscribeAndComplete();
@@ -138,7 +139,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Test null key validation - this should always throw ArgumentNullException
         var insertNullError = cache.InsertObject(null!, SampleValue).SubscribeGetError();
@@ -287,7 +288,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         const int concurrencyLevel = 100;
         const int operationsPerThread = 50;
@@ -344,7 +345,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Test immediate expiration
         var pastExpiration = TimeProvider.System.GetLocalNow().AddSeconds(-1);
@@ -402,7 +403,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Create complex nested object
         UserObject[] users =
@@ -448,7 +449,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Create many objects to simulate memory pressure
         const int objectCount = 1000;
@@ -501,7 +502,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Test various Unicode and special character scenarios
         Dictionary<string, string> testCases = new()
@@ -559,7 +560,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Test various DateTime edge cases
         Dictionary<string, DateTime> dateTimeCases = new()
@@ -648,7 +649,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
     /// <summary>Creates a fresh in-memory cache backed by the System.Text.Json serializer.</summary>
     /// <returns>A new cache instance the caller owns and must dispose.</returns>
-    private static InMemoryBlobCache CreateCache() => new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+    private static InMemoryBlobCache CreateCache() => new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
     /// <summary>Nested configuration block carried inside <see cref="ComplexObjectGraph"/>.</summary>
     /// <param name="Enabled">Whether the configured feature is switched on.</param>

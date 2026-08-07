@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\shared\Helpers\ObservableTestExtensions.cs" Link="Helpers\%(Filename)%(Extension)" />
     <Compile Include="..\shared\Helpers\Utility.cs" Link="Helpers\%(Filename)%(Extension)" />
   </ItemGroup>
 
@@ -20,6 +19,25 @@
     <ProjectReference Include="..\..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />
     <ProjectReference Include="..\..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
     <ProjectReference Include="..\..\Akavache.Settings\Akavache.Settings.csproj" />
+  </ItemGroup>
+
+
+  <!-- Akavache namespaces as global usings; Directory.Build.targets shifts them for the .Reactive twin. -->
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Core.Observables" />
+    <AkavacheInternalUsing Include="Akavache.EncryptedSettings.Tests" />
+    <AkavacheInternalUsing Include="Akavache.EncryptedSqlite3" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.NewtonsoftJson" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
+    <AkavacheInternalUsing Include="Akavache.Settings.Core" />
+    <AkavacheInternalUsing Include="Akavache.Settings.Tests" />
+    <AkavacheInternalUsing Include="Akavache.Sqlite3" />
+    <AkavacheInternalUsing Include="Akavache.SystemTextJson" />
+    <AkavacheInternalUsing Include="Akavache.Tests" />
+    <AkavacheInternalUsing Include="Akavache.Tests.Helpers" />
   </ItemGroup>
 
 </Project>

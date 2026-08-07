@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Settings.Core;
-using Akavache.SystemTextJson;
-using Akavache.Tests;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests;
+#else
 namespace Akavache.Settings.Tests;
+#endif
 
 /// <summary>
 /// Tests the settings-store teardown members of <see cref="AkavacheBuilderExtensions"/>:
@@ -29,7 +30,7 @@ public class SettingsStoreTeardownTests
     [Test]
     internal async Task DisposeSettingsStore_RegisteredStore_ReleasesStoreAndCache()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var storage = new TeardownProbeStorage(cache);
         var instance = CreateInstanceHolding(storage, cache);
 
@@ -55,7 +56,7 @@ public class SettingsStoreTeardownTests
     [Test]
     internal async Task DeleteSettingsStore_CachePathReportsIoFailure_CompletesWithoutFaulting()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var storage = new TeardownProbeStorage(cache);
         var instance = CreateInstanceHolding(storage, cache);
         instance.SettingsCachePathFault = new IOException("The settings directory is not readable.");
@@ -79,7 +80,7 @@ public class SettingsStoreTeardownTests
     [Test]
     internal async Task DeleteSettingsStore_CachePathReportsAccessDenied_CompletesWithoutFaulting()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var storage = new TeardownProbeStorage(cache);
         var instance = CreateInstanceHolding(storage, cache);
         instance.SettingsCachePathFault = new UnauthorizedAccessException("The settings directory is not writable.");

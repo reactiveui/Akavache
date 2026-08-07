@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests.Helpers;
+#else
 namespace Akavache.Tests.Helpers;
+#endif
 
 /// <summary>Extensions for DateTime handling in tests.</summary>
 internal static class DateTimeExtensions

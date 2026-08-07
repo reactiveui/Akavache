@@ -4,11 +4,11 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-using Akavache.Core;
-using Akavache.EncryptedSqlite3;
-using Akavache.Sqlite3;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings;
+#else
 namespace Akavache.Settings;
+#endif
 
 /// <summary>Provides extension methods for configuring Akavache settings storage.</summary>
 public static class AkavacheBuilderExtensions
@@ -79,14 +79,14 @@ public static class AkavacheBuilderExtensions
         /// Configures a standard settings store backed by SQLite using the supplied
         /// <paramref name="scheduler"/>. Intended for test harnesses that want to avoid
         /// thread-pool scheduling on the cache initialization observable (pass
-        /// <see cref="ImmediateScheduler.Instance"/>).
+        /// <see cref="Sequencer.Immediate"/>).
         /// </summary>
         /// <typeparam name="T">The settings type.</typeparam>
         /// <param name="settings">Action to configure the settings instance once created.</param>
         /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
         /// <param name="scheduler">Scheduler to use for the underlying blob cache, or <see langword="null"/> for the default task-pool scheduler.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
-        public IAkavacheBuilder WithSettingsStore<T>(Action<T?> settings, string? overrideDatabaseName, IScheduler? scheduler)
+        public IAkavacheBuilder WithSettingsStore<T>(Action<T?> settings, string? overrideDatabaseName, ISequencer? scheduler)
                 where T : class, ISettingsStorage, new()
         {
             ArgumentExceptionHelper.ThrowIfNull(builder);
@@ -147,7 +147,7 @@ public static class AkavacheBuilderExtensions
             "Design",
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-        public IObservable<Unit> DeleteSettingsStore<T>() =>
+        public IObservable<RxVoid> DeleteSettingsStore<T>() =>
             builder.DeleteSettingsStore<T>((string?)null);
 
         /// <summary>
@@ -162,7 +162,7 @@ public static class AkavacheBuilderExtensions
             "Design",
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-        public IObservable<Unit> DeleteSettingsStore<T>(
+        public IObservable<RxVoid> DeleteSettingsStore<T>(
                 string? overrideDatabaseName)
         {
             ArgumentExceptionHelper.ThrowIfNull(builder);
@@ -239,7 +239,7 @@ public static class AkavacheBuilderExtensions
             "Design",
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-        public IObservable<Unit> DisposeSettingsStore<T>() =>
+        public IObservable<RxVoid> DisposeSettingsStore<T>() =>
             builder.DisposeSettingsStore<T>((string?)null);
 
         /// <summary>
@@ -254,11 +254,11 @@ public static class AkavacheBuilderExtensions
             "Design",
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-        public IObservable<Unit> DisposeSettingsStore<T>(string? overrideDatabaseName)
+        public IObservable<RxVoid> DisposeSettingsStore<T>(string? overrideDatabaseName)
         {
             ArgumentExceptionHelper.ThrowIfNull(builder);
 
-            return Observable.Defer(() =>
+            return Signal.Defer(() =>
             {
                 var key = overrideDatabaseName ?? typeof(T).Name;
                 var settings = builder.GetLoadedSettingsStore<T>(overrideDatabaseName);
@@ -275,7 +275,7 @@ public static class AkavacheBuilderExtensions
                     _ = builder.BlobCaches.Remove(key);
                 }
 
-                return Observable.Return(Unit.Default);
+                return ImmutableReturnRxVoidSignal.Instance;
             });
         }
 
@@ -311,7 +311,7 @@ public static class AkavacheBuilderExtensions
         /// <summary>
         /// Gets or creates a secure encrypted settings store with password protection, optionally
         /// overriding the scheduler the underlying <see cref="EncryptedSqliteBlobCache"/> uses.
-        /// Pass <see cref="ImmediateScheduler.Instance"/> from tests to avoid thread-pool hops
+        /// Pass <see cref="Sequencer.Immediate"/> from tests to avoid thread-pool hops
         /// on the initialization observable.
         /// </summary>
         /// <typeparam name="T">The settings type that implements <see cref="ISettingsStorage"/>.</typeparam>
@@ -323,7 +323,7 @@ public static class AkavacheBuilderExtensions
             "Design",
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-        public T GetSecureSettingsStore<T>(string password, string? overrideDatabaseName, IScheduler? scheduler)
+        public T GetSecureSettingsStore<T>(string password, string? overrideDatabaseName, ISequencer? scheduler)
                 where T : class, ISettingsStorage, new()
         {
             ArgumentExceptionHelper.ThrowIfNull(builder);
@@ -385,7 +385,7 @@ public static class AkavacheBuilderExtensions
         /// <summary>
         /// Gets or creates a standard settings store using SQLite for persistence, optionally
         /// overriding the scheduler the underlying <see cref="SqliteBlobCache"/> uses.
-        /// Pass <see cref="ImmediateScheduler.Instance"/> from tests to avoid thread-pool hops
+        /// Pass <see cref="Sequencer.Immediate"/> from tests to avoid thread-pool hops
         /// on the initialization observable.
         /// </summary>
         /// <typeparam name="T">The settings type that implements <see cref="ISettingsStorage"/>.</typeparam>
@@ -396,7 +396,7 @@ public static class AkavacheBuilderExtensions
             "Design",
             "SST2307:Type parameter appears in no parameter",
             Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-        public T GetSettingsStore<T>(string? overrideDatabaseName, IScheduler? scheduler)
+        public T GetSettingsStore<T>(string? overrideDatabaseName, ISequencer? scheduler)
                 where T : class, ISettingsStorage, new()
         {
             ArgumentExceptionHelper.ThrowIfNull(builder);

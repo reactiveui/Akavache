@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.NewtonsoftJson;
+#else
 namespace Akavache.NewtonsoftJson;
+#endif
 
 /// <summary>
 /// A Newtonsoft.Json serializer configured for maximum Akavache BSON compatibility.

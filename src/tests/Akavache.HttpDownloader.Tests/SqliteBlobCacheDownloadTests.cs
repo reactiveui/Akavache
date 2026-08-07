@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Download tests exercising <see cref="SqliteBlobCache"/> with a real HTTP server.</summary>
 [InheritsTests]
@@ -14,6 +16,6 @@ public class SqliteBlobCacheDownloadTests : BlobCacheDownloadTestsBase
     protected override IBlobCache CreateBlobCache(string path, ISerializer serializer)
     {
         var dbPath = Path.Combine(path, $"blob{Guid.NewGuid()}.db");
-        return new SqliteBlobCache(dbPath, serializer, ImmediateScheduler.Instance);
+        return new SqliteBlobCache(dbPath, serializer, ImmediateSequencer.Instance);
     }
 }

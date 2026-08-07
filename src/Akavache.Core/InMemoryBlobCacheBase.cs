@@ -6,12 +6,13 @@ using System.Diagnostics.CodeAnalysis;
 #if NET6_0_OR_GREATER
 using System.Runtime.InteropServices;
 #endif
-using Akavache.Core;
-using Akavache.Core.Observables;
-using Akavache.Helpers;
 using Splat;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>
 /// Base class for in-memory blob cache implementations that provides common functionality
@@ -22,7 +23,7 @@ namespace Akavache;
 /// </remarks>
 /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
 /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
-public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer) : ISecureBlobCache
+public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer) : ISecureBlobCache
 {
     /// <summary>The in-memory key to cache entry mapping.</summary>
     private readonly Dictionary<string, CacheEntry> _cache = new(StringComparer.Ordinal);
@@ -40,7 +41,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
     private int _disposed;
 
     /// <inheritdoc />
-    public IScheduler Scheduler { get; } = ArgumentValidation.EnsureNotNull(scheduler);
+    public ISequencer Scheduler { get; } = ArgumentValidation.EnsureNotNull(scheduler);
 
     /// <inheritdoc/>
     public ISerializer Serializer { get; } = ArgumentValidation.EnsureNotNull(serializer);
@@ -62,20 +63,20 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
     }
 
     /// <inheritdoc />
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
         Insert(keyValuePairs, (DateTimeOffset?)null);
 
     /// <inheritdoc />
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration)
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration)
     {
         ArgumentExceptionHelper.ThrowIfNull(keyValuePairs);
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name);
         }
 
         // Empty-input guard.
-        return keyValuePairs is ICollection<KeyValuePair<string, byte[]>> { Count: 0 } ? Core.CachedObservables.UnitDefault : Observable.Start(
+        return keyValuePairs is ICollection<KeyValuePair<string, byte[]>> { Count: 0 } ? ImmutableReturnRxVoidSignal.Instance : Signal.Start(
             () =>
             {
                 lock (_lock)
@@ -87,20 +88,20 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                     }
                 }
 
-                return Unit.Default;
+                return RxVoid.Default;
             },
             Scheduler);
     }
 
     /// <inheritdoc />
-    public IObservable<Unit> Insert(string key, byte[] data) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data) =>
         Insert(key, data, (DateTimeOffset?)null);
 
     /// <inheritdoc />
-    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
-            : Observable.Start(
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name)
+            : Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -108,24 +109,24 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                         _cache[key] = new(key, TypeName: null, data, Scheduler.Now, absoluteExpiration);
                     }
 
-                    return Unit.Default;
+                    return RxVoid.Default;
                 },
                 Scheduler);
 
     /// <inheritdoc />
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
         Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
     /// <inheritdoc />
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration)
+    public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration)
     {
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name);
         }
 
         // Empty-input guard.
-        return keyValuePairs is ICollection<KeyValuePair<string, byte[]>> { Count: 0 } ? Core.CachedObservables.UnitDefault : Observable.Start(
+        return keyValuePairs is ICollection<KeyValuePair<string, byte[]>> { Count: 0 } ? ImmutableReturnRxVoidSignal.Instance : Signal.Start(
             () =>
             {
                 lock (_lock)
@@ -158,20 +159,20 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                     }
                 }
 
-                return Unit.Default;
+                return RxVoid.Default;
             },
             Scheduler);
     }
 
     /// <inheritdoc />
-    public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
         Insert(key, data, type, (DateTimeOffset?)null);
 
     /// <inheritdoc />
-    public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
-            : Observable.Start(
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name)
+            : Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -199,7 +200,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                         _keyToType[key] = type;
                     }
 
-                    return Unit.Default;
+                    return RxVoid.Default;
                 },
                 Scheduler);
 
@@ -207,7 +208,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
     public IObservable<byte[]?> Get(string key) =>
         Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]?>(GetType().Name)
-            : Observable.Start(
+            : Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -243,7 +244,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
             : keys.ToObservable()
                 .SelectMany(key => Get(key)
                     .Select(value => new KeyValuePair<string, byte[]>(key, value!))
-                    .Catch<KeyValuePair<string, byte[]>, KeyNotFoundException>(static _ => Observable.Empty<KeyValuePair<string, byte[]>>()));
+                    .Catch<KeyValuePair<string, byte[]>, KeyNotFoundException>(static _ => ImmutableEmptySignal<KeyValuePair<string, byte[]>>.Instance));
 
     /// <inheritdoc />
     public IObservable<byte[]?> Get(string key, Type type) => Get(key);
@@ -255,7 +256,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
     public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) =>
         Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<KeyValuePair<string, byte[]>>(GetType().Name)
-            : Observable.Start(
+            : Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -300,7 +301,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
     public IObservable<string> GetAllKeys() =>
         Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>(GetType().Name)
-            : Observable.Start(
+            : Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -336,7 +337,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
     public IObservable<string> GetAllKeys(Type type) =>
         Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>(GetType().Name)
-            : Observable.Start(
+            : Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -396,7 +397,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
     public IObservable<DateTimeOffset?> GetCreatedAt(string key) =>
         Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<DateTimeOffset?>(GetType().Name)
-            : Observable.Start(
+            : Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -414,16 +415,16 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
     public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => GetCreatedAt(key);
 
     /// <inheritdoc />
-    public IObservable<Unit> Flush() => Core.CachedObservables.UnitDefault;
+    public IObservable<RxVoid> Flush() => ImmutableReturnRxVoidSignal.Instance;
 
     /// <inheritdoc />
-    public IObservable<Unit> Flush(Type type) => Core.CachedObservables.UnitDefault;
+    public IObservable<RxVoid> Flush(Type type) => ImmutableReturnRxVoidSignal.Instance;
 
     /// <inheritdoc />
-    public IObservable<Unit> Invalidate(string key) =>
+    public IObservable<RxVoid> Invalidate(string key) =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
-            : Observable.Start(
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name)
+            : Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -435,23 +436,23 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                     // Clear pending requests for this key.
                     RequestCache.RemoveRequestsForKey(key);
 
-                    return Unit.Default;
+                    return RxVoid.Default;
                 },
                 Scheduler);
 
     /// <inheritdoc />
-    public IObservable<Unit> Invalidate(string key, Type type) => Invalidate(key);
+    public IObservable<RxVoid> Invalidate(string key, Type type) => Invalidate(key);
 
     /// <inheritdoc />
-    public IObservable<Unit> Invalidate(IEnumerable<string> keys)
+    public IObservable<RxVoid> Invalidate(IEnumerable<string> keys)
     {
         if (Volatile.Read(ref _disposed) != 0)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name);
         }
 
         // Empty-input guard — skip the Observable.Start scheduling and lock acquisition entirely.
-        return keys is ICollection<string> { Count: 0 } ? Core.CachedObservables.UnitDefault : Observable.Start(
+        return keys is ICollection<string> { Count: 0 } ? ImmutableReturnRxVoidSignal.Instance : Signal.Start(
             () =>
             {
                 // Materialize the enumerable. The spread pre-sizes from an ICollection source.
@@ -472,19 +473,19 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                     RequestCache.RemoveRequestsForKey(key);
                 }
 
-                return Unit.Default;
+                return RxVoid.Default;
             },
             Scheduler);
     }
 
     /// <inheritdoc />
-    public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => Invalidate(keys);
+    public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type) => Invalidate(keys);
 
     /// <inheritdoc />
-    public IObservable<Unit> InvalidateAll(Type type) =>
+    public IObservable<RxVoid> InvalidateAll(Type type) =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
-            : Observable.Start(
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name)
+            : Signal.Start(
                 () =>
                 {
                     List<string> keysToInvalidate = [];
@@ -512,15 +513,15 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                         RequestCache.RemoveRequest(key, type);
                     }
 
-                    return Unit.Default;
+                    return RxVoid.Default;
                 },
                 Scheduler);
 
     /// <inheritdoc />
-    public IObservable<Unit> InvalidateAll() =>
+    public IObservable<RxVoid> InvalidateAll() =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
-            : Observable.Start(
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name)
+            : Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -533,17 +534,17 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                     // Clear all pending requests.
                     RequestCache.Clear();
 
-                    return Unit.Default;
+                    return RxVoid.Default;
                 },
                 Scheduler);
 
     /// <inheritdoc />
-    public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
         (string.IsNullOrWhiteSpace(key), Volatile.Read(ref _disposed) != 0) switch
         {
-            (true, _) => Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key))),
-            (_, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name),
-            _ => Observable.Start(
+            (true, _) => new ImmediateThrowSignal<RxVoid>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key))),
+            (_, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name),
+            _ => Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -554,19 +555,19 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                         }
                     }
 
-                    return Unit.Default;
+                    return RxVoid.Default;
                 },
                 Scheduler),
         };
 
     /// <inheritdoc />
-    public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
         (string.IsNullOrWhiteSpace(key), type is null, Volatile.Read(ref _disposed) != 0) switch
         {
-            (true, _, _) => Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key))),
-            (_, true, _) => Observable.Throw<Unit>(new ArgumentNullException(nameof(type))),
-            (_, _, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name),
-            _ => Observable.Start(
+            (true, _, _) => new ImmediateThrowSignal<RxVoid>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key))),
+            (_, true, _) => new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(type))),
+            (_, _, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name),
+            _ => Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -577,18 +578,18 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                         }
                     }
 
-                    return Unit.Default;
+                    return RxVoid.Default;
                 },
                 Scheduler),
         };
 
     /// <inheritdoc />
-    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
         (keys is null, Volatile.Read(ref _disposed) != 0) switch
         {
-            (true, _) => Observable.Throw<Unit>(new ArgumentNullException(nameof(keys))),
-            (_, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name),
-            _ => Observable.Start(
+            (true, _) => new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(keys))),
+            (_, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name),
+            _ => Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -602,19 +603,19 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                         }
                     }
 
-                    return Unit.Default;
+                    return RxVoid.Default;
                 },
                 Scheduler),
         };
 
     /// <inheritdoc />
-    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) =>
         (keys is null, type is null, Volatile.Read(ref _disposed) != 0) switch
         {
-            (true, _, _) => Observable.Throw<Unit>(new ArgumentNullException(nameof(keys))),
-            (_, true, _) => Observable.Throw<Unit>(new ArgumentNullException(nameof(type))),
-            (_, _, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name),
-            _ => Observable.Start(
+            (true, _, _) => new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(keys))),
+            (_, true, _) => new ImmediateThrowSignal<RxVoid>(new ArgumentNullException(nameof(type))),
+            (_, _, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name),
+            _ => Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -628,16 +629,16 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                         }
                     }
 
-                    return Unit.Default;
+                    return RxVoid.Default;
                 },
                 Scheduler),
         };
 
     /// <inheritdoc />
-    public IObservable<Unit> Vacuum() =>
+    public IObservable<RxVoid> Vacuum() =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
-            : Observable.Start(
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name)
+            : Signal.Start(
                 () =>
                 {
                     lock (_lock)
@@ -645,7 +646,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
                         VacuumExpiredEntriesFast(_cache, _typeIndex, _keyToType, Scheduler.Now);
                     }
 
-                    return Unit.Default;
+                    return RxVoid.Default;
                 },
                 Scheduler);
 
@@ -663,7 +664,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
     /// <returns>A Future result representing the completion of the insert.</returns>
     [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
     [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]
-    public IObservable<Unit> InsertObject<T>(string key, T value) =>
+    public IObservable<RxVoid> InsertObject<T>(string key, T value) =>
         InsertObject(key, value, (DateTimeOffset?)null);
 
     /// <summary>Insert an object into the cache using the configured serializer.</summary>
@@ -674,9 +675,9 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
     /// <returns>A Future result representing the completion of the insert.</returns>
     [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
     [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]
-    public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration) =>
+    public IObservable<RxVoid> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration) =>
         Volatile.Read(ref _disposed) != 0
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<RxVoid>(GetType().Name)
             : Insert(key, Serializer.Serialize(value), typeof(T), absoluteExpiration);
 
     /// <summary>Get an object from the cache and deserialize it using the configured serializer.</summary>
@@ -730,7 +731,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
         "Design",
         "SST2307:Type parameter appears in no parameter",
         Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-    public IObservable<Unit> InvalidateObject<T>(string key) => Invalidate(key, typeof(T));
+    public IObservable<RxVoid> InvalidateObject<T>(string key) => Invalidate(key, typeof(T));
 
     /// <summary>Invalidates all objects of the specified type.</summary>
     /// <typeparam name="T">The type of object associated with the blob.</typeparam>
@@ -739,7 +740,7 @@ public class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer
         "Design",
         "SST2307:Type parameter appears in no parameter",
         Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-    public IObservable<Unit> InvalidateAllObjects<T>() => InvalidateAll(typeof(T));
+    public IObservable<RxVoid> InvalidateAllObjects<T>() => InvalidateAll(typeof(T));
 
     /// <summary>Removes any entries from <paramref name="cache"/> whose <c>ExpiresAt</c> is at or before <paramref name="now"/>.</summary>
     /// <param name="cache">The key-to-entry dictionary to vacuum.</param>

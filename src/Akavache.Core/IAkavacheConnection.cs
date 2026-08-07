@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>
 /// Abstracts the database connection used by SQLite-backed blob caches. The surface is
@@ -27,12 +31,12 @@ namespace Akavache;
 /// one item per matching row and then complete; callers that want a materialized list
 /// can apply <c>.ToList()</c> at the boundary. Writers (<see cref="Upsert"/>,
 /// <see cref="Invalidate"/>, <see cref="SetExpiry"/>, etc.) emit a single
-/// <see cref="Unit"/> and then complete on success or <c>OnError</c> on failure.
+/// <see cref="RxVoid"/> and then complete on success or <c>OnError</c> on failure.
 /// </para>
 /// <para>
 /// <c>Task</c>-returning adapters live on <c>IAkavacheConnectionTaskExtensions</c> for
 /// callers that prefer async/await at the boundary — those are thin
-/// <see cref="System.Reactive.Threading.Tasks.TaskObservableExtensions.ToTask{TResult}(IObservable{TResult})"/>
+/// <see cref="LinqExtensions.ToTask{T}(IObservable{T})"/>
 /// wrappers that do not take part in the hot path.
 /// </para>
 /// </remarks>
@@ -40,10 +44,10 @@ public interface IAkavacheConnection : IDisposable
 {
     /// <summary>
     /// Creates the CacheEntry table (and supporting indexes) if it does not already
-    /// exist. Emits a single <see cref="Unit"/> when the schema is ready.
+    /// exist. Emits a single <see cref="RxVoid"/> when the schema is ready.
     /// </summary>
     /// <returns>A one-shot observable that signals schema creation completion.</returns>
-    IObservable<Unit> CreateSchema();
+    IObservable<RxVoid> CreateSchema();
 
     /// <summary>Checks whether a table with the specified name exists in the database. Emits a single <see cref="bool"/>.</summary>
     /// <param name="tableName">The table name.</param>
@@ -83,49 +87,49 @@ public interface IAkavacheConnection : IDisposable
     /// <returns>An observable sequence of matching keys.</returns>
     IObservable<string> GetAllKeys(string? typeFullName, DateTimeOffset now);
 
-    /// <summary>Inserts or replaces a batch of cache entries within a single transaction. Emits a single <see cref="Unit"/> on commit.</summary>
+    /// <summary>Inserts or replaces a batch of cache entries within a single transaction. Emits a single <see cref="RxVoid"/> on commit.</summary>
     /// <param name="entries">The entries to upsert.</param>
     /// <returns>A one-shot observable that fires on commit.</returns>
-    IObservable<Unit> Upsert(IReadOnlyList<CacheEntry> entries);
+    IObservable<RxVoid> Upsert(IReadOnlyList<CacheEntry> entries);
 
     /// <summary>
     /// Deletes cache entries by key within a single transaction. If a type discriminator
     /// is supplied, only rows whose <see cref="CacheEntry.TypeName"/> matches are removed.
-    /// Emits a single <see cref="Unit"/> on commit.
+    /// Emits a single <see cref="RxVoid"/> on commit.
     /// </summary>
     /// <param name="keys">Keys to remove.</param>
     /// <param name="typeFullName">Optional type discriminator.</param>
     /// <returns>A one-shot observable that fires on commit.</returns>
-    IObservable<Unit> Invalidate(IReadOnlyList<string> keys, string? typeFullName);
+    IObservable<RxVoid> Invalidate(IReadOnlyList<string> keys, string? typeFullName);
 
-    /// <summary>Removes every row from the CacheEntry table, optionally filtered by type. Emits a single <see cref="Unit"/> on commit.</summary>
+    /// <summary>Removes every row from the CacheEntry table, optionally filtered by type. Emits a single <see cref="RxVoid"/> on commit.</summary>
     /// <param name="typeFullName">Optional type discriminator. <see langword="null"/> wipes everything.</param>
     /// <returns>A one-shot observable that fires on commit.</returns>
-    IObservable<Unit> InvalidateAll(string? typeFullName);
+    IObservable<RxVoid> InvalidateAll(string? typeFullName);
 
-    /// <summary>Updates the expiration time of a cache entry by key, with an optional type filter. Emits a single <see cref="Unit"/> on commit.</summary>
+    /// <summary>Updates the expiration time of a cache entry by key, with an optional type filter. Emits a single <see cref="RxVoid"/> on commit.</summary>
     /// <param name="key">The cache key.</param>
     /// <param name="typeFullName">Optional type discriminator.</param>
     /// <param name="expiresAt">The new expiration instant, or <see langword="null"/> to clear.</param>
     /// <returns>A one-shot observable that fires on commit.</returns>
-    IObservable<Unit> SetExpiry(string key, string? typeFullName, DateTimeOffset? expiresAt);
+    IObservable<RxVoid> SetExpiry(string key, string? typeFullName, DateTimeOffset? expiresAt);
 
-    /// <summary>Removes every row whose expiration is older than <paramref name="now"/>. Emits a single <see cref="Unit"/> on commit.</summary>
+    /// <summary>Removes every row whose expiration is older than <paramref name="now"/>. Emits a single <see cref="RxVoid"/> on commit.</summary>
     /// <param name="now">The wall-clock instant.</param>
     /// <returns>A one-shot observable that fires on commit.</returns>
-    IObservable<Unit> VacuumExpired(DateTimeOffset now);
+    IObservable<RxVoid> VacuumExpired(DateTimeOffset now);
 
     /// <summary>
     /// Requests a WAL checkpoint at the specified strength. Backends with no write-ahead
-    /// log should treat this as a no-op and emit <see cref="Unit"/> immediately.
+    /// log should treat this as a no-op and emit <see cref="RxVoid"/> immediately.
     /// </summary>
     /// <param name="mode">The checkpoint strength.</param>
     /// <returns>A one-shot observable that fires when the checkpoint finishes.</returns>
-    IObservable<Unit> Checkpoint(CheckpointMode mode);
+    IObservable<RxVoid> Checkpoint(CheckpointMode mode);
 
-    /// <summary>Requests that the backend reclaim unused storage. On SQLite this maps to <c>VACUUM</c>. Emits a single <see cref="Unit"/> on completion.</summary>
+    /// <summary>Requests that the backend reclaim unused storage. On SQLite this maps to <c>VACUUM</c>. Emits a single <see cref="RxVoid"/> on completion.</summary>
     /// <returns>A one-shot observable that fires when compaction finishes.</returns>
-    IObservable<Unit> Compact();
+    IObservable<RxVoid> Compact();
 
     /// <summary>
     /// Attempts to read a cache value from a V10 legacy backing store. Backends that

@@ -1,15 +1,14 @@
 // Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-using Akavache.EncryptedSqlite3;
-using Akavache.NewtonsoftJson;
-using Akavache.Settings;
-using Akavache.Settings.Tests;
-using Akavache.SystemTextJson;
-using Akavache.Tests;
+
 using Splat.Builder;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.EncryptedSettings.Tests;
+#else
 namespace Akavache.EncryptedSettings.Tests;
+#endif
 
 /// <summary>
 /// Tests for the encrypted settings cache, isolated per test to avoid static state leakage.

@@ -2,14 +2,16 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core.Observables;
+#else
 namespace Akavache.Core.Observables;
+#endif
 
 /// <summary>
-/// Runs a list of one-shot <see cref="IObservable{Unit}"/> observables sequentially,
-/// ignoring emitted values, and emits a single <see cref="Unit.Default"/> when all
-/// have completed. If the list is empty, emits <see cref="Unit.Default"/> immediately.
+/// Runs a list of one-shot <see cref="IObservable{RxVoid}"/> observables sequentially,
+/// ignoring emitted values, and emits a single <see cref="RxVoid.Default"/> when all
+/// have completed. If the list is empty, emits <see cref="RxVoid.Default"/> immediately.
 /// Errors from any observable propagate to the downstream observer.
 /// </summary>
 /// <remarks>
@@ -23,16 +25,16 @@ namespace Akavache.Core.Observables;
 /// when sources complete synchronously during <c>Subscribe</c>.
 /// </remarks>
 /// <param name="sources">The list of one-shot observables to run in order.</param>
-internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources) : IObservable<Unit>
+internal sealed class RunAllObservable(IReadOnlyList<IObservable<RxVoid>> sources) : IObservable<RxVoid>
 {
     /// <inheritdoc/>
-    public IDisposable Subscribe(IObserver<Unit> observer)
+    public IDisposable Subscribe(IObserver<RxVoid> observer)
     {
         if (sources.Count == 0)
         {
-            observer.OnNext(Unit.Default);
+            observer.OnNext(RxVoid.Default);
             observer.OnCompleted();
-            return Disposable.Empty;
+            return Scope.Empty;
         }
 
         var sink = new Sink(observer, sources);
@@ -43,7 +45,7 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
     /// <summary>
     /// Stateful observer that walks the source list sequentially. Each source's
     /// values are ignored; on <c>OnCompleted</c> the next source is subscribed.
-    /// When all sources have completed, emits <see cref="Unit.Default"/> and completes.
+    /// When all sources have completed, emits <see cref="RxVoid.Default"/> and completes.
     /// </summary>
     /// <remarks>
     /// Synchronous completion is detected via a <c>_syncCompleted</c> flag so that
@@ -56,8 +58,8 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
     /// <param name="downstream">The observer signalled once every source has completed.</param>
     /// <param name="sources">The sources to run, in order.</param>
     private sealed class Sink(
-        IObserver<Unit> downstream,
-        IReadOnlyList<IObservable<Unit>> sources) : IObserver<Unit>, IDisposable
+        IObserver<RxVoid> downstream,
+        IReadOnlyList<IObservable<RxVoid>> sources) : IObserver<RxVoid>, IDisposable
     {
         /// <summary>Index of the current source being observed.</summary>
         private int _index;
@@ -79,7 +81,7 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
         private bool _looping;
 
         /// <inheritdoc/>
-        public void OnNext(Unit value)
+        public void OnNext(RxVoid value)
         {
             // Ignore emitted values — we only care about completion.
         }
@@ -162,7 +164,7 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
             }
 
             _done = true;
-            downstream.OnNext(Unit.Default);
+            downstream.OnNext(RxVoid.Default);
             downstream.OnCompleted();
         }
     }

@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Helpers;
+#else
 namespace Akavache.Helpers;
+#endif
 
 /// <summary>
 /// Pure helpers for <see cref="DateTime"/> and <see cref="DateTimeOffset"/> conversion,

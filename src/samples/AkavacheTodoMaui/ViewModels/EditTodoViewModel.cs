@@ -73,10 +73,10 @@ public partial class EditTodoViewModel : ReactiveObject
     public TodoPriority[] PriorityOptions { get; }
 
     /// <summary>Gets the save command.</summary>
-    public ReactiveCommand<Unit, Unit> SaveCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> SaveCommand { get; }
 
     /// <summary>Gets the cancel command.</summary>
-    public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+    public ReactiveCommand<RxVoid, RxVoid> CancelCommand { get; }
 
     /// <summary>Gets a value indicating whether the todo was saved.</summary>
     public bool WasSaved { get; private set; }

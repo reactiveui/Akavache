@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for <see cref="ReadWithLegacyFallbackObservable"/> covering the primary OnError path (line 99) and the legacy OnError path (line 146).</summary>
 [Category("Akavache")]
@@ -28,7 +28,7 @@ public class ReadWithLegacyFallbackObservableTests
     internal async Task PrimaryObserver_OnError_PropagatesDownstream()
     {
         InMemoryAkavacheConnection connection = new() { FailGet = true };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             Exception? ex = null;
@@ -53,7 +53,7 @@ public class ReadWithLegacyFallbackObservableTests
     internal async Task PrimaryObserver_OnError_TypedGet_PropagatesDownstream()
     {
         InMemoryAkavacheConnection connection = new() { FailGet = true };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             Exception? ex = null;
@@ -77,7 +77,7 @@ public class ReadWithLegacyFallbackObservableTests
         InMemoryAkavacheConnection connection = new() { FailLegacyRead = true };
 
         // Don't insert the key into the primary store so the fallback is triggered.
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             Exception? ex = null;
@@ -102,7 +102,7 @@ public class ReadWithLegacyFallbackObservableTests
     internal async Task LegacyObserver_OnError_TypedGet_PropagatesDownstream()
     {
         InMemoryAkavacheConnection connection = new() { FailLegacyRead = true };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             Exception? ex = null;

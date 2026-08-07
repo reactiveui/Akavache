@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests.Helpers;
+#else
 namespace Akavache.Tests.Helpers;
+#endif
 
 /// <summary>A set of utility helper methods for use throughout tests.</summary>
 internal static class Utility
@@ -109,7 +111,7 @@ internal static class Utility
         di.Create();
 
         directoryPath = di.FullName;
-        return Disposable.Create(directoryPath, DeleteDirectory);
+        return Scope.Create(directoryPath, DeleteDirectory);
     }
 
     /// <summary>Clears the read-only attribute so an entry can be deleted.</summary>

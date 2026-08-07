@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for <see cref="SqliteRowObservable{T}"/> covering state transitions, cancellation, idempotent terminal calls, and single-subscriber enforcement.</summary>
 [Category("Akavache")]
@@ -21,7 +23,7 @@ public class SqliteRowObservableTests
         var values = new List<int>();
         var completed = false;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             () => completed = true));
@@ -43,7 +45,7 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var completedCount = 0;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             static _ => { },
             () => completedCount++));
@@ -62,7 +64,7 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         Exception? caught = null;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -82,7 +84,7 @@ public class SqliteRowObservableTests
         var completed = false;
         Exception? caught = null;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             () => completed = true));
@@ -105,7 +107,7 @@ public class SqliteRowObservableTests
         var completed = false;
         var values = new List<int>();
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             () => completed = true));
@@ -128,7 +130,7 @@ public class SqliteRowObservableTests
         var completed = false;
         Exception? caught = null;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             () => completed = true));
@@ -144,7 +146,7 @@ public class SqliteRowObservableTests
     {
         var sut = new SqliteRowObservable<int>();
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             static _ => { },
             static () => { }));
@@ -152,7 +154,7 @@ public class SqliteRowObservableTests
         await Assert.ThrowsAsync<InvalidOperationException>(
             () =>
             {
-                _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+                _ = sut.Subscribe(Witness.Create<int>(
                     static _ => { },
                     static _ => { },
                     static () => { }));
@@ -181,7 +183,7 @@ public class SqliteRowObservableTests
     {
         var sut = new SqliteRowObservable<int>();
 
-        var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        var subscription = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             static _ => { },
             static () => { }));
@@ -200,7 +202,7 @@ public class SqliteRowObservableTests
     {
         var sut = new SqliteRowObservable<int>();
 
-        var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        var subscription = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             static _ => { },
             static () => { }));
@@ -221,7 +223,7 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var values = new List<int>();
 
-        var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        var subscription = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             static () => { }));
@@ -255,7 +257,7 @@ public class SqliteRowObservableTests
         var values = new List<int>();
         var completed = false;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             () => completed = true));
@@ -282,7 +284,7 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
 
         var values = new List<int>();
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             static () => { }));
@@ -302,7 +304,7 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var errorCount = 0;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             _ => errorCount++,
             static () => { }));
@@ -323,7 +325,7 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var values = new List<int>();
 
-        var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        var subscription = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             static () => { }));
@@ -359,7 +361,7 @@ public class SqliteRowObservableTests
         var values = new List<int>();
         var completed = false;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             () => completed = true));
@@ -409,7 +411,7 @@ public class SqliteRowObservableTests
         var values = new List<int>();
         var completed = false;
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             () => completed = true));
@@ -433,7 +435,7 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var values = new List<int>();
 
-        var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        var subscription = sut.Subscribe(Witness.Create<int>(
             values.Add,
             static _ => { },
             static () => { }));
@@ -453,7 +455,7 @@ public class SqliteRowObservableTests
         var state = 0; // StatePending
         List<int>? buffer = null;
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
             ref state,
@@ -475,7 +477,7 @@ public class SqliteRowObservableTests
         var state = 0; // StatePending
         List<int>? buffer = [10, 20, 30];
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
             ref state,
@@ -498,7 +500,7 @@ public class SqliteRowObservableTests
         var state = 0; // StatePending
         List<int>? buffer = [];
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
             ref state,
@@ -519,7 +521,7 @@ public class SqliteRowObservableTests
         var state = 1; // StateCompleted
         List<int>? buffer = [99];
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
             ref state,

@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core.Observables;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for <see cref="InitSignal"/> covering Complete, Fail, Gate, TryPark, and idempotent / race-condition paths.</summary>
 [Category("Akavache")]
@@ -105,7 +107,7 @@ public class InitSignalTests
 
         // The first error is pinned — Gate surfaces it.
         Exception? caught = null;
-        _ = signal.Gate(static () => Observable.Return(0)).Subscribe(
+        _ = signal.Gate(static () => Signal.Return(0)).Subscribe(
             static _ => { },
             ex => caught = ex,
             static () => { });
@@ -193,7 +195,7 @@ public class InitSignalTests
         var signal = new InitSignal();
         signal.Complete();
 
-        var expected = Observable.Return(FactoryValue);
+        var expected = Signal.Return(FactoryValue);
         var actual = signal.Gate(() => expected);
 
         await Assert.That(actual).IsSameReferenceAs(expected);
@@ -209,7 +211,7 @@ public class InitSignalTests
         signal.Fail(expected);
 
         Exception? caught = null;
-        _ = signal.Gate(static () => Observable.Return(0)).Subscribe(
+        _ = signal.Gate(static () => Signal.Return(0)).Subscribe(
             static _ => { },
             ex => caught = ex,
             static () => { });
@@ -224,7 +226,7 @@ public class InitSignalTests
     {
         var signal = new InitSignal();
 
-        var gated = signal.Gate(static () => Observable.Return(1));
+        var gated = signal.Gate(static () => Signal.Return(1));
 
         await Assert.That(gated).IsTypeOf<GatedByInitObservable<int>>();
     }
@@ -237,7 +239,7 @@ public class InitSignalTests
         var signal = new InitSignal();
         int? received = null;
 
-        _ = signal.Gate(static () => Observable.Return(ParkedValue)).Subscribe(
+        _ = signal.Gate(static () => Signal.Return(ParkedValue)).Subscribe(
             v => received = v,
             static _ => { },
             static () => { });
@@ -258,7 +260,7 @@ public class InitSignalTests
         Exception? caught = null;
         var expected = new InvalidOperationException("pending-fail");
 
-        _ = signal.Gate(static () => Observable.Return(0)).Subscribe(
+        _ = signal.Gate(static () => Signal.Return(0)).Subscribe(
             static _ => { },
             ex => caught = ex,
             static () => { });
@@ -281,7 +283,7 @@ public class InitSignalTests
         signal.Fail(expected);
 
         Exception? caught = null;
-        _ = signal.Gate(static () => Observable.Return(0)).Subscribe(
+        _ = signal.Gate(static () => Signal.Return(0)).Subscribe(
             static _ => { },
             ex => caught = ex,
             static () => { });
@@ -303,7 +305,7 @@ public class InitSignalTests
         signal.Complete();
 
         Exception? caught = null;
-        _ = signal.Gate(static () => Observable.Return(0)).Subscribe(
+        _ = signal.Gate(static () => Signal.Return(0)).Subscribe(
             static _ => { },
             ex => caught = ex,
             static () => { });

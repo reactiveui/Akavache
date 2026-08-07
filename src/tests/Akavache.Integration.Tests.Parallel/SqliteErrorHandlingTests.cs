@@ -2,13 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.EncryptedSqlite3;
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Error handling scenarios for Sqlite and Encrypted caches.</summary>
 [Category("Sqlite")]
@@ -23,7 +21,7 @@ public class SqliteErrorHandlingTests
         SystemJsonSerializer serializer = new();
         var path = Path.Combine(tempDir, "enc.db");
 
-        using (EncryptedSqliteBlobCache cache = new(path, "password1", serializer, ImmediateScheduler.Instance))
+        using (EncryptedSqliteBlobCache cache = new(path, "password1", serializer, ImmediateSequencer.Instance))
         {
             byte[] payload = [1, 2, 3];
             cache.Insert("key", payload).WaitForCompletion();
@@ -36,7 +34,7 @@ public class SqliteErrorHandlingTests
         Exception? ex = null;
         try
         {
-            using EncryptedSqliteBlobCache cache2 = new(path, "password2", serializer, ImmediateScheduler.Instance);
+            using EncryptedSqliteBlobCache cache2 = new(path, "password2", serializer, ImmediateSequencer.Instance);
             var error = cache2.Get("key").WaitForError();
             if (error is not null)
             {
@@ -60,7 +58,7 @@ public class SqliteErrorHandlingTests
         SystemJsonSerializer serializer = new();
         var path = Path.Combine(tempDir, "plain.db");
 
-        using SqliteBlobCache cache = new(path, serializer, ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(path, serializer, ImmediateSequencer.Instance);
         byte[] data = [10, 20, 30, 40];
         cache.Insert("bin", data).WaitForCompletion();
 

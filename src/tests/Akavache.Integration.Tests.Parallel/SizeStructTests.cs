@@ -3,9 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 // System first
-using Akavache.Drawing;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Skeleton tests for Size struct operations.</summary>
 [Category("Drawing")]

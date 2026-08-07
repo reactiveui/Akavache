@@ -2,14 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.EncryptedSqlite3;
-using Akavache.NewtonsoftJson;
-using Akavache.Sqlite3;
-
 using Splat.Builder;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests;
+#else
 namespace Akavache.Settings.Tests;
+#endif
 
 /// <summary>Tests for <see cref="AkavacheBuilderExtensions"/> covering null guards, edge cases, and the IBlobCache-based settings store overloads.</summary>
 [Category("Akavache")]
@@ -224,7 +223,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task WithSettingsStoreWithCache_NullBuilder_ThrowsAsync()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new NewtonsoftSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new NewtonsoftSerializer());
         var action = () => ((IAkavacheBuilder)null!).WithSettingsStore<ViewSettings>(cache, static _ => { });
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
@@ -259,7 +258,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task GetSettingsStoreWithCache_NullBuilder_ThrowsAsync()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new NewtonsoftSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new NewtonsoftSerializer());
         var action = () => ((IAkavacheInstance)null!).GetSettingsStore<ViewSettings>(cache);
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }

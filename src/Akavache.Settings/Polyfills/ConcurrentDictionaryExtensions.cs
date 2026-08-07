@@ -4,7 +4,11 @@
 
 using System.Collections.Concurrent;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings;
+#else
 namespace Akavache.Settings;
+#endif
 
 /// <summary>Supplies the state-passing <c>GetOrAdd</c> shape that .NET Framework does not carry.</summary>
 internal static class ConcurrentDictionaryExtensions

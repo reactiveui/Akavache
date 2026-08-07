@@ -7,9 +7,11 @@ using System.Net.Http;
 #endif
 using System.Runtime.CompilerServices;
 
-using Akavache.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Provides extension methods for handling HTTP operations and stream operations.</summary>
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -412,11 +414,11 @@ public static class HttpExtensions
         /// <param name="start">The starting index in the data array.</param>
         /// <param name="length">The number of bytes to write.</param>
         /// <returns>An observable that signals when the write operation has completed.</returns>
-        public IObservable<Unit> WriteAsyncRx(byte[] data, int start, int length)
+        public IObservable<RxVoid> WriteAsyncRx(byte[] data, int start, int length)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
-            AsyncSubject<Unit> ret = new();
+            AsyncSignal<RxVoid> ret = new();
 
             try
             {
@@ -429,7 +431,7 @@ public static class HttpExtensions
                         try
                         {
                             blobCache.EndWrite(result);
-                            ret.OnNext(Unit.Default);
+                            ret.OnNext(RxVoid.Default);
                             ret.OnCompleted();
                         }
                         catch (Exception ex)

@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>Akavache.NewtonsoftJson.Reactive</AssemblyName>
+    <RootNamespace>Akavache.Reactive.NewtonsoftJson</RootNamespace>
+    <PackageId>Akavache.NewtonsoftJson.Reactive</PackageId>
+    <Description>Newtonsoft.Json serialization support for Akavache with optional BSON compatibility, recompiled against System.Reactive</Description>
+    <PackageDescription>Akavache.NewtonsoftJson recompiled against System.Reactive's Unit and IScheduler, for consumers already on the System.Reactive stack.</PackageDescription>
+
+    <!-- Newtonsoft.Json is inherently reflection-based and not AOT/trim compatible -->
+    <IsAotCompatible>false</IsAotCompatible>
+    <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>false</EnableAotAnalyzer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Reactive\Akavache.Reactive.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json.Bson" />
+    <PackageReference Include="ReactiveUI.Primitives.Reactive" ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <!-- The same source the lean Akavache.NewtonsoftJson package ships, recompiled here under REACTIVE_SHIM. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.NewtonsoftJson\**\*.cs"
+             Exclude="..\Akavache.NewtonsoftJson\obj\**\*.cs;..\Akavache.NewtonsoftJson\bin\**\*.cs"
+             Link="Akavache.NewtonsoftJson\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Mirrors the lean project's shared-internals set; see Akavache.Sqlite3.csproj for the rationale. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentValidation.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Helpers\BinaryHelpers.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.NewtonsoftJson" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests.Parallel.Reactive" />
+  </ItemGroup>
+</Project>

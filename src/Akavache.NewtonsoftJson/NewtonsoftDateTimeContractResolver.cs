@@ -4,7 +4,11 @@
 
 using Newtonsoft.Json.Serialization;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.NewtonsoftJson;
+#else
 namespace Akavache.NewtonsoftJson;
+#endif
 
 /// <summary>
 /// Resolver which will handle DateTime and DateTimeOffset with our own internal resolver.

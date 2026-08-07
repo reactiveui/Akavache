@@ -1,0 +1,31 @@
+#nullable enable
+Akavache.Reactive.V10toV11.AkavacheBuilderExtensions
+Akavache.Reactive.V10toV11.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!)
+Akavache.Reactive.V10toV11.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!).MigrateFromV10() -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.V10toV11.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!).MigrateFromV10(System.Action<Akavache.Reactive.V10toV11.V10MigrationOptions!>? configure) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.V10toV11.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!).WithV10FileNames() -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.V10toV11.V10MigrationOptions
+Akavache.Reactive.V10toV11.V10MigrationOptions.<Clone>$() -> Akavache.Reactive.V10toV11.V10MigrationOptions!
+Akavache.Reactive.V10toV11.V10MigrationOptions.Deconstruct(out bool DeleteOldFiles, out bool ReserializeToCurrentFormat, out bool MigrateLocalMachine, out bool MigrateUserAccount, out bool MigrateSecure, out System.Action<string!>? Logger) -> void
+Akavache.Reactive.V10toV11.V10MigrationOptions.DeleteOldFiles.get -> bool
+Akavache.Reactive.V10toV11.V10MigrationOptions.DeleteOldFiles.init -> void
+Akavache.Reactive.V10toV11.V10MigrationOptions.Equals(Akavache.Reactive.V10toV11.V10MigrationOptions? other) -> bool
+Akavache.Reactive.V10toV11.V10MigrationOptions.Logger.get -> System.Action<string!>?
+Akavache.Reactive.V10toV11.V10MigrationOptions.Logger.init -> void
+Akavache.Reactive.V10toV11.V10MigrationOptions.MigrateLocalMachine.get -> bool
+Akavache.Reactive.V10toV11.V10MigrationOptions.MigrateLocalMachine.init -> void
+Akavache.Reactive.V10toV11.V10MigrationOptions.MigrateSecure.get -> bool
+Akavache.Reactive.V10toV11.V10MigrationOptions.MigrateSecure.init -> void
+Akavache.Reactive.V10toV11.V10MigrationOptions.MigrateUserAccount.get -> bool
+Akavache.Reactive.V10toV11.V10MigrationOptions.MigrateUserAccount.init -> void
+Akavache.Reactive.V10toV11.V10MigrationOptions.ReserializeToCurrentFormat.get -> bool
+Akavache.Reactive.V10toV11.V10MigrationOptions.ReserializeToCurrentFormat.init -> void
+Akavache.Reactive.V10toV11.V10MigrationOptions.V10MigrationOptions(bool DeleteOldFiles = false, bool ReserializeToCurrentFormat = true, bool MigrateLocalMachine = true, bool MigrateUserAccount = true, bool MigrateSecure = true, System.Action<string!>? Logger = null) -> void
+override Akavache.Reactive.V10toV11.V10MigrationOptions.Equals(object? obj) -> bool
+override Akavache.Reactive.V10toV11.V10MigrationOptions.GetHashCode() -> int
+override Akavache.Reactive.V10toV11.V10MigrationOptions.ToString() -> string!
+static Akavache.Reactive.V10toV11.AkavacheBuilderExtensions.MigrateFromV10(this Akavache.Reactive.IAkavacheBuilder! builder) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.V10toV11.AkavacheBuilderExtensions.MigrateFromV10(this Akavache.Reactive.IAkavacheBuilder! builder, System.Action<Akavache.Reactive.V10toV11.V10MigrationOptions!>? configure) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.V10toV11.AkavacheBuilderExtensions.WithV10FileNames(this Akavache.Reactive.IAkavacheBuilder! builder) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.V10toV11.V10MigrationOptions.operator !=(Akavache.Reactive.V10toV11.V10MigrationOptions? left, Akavache.Reactive.V10toV11.V10MigrationOptions? right) -> bool
+static Akavache.Reactive.V10toV11.V10MigrationOptions.operator ==(Akavache.Reactive.V10toV11.V10MigrationOptions? left, Akavache.Reactive.V10toV11.V10MigrationOptions? right) -> bool

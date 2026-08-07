@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core.Observables;
+#else
 namespace Akavache.Core.Observables;
+#endif
 
 /// <summary>
 /// Observable that gates subscription behind an <see cref="InitSignal"/>. When the signal
@@ -29,13 +31,13 @@ internal sealed class GatedByInitObservable<T>(InitSignal signal, Func<IObservab
         if (signal.IsCompleted)
         {
             // Failed state — InitSignal.Gate<T> usually catches this and returns
-            // Observable.Throw, but there is a narrow race window between the check
+            // Signal.Throw, but there is a narrow race window between the check
             // in Gate and the call here where the signal could have transitioned.
             // Close the race here.
             return SubscribeAfterPark(factory, observer, capturedError: null);
         }
 
-        var inner = new SingleAssignmentDisposable();
+        MutableDisposable inner = new();
         var parked = signal.TryPark(
             err =>
             {
@@ -91,7 +93,7 @@ internal sealed class GatedByInitObservable<T>(InitSignal signal, Func<IObservab
         catch (Exception ex)
         {
             observer.OnError(ex);
-            return Disposable.Empty;
+            return Scope.Empty;
         }
     }
 
@@ -102,7 +104,7 @@ internal sealed class GatedByInitObservable<T>(InitSignal signal, Func<IObservab
     internal static IDisposable DeliverError(IObserver<T> observer, Exception capturedError)
     {
         observer.OnError(capturedError);
-        return Disposable.Empty;
+        return Scope.Empty;
     }
 
     /// <summary>

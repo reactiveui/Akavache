@@ -2,12 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for SqliteBlobCache covering disposed-state error paths, null arg validation, and type-aware overloads.</summary>
 [Category("Akavache")]
@@ -528,7 +527,7 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             cache.Dispose();
 
-            await AssertDisposed(cache.BeforeWriteToDiskFilter(ThreeBytePayload, ImmediateScheduler.Instance));
+            await AssertDisposed(cache.BeforeWriteToDiskFilter(ThreeBytePayload, ImmediateSequencer.Instance));
         }
     }
 
@@ -542,7 +541,7 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                var result = cache.BeforeWriteToDiskFilter(WriteFilterProbePayload, ImmediateScheduler.Instance).SubscribeGetValue();
+                var result = cache.BeforeWriteToDiskFilter(WriteFilterProbePayload, ImmediateSequencer.Instance).SubscribeGetValue();
                 await Assert.That(result).IsEquivalentTo(WriteFilterProbePayload);
             }
             finally
@@ -1156,5 +1155,5 @@ public class SqliteBlobCacheDirectTests
     /// </summary>
     /// <returns>A SqliteBlobCache instance backed by an in-memory connection.</returns>
     private static SqliteBlobCache CreateCache() =>
-        new(new InMemoryAkavacheConnection(), new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        new(new InMemoryAkavacheConnection(), new SystemJsonSerializer(), ImmediateSequencer.Instance);
 }

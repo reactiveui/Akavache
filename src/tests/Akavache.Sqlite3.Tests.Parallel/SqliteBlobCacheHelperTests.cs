@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests for the pure helpers on <see cref="SqliteBlobCache"/> — expiry conversion, key
@@ -121,7 +121,7 @@ public class SqliteBlobCacheHelperTests
     {
         InMemoryAkavacheConnection connection = new();
         connection.LegacyV10Store["legacy-only"] = "\t\t\t"u8.ToArray();
-        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         var bytes = cache.ReadValueWithLegacyFallback("legacy-only", type: null).SubscribeGetValue();
 
@@ -284,5 +284,5 @@ public class SqliteBlobCacheHelperTests
     /// <summary>Creates a cache backed by an in-memory connection, so the helper tests never touch disk.</summary>
     /// <returns>A SqliteBlobCache instance backed by an in-memory connection.</returns>
     private static SqliteBlobCache CreateCache() =>
-        new(new InMemoryAkavacheConnection(), new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        new(new InMemoryAkavacheConnection(), new SystemJsonSerializer(), ImmediateSequencer.Instance);
 }

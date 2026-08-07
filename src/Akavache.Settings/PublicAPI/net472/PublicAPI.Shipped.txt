@@ -1,0 +1,80 @@
+#nullable enable
+Akavache.Settings.AkavacheBuilderAsyncExtensions
+Akavache.Settings.AkavacheBuilderAsyncExtensions.extension(Akavache.IAkavacheInstance!)
+Akavache.Settings.AkavacheBuilderAsyncExtensions.extension(Akavache.IAkavacheInstance!).DeleteSettingsStoreAsync<T>() -> System.Threading.Tasks.Task!
+Akavache.Settings.AkavacheBuilderAsyncExtensions.extension(Akavache.IAkavacheInstance!).DeleteSettingsStoreAsync<T>(string? overrideDatabaseName) -> System.Threading.Tasks.Task!
+Akavache.Settings.AkavacheBuilderAsyncExtensions.extension(Akavache.IAkavacheInstance!).DisposeSettingsStoreAsync<T>() -> System.Threading.Tasks.Task!
+Akavache.Settings.AkavacheBuilderAsyncExtensions.extension(Akavache.IAkavacheInstance!).DisposeSettingsStoreAsync<T>(string? overrideDatabaseName) -> System.Threading.Tasks.Task!
+Akavache.Settings.AkavacheBuilderExtensions
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!)
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithSecureSettingsStore<T>(string! password, System.Action<T?>! settings) -> Akavache.IAkavacheBuilder!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithSecureSettingsStore<T>(string! password, System.Action<T?>! settings, string? overrideDatabaseName) -> Akavache.IAkavacheBuilder!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithSettingsCachePath(string! path) -> Akavache.IAkavacheBuilder!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithSettingsStore<T>(Akavache.IBlobCache! cache, System.Action<T?>! settings) -> Akavache.IAkavacheBuilder!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithSettingsStore<T>(Akavache.IBlobCache! cache, System.Action<T?>! settings, string? overrideDatabaseName) -> Akavache.IAkavacheBuilder!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithSettingsStore<T>(System.Action<T?>! settings) -> Akavache.IAkavacheBuilder!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithSettingsStore<T>(System.Action<T?>! settings, string? overrideDatabaseName) -> Akavache.IAkavacheBuilder!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithSettingsStore<T>(System.Action<T?>! settings, string? overrideDatabaseName, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler) -> Akavache.IAkavacheBuilder!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!)
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).DeleteSettingsStore<T>() -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).DeleteSettingsStore<T>(string? overrideDatabaseName) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).DisposeSettingsStore<T>() -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).DisposeSettingsStore<T>(string? overrideDatabaseName) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).GetLoadedSettingsStore<T>() -> Akavache.Settings.ISettingsStorage?
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).GetLoadedSettingsStore<T>(string? overrideDatabaseName) -> Akavache.Settings.ISettingsStorage?
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).GetSecureSettingsStore<T>(string! password) -> T!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).GetSecureSettingsStore<T>(string! password, string? overrideDatabaseName) -> T!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).GetSecureSettingsStore<T>(string! password, string? overrideDatabaseName, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler) -> T!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).GetSettingsStore<T>() -> T!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).GetSettingsStore<T>(Akavache.IBlobCache! cache) -> T!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).GetSettingsStore<T>(Akavache.IBlobCache! cache, string? overrideDatabaseName) -> T!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).GetSettingsStore<T>(string? overrideDatabaseName) -> T!
+Akavache.Settings.AkavacheBuilderExtensions.extension(Akavache.IAkavacheInstance!).GetSettingsStore<T>(string? overrideDatabaseName, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler) -> T!
+Akavache.Settings.Core.SettingsPropertyHelper<T>
+Akavache.Settings.Core.SettingsPropertyHelper<T>.Dispose() -> void
+Akavache.Settings.Core.SettingsPropertyHelper<T>.PropertyChanged -> System.ComponentModel.PropertyChangedEventHandler?
+Akavache.Settings.Core.SettingsPropertyHelper<T>.Set(T value) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Settings.Core.SettingsPropertyHelper<T>.Subscribe(System.IObserver<T>! observer) -> System.IDisposable!
+Akavache.Settings.Core.SettingsPropertyHelper<T>.ToT() -> T
+Akavache.Settings.Core.SettingsPropertyHelper<T>.Value.get -> T
+Akavache.Settings.Core.SettingsStorage
+Akavache.Settings.Core.SettingsStorage.CreateProperty<T>(T defaultValue, string? propertyName = null) -> Akavache.Settings.Core.SettingsPropertyHelper<T>!
+Akavache.Settings.Core.SettingsStorage.Dispose() -> void
+Akavache.Settings.Core.SettingsStorage.GetOrCreateObservable<T>(T defaultValue, string? key = null) -> System.IObservable<T>!
+Akavache.Settings.Core.SettingsStorage.Initialize() -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Settings.Core.SettingsStorage.OnPropertyChanged() -> void
+Akavache.Settings.Core.SettingsStorage.OnPropertyChanged(string? propertyName) -> void
+Akavache.Settings.Core.SettingsStorage.PropertyChanged -> System.ComponentModel.PropertyChangedEventHandler?
+Akavache.Settings.Core.SettingsStorage.SetObservable<T>(T value, string? key = null) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Settings.Core.SettingsStorage.SettingsStorage(string! keyPrefix, Akavache.IBlobCache! cache) -> void
+Akavache.Settings.SettingsBase
+Akavache.Settings.SettingsBase.SettingsBase(string! className) -> void
+Akavache.Settings.SettingsBase.SettingsBase(string! className, System.Func<Akavache.IBlobCache!>! userAccountResolver, System.Func<Akavache.IBlobCache!>! localMachineResolver, System.Func<Akavache.IBlobCache!>! inMemoryResolver) -> void
+static Akavache.Settings.AkavacheBuilderAsyncExtensions.DeleteSettingsStoreAsync<T>(this Akavache.IAkavacheInstance! builder) -> System.Threading.Tasks.Task!
+static Akavache.Settings.AkavacheBuilderAsyncExtensions.DeleteSettingsStoreAsync<T>(this Akavache.IAkavacheInstance! builder, string? overrideDatabaseName) -> System.Threading.Tasks.Task!
+static Akavache.Settings.AkavacheBuilderAsyncExtensions.DisposeSettingsStoreAsync<T>(this Akavache.IAkavacheInstance! builder) -> System.Threading.Tasks.Task!
+static Akavache.Settings.AkavacheBuilderAsyncExtensions.DisposeSettingsStoreAsync<T>(this Akavache.IAkavacheInstance! builder, string? overrideDatabaseName) -> System.Threading.Tasks.Task!
+static Akavache.Settings.AkavacheBuilderExtensions.DeleteSettingsStore<T>(this Akavache.IAkavacheInstance! builder) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Settings.AkavacheBuilderExtensions.DeleteSettingsStore<T>(this Akavache.IAkavacheInstance! builder, string? overrideDatabaseName) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Settings.AkavacheBuilderExtensions.DisposeSettingsStore<T>(this Akavache.IAkavacheInstance! builder) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Settings.AkavacheBuilderExtensions.DisposeSettingsStore<T>(this Akavache.IAkavacheInstance! builder, string? overrideDatabaseName) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Settings.AkavacheBuilderExtensions.GetLoadedSettingsStore<T>(this Akavache.IAkavacheInstance! builder) -> Akavache.Settings.ISettingsStorage?
+static Akavache.Settings.AkavacheBuilderExtensions.GetLoadedSettingsStore<T>(this Akavache.IAkavacheInstance! builder, string? overrideDatabaseName) -> Akavache.Settings.ISettingsStorage?
+static Akavache.Settings.AkavacheBuilderExtensions.GetSecureSettingsStore<T>(this Akavache.IAkavacheInstance! builder, string! password) -> T!
+static Akavache.Settings.AkavacheBuilderExtensions.GetSecureSettingsStore<T>(this Akavache.IAkavacheInstance! builder, string! password, string? overrideDatabaseName) -> T!
+static Akavache.Settings.AkavacheBuilderExtensions.GetSecureSettingsStore<T>(this Akavache.IAkavacheInstance! builder, string! password, string? overrideDatabaseName, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler) -> T!
+static Akavache.Settings.AkavacheBuilderExtensions.GetSettingsStore<T>(this Akavache.IAkavacheInstance! builder) -> T!
+static Akavache.Settings.AkavacheBuilderExtensions.GetSettingsStore<T>(this Akavache.IAkavacheInstance! builder, Akavache.IBlobCache! cache) -> T!
+static Akavache.Settings.AkavacheBuilderExtensions.GetSettingsStore<T>(this Akavache.IAkavacheInstance! builder, Akavache.IBlobCache! cache, string? overrideDatabaseName) -> T!
+static Akavache.Settings.AkavacheBuilderExtensions.GetSettingsStore<T>(this Akavache.IAkavacheInstance! builder, string? overrideDatabaseName) -> T!
+static Akavache.Settings.AkavacheBuilderExtensions.GetSettingsStore<T>(this Akavache.IAkavacheInstance! builder, string? overrideDatabaseName, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler) -> T!
+static Akavache.Settings.AkavacheBuilderExtensions.WithSecureSettingsStore<T>(this Akavache.IAkavacheBuilder! builder, string! password, System.Action<T?>! settings) -> Akavache.IAkavacheBuilder!
+static Akavache.Settings.AkavacheBuilderExtensions.WithSecureSettingsStore<T>(this Akavache.IAkavacheBuilder! builder, string! password, System.Action<T?>! settings, string? overrideDatabaseName) -> Akavache.IAkavacheBuilder!
+static Akavache.Settings.AkavacheBuilderExtensions.WithSettingsCachePath(this Akavache.IAkavacheBuilder! builder, string! path) -> Akavache.IAkavacheBuilder!
+static Akavache.Settings.AkavacheBuilderExtensions.WithSettingsStore<T>(this Akavache.IAkavacheBuilder! builder, Akavache.IBlobCache! cache, System.Action<T?>! settings) -> Akavache.IAkavacheBuilder!
+static Akavache.Settings.AkavacheBuilderExtensions.WithSettingsStore<T>(this Akavache.IAkavacheBuilder! builder, Akavache.IBlobCache! cache, System.Action<T?>! settings, string? overrideDatabaseName) -> Akavache.IAkavacheBuilder!
+static Akavache.Settings.AkavacheBuilderExtensions.WithSettingsStore<T>(this Akavache.IAkavacheBuilder! builder, System.Action<T?>! settings) -> Akavache.IAkavacheBuilder!
+static Akavache.Settings.AkavacheBuilderExtensions.WithSettingsStore<T>(this Akavache.IAkavacheBuilder! builder, System.Action<T?>! settings, string? overrideDatabaseName) -> Akavache.IAkavacheBuilder!
+static Akavache.Settings.AkavacheBuilderExtensions.WithSettingsStore<T>(this Akavache.IAkavacheBuilder! builder, System.Action<T?>! settings, string? overrideDatabaseName, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler) -> Akavache.IAkavacheBuilder!
+static Akavache.Settings.Core.SettingsPropertyHelper<T>.implicit operator T(Akavache.Settings.Core.SettingsPropertyHelper<T>! helper) -> T
+virtual Akavache.Settings.Core.SettingsStorage.Dispose(bool disposing) -> void

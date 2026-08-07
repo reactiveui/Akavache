@@ -1,0 +1,176 @@
+#nullable enable
+Akavache.Drawing.BitmapImageExtensions
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!)
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImage(string! key) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImage(string! key, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImage(string! key, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(System.Uri! url) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(System.Uri! url, bool fetchAlways) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(System.Uri! url, bool fetchAlways, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(System.Uri! url, bool fetchAlways, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(System.Uri! url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! key, System.Uri! url) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! key, System.Uri! url, bool fetchAlways) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! key, System.Uri! url, bool fetchAlways, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! key, System.Uri! url, bool fetchAlways, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! key, System.Uri! url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! key, string! url) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! key, string! url, bool fetchAlways) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! key, string! url, bool fetchAlways, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! key, string! url, bool fetchAlways, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! key, string! url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! url) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! url, bool fetchAlways) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! url, bool fetchAlways, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! url, bool fetchAlways, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrl(string! url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).SaveImage(string! key, Splat.IBitmap! image) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Drawing.BitmapImageExtensions.extension(Akavache.IBlobCache!).SaveImage(string! key, Splat.IBitmap! image, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Drawing.BitmapImageExtensions.extension(Splat.IBitmap!)
+Akavache.Drawing.BitmapImageExtensions.extension(Splat.IBitmap!).ImageToBytes() -> System.IObservable<byte[]!>!
+Akavache.Drawing.ImageCacheExtensions
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!)
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).ClearImageCache(System.Func<string!, bool>! keyPattern) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).CreateAndCacheThumbnail(string! sourceKey, string! thumbnailKey, float thumbnailWidth, float thumbnailHeight) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).CreateAndCacheThumbnail(string! sourceKey, string! thumbnailKey, float thumbnailWidth, float thumbnailHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).GetImageSize(string! key) -> System.IObservable<Akavache.Drawing.Size>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrlWithFallback(string! url, byte[]! fallbackImageBytes) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrlWithFallback(string! url, byte[]! fallbackImageBytes, bool fetchAlways) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrlWithFallback(string! url, byte[]! fallbackImageBytes, bool fetchAlways, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrlWithFallback(string! url, byte[]! fallbackImageBytes, bool fetchAlways, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImageFromUrlWithFallback(string! url, byte[]! fallbackImageBytes, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImageWithFallback(string! key, byte[]! fallbackImageBytes) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImageWithFallback(string! key, byte[]! fallbackImageBytes, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImageWithFallback(string! key, byte[]! fallbackImageBytes, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImages(System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, Splat.IBitmap!>>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImages(System.Collections.Generic.IEnumerable<string!>! keys, float? desiredWidth) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, Splat.IBitmap!>>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).LoadImages(System.Collections.Generic.IEnumerable<string!>! keys, float? desiredWidth, float? desiredHeight) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, Splat.IBitmap!>>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).PreloadImagesFromUrls(System.Collections.Generic.IEnumerable<string!>! urls) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Drawing.ImageCacheExtensions.extension(Akavache.IBlobCache!).PreloadImagesFromUrls(System.Collections.Generic.IEnumerable<string!>! urls, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+Akavache.Drawing.Size
+Akavache.Drawing.Size.AspectRatio.get -> float
+Akavache.Drawing.Size.Equals(Akavache.Drawing.Size other) -> bool
+Akavache.Drawing.Size.Height.get -> float
+Akavache.Drawing.Size.Size() -> void
+Akavache.Drawing.Size.Size(float width, float height) -> void
+Akavache.Drawing.Size.Width.get -> float
+System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute.DoesNotReturnAttribute() -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute.DoesNotReturnIfAttribute(bool parameterValue) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute.ParameterValue.get -> bool (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.MemberNotNullAttribute(params string![]! members) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.MemberNotNullAttribute(string! member) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.Members.get -> string![]! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.NotNullAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.NotNullAttribute.NotNullAttribute() -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.ExcludeStatics.get -> bool (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.ExcludeStatics.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.Message.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.RequiresDynamicCodeAttribute(string! message) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.Url.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.Url.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.ExcludeStatics.get -> bool (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.ExcludeStatics.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.Message.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.RequiresUnreferencedCodeAttribute(string! message) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.Url.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.Url.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Category.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.CheckId.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Justification.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Justification.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.MessageId.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.MessageId.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Scope.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Scope.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Target.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Target.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.UnconditionalSuppressMessageAttribute(string! category, string! checkId) -> void (forwarded, contained in System.Runtime)
+System.HashCode (forwarded, contained in System.Runtime)
+System.HashCode.Add<T>(T value) -> void (forwarded, contained in System.Runtime)
+System.HashCode.Add<T>(T value, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void (forwarded, contained in System.Runtime)
+System.HashCode.AddBytes(System.ReadOnlySpan<byte> value) -> void (forwarded, contained in System.Runtime)
+System.HashCode.HashCode() -> void (forwarded, contained in System.Runtime)
+System.HashCode.ToHashCode() -> int (forwarded, contained in System.Runtime)
+System.Index (forwarded, contained in System.Runtime)
+System.Index.Equals(System.Index other) -> bool (forwarded, contained in System.Runtime)
+System.Index.GetOffset(int length) -> int (forwarded, contained in System.Runtime)
+System.Index.Index() -> void (forwarded, contained in System.Runtime)
+System.Index.Index(int value, bool fromEnd = false) -> void (forwarded, contained in System.Runtime)
+System.Index.IsFromEnd.get -> bool (forwarded, contained in System.Runtime)
+System.Index.Value.get -> int (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.CallerArgumentExpressionAttribute (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.CallerArgumentExpressionAttribute.CallerArgumentExpressionAttribute(string! parameterName) -> void (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.CallerArgumentExpressionAttribute.ParameterName.get -> string! (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.IsExternalInit (forwarded, contained in System.Runtime)
+override Akavache.Drawing.Size.Equals(object? obj) -> bool
+override Akavache.Drawing.Size.GetHashCode() -> int
+override Akavache.Drawing.Size.ToString() -> string!
+override System.HashCode.Equals(object? obj) -> bool (forwarded, contained in System.Runtime)
+override System.HashCode.GetHashCode() -> int (forwarded, contained in System.Runtime)
+override System.Index.Equals(object? value) -> bool (forwarded, contained in System.Runtime)
+override System.Index.GetHashCode() -> int (forwarded, contained in System.Runtime)
+override System.Index.ToString() -> string! (forwarded, contained in System.Runtime)
+static Akavache.Drawing.BitmapImageExtensions.ImageToBytes(this Splat.IBitmap! image) -> System.IObservable<byte[]!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImage(this Akavache.IBlobCache! blobCache, string! key) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImage(this Akavache.IBlobCache! blobCache, string! key, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImage(this Akavache.IBlobCache! blobCache, string! key, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, System.Uri! url) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, System.Uri! url, bool fetchAlways) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, System.Uri! url, bool fetchAlways, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, System.Uri! url, bool fetchAlways, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, System.Uri! url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! key, System.Uri! url) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! key, System.Uri! url, bool fetchAlways) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! key, System.Uri! url, bool fetchAlways, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! key, System.Uri! url, bool fetchAlways, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! key, System.Uri! url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! key, string! url) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! key, string! url, bool fetchAlways) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! key, string! url, bool fetchAlways, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! key, string! url, bool fetchAlways, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! key, string! url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! url) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! url, bool fetchAlways) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! url, bool fetchAlways, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! url, bool fetchAlways, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.LoadImageFromUrl(this Akavache.IBlobCache! blobCache, string! url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.BitmapImageExtensions.SaveImage(this Akavache.IBlobCache! blobCache, string! key, Splat.IBitmap! image) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Drawing.BitmapImageExtensions.SaveImage(this Akavache.IBlobCache! blobCache, string! key, Splat.IBitmap! image, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Drawing.ImageCacheExtensions.ClearImageCache(this Akavache.IBlobCache! blobCache, System.Func<string!, bool>! keyPattern) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Drawing.ImageCacheExtensions.CreateAndCacheThumbnail(this Akavache.IBlobCache! blobCache, string! sourceKey, string! thumbnailKey, float thumbnailWidth, float thumbnailHeight) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Drawing.ImageCacheExtensions.CreateAndCacheThumbnail(this Akavache.IBlobCache! blobCache, string! sourceKey, string! thumbnailKey, float thumbnailWidth, float thumbnailHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Drawing.ImageCacheExtensions.GetImageSize(this Akavache.IBlobCache! blobCache, string! key) -> System.IObservable<Akavache.Drawing.Size>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImageFromUrlWithFallback(this Akavache.IBlobCache! blobCache, string! url, byte[]! fallbackImageBytes) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImageFromUrlWithFallback(this Akavache.IBlobCache! blobCache, string! url, byte[]! fallbackImageBytes, bool fetchAlways) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImageFromUrlWithFallback(this Akavache.IBlobCache! blobCache, string! url, byte[]! fallbackImageBytes, bool fetchAlways, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImageFromUrlWithFallback(this Akavache.IBlobCache! blobCache, string! url, byte[]! fallbackImageBytes, bool fetchAlways, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImageFromUrlWithFallback(this Akavache.IBlobCache! blobCache, string! url, byte[]! fallbackImageBytes, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImageWithFallback(this Akavache.IBlobCache! blobCache, string! key, byte[]! fallbackImageBytes) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImageWithFallback(this Akavache.IBlobCache! blobCache, string! key, byte[]! fallbackImageBytes, float? desiredWidth) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImageWithFallback(this Akavache.IBlobCache! blobCache, string! key, byte[]! fallbackImageBytes, float? desiredWidth, float? desiredHeight) -> System.IObservable<Splat.IBitmap!>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImages(this Akavache.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<string!>! keys) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, Splat.IBitmap!>>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImages(this Akavache.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<string!>! keys, float? desiredWidth) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, Splat.IBitmap!>>!
+static Akavache.Drawing.ImageCacheExtensions.LoadImages(this Akavache.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<string!>! keys, float? desiredWidth, float? desiredHeight) -> System.IObservable<System.Collections.Generic.KeyValuePair<string!, Splat.IBitmap!>>!
+static Akavache.Drawing.ImageCacheExtensions.PreloadImagesFromUrls(this Akavache.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<string!>! urls) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Drawing.ImageCacheExtensions.PreloadImagesFromUrls(this Akavache.IBlobCache! blobCache, System.Collections.Generic.IEnumerable<string!>! urls, System.DateTimeOffset? absoluteExpiration) -> System.IObservable<ReactiveUI.Primitives.RxVoid>!
+static Akavache.Drawing.Size.operator !=(in Akavache.Drawing.Size left, in Akavache.Drawing.Size right) -> bool
+static Akavache.Drawing.Size.operator ==(in Akavache.Drawing.Size left, in Akavache.Drawing.Size right) -> bool
+static System.HashCode.Combine<T1, T2, T3, T4, T5, T6, T7, T8>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4, T5, T6, T7>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4, T5, T6>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4, T5>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4>(T1 value1, T2 value2, T3 value3, T4 value4) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3>(T1 value1, T2 value2, T3 value3) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2>(T1 value1, T2 value2) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1>(T1 value1) -> int (forwarded, contained in System.Runtime)
+static System.Index.End.get -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.FromEnd(int value) -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.FromStart(int value) -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.Start.get -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.implicit operator System.Index(int value) -> System.Index (forwarded, contained in System.Runtime)

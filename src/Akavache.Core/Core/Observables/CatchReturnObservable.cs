@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core.Observables;
+#else
 namespace Akavache.Core.Observables;
+#endif
 
 /// <summary>
 /// Error-swallowing operator that forwards the source sequence and, on any
@@ -10,14 +14,14 @@ namespace Akavache.Core.Observables;
 /// followed by <see cref="IObserver{T}.OnCompleted"/>. Replaces the ubiquitous
 /// <c>source.Catch&lt;T, Exception&gt;(static _ =&gt; Observable.Return(fallback))</c>
 /// pattern with a single operator + observer pair, avoiding the
-/// <see cref="Observable.Return{TResult}(TResult)"/> wrapper and the catch-selector
+/// <see cref="Signal.Return{T}(T)"/> wrapper and the catch-selector
 /// lambda allocation.
 /// </summary>
 /// <remarks>
 /// Only the constant-fallback shape is covered here — callers that need to chain
 /// another observable on error should still use <c>Catch</c>. This covers the
 /// overwhelming majority of sites in <c>Akavache.Sqlite3.SqliteBlobCache</c>'s
-/// dispose/checkpoint pipelines where the fallback is always <see cref="Unit.Default"/>
+/// dispose/checkpoint pipelines where the fallback is always <see cref="RxVoid.Default"/>
 /// or another cheap constant.
 /// </remarks>
 /// <typeparam name="T">The element type of the source observable.</typeparam>

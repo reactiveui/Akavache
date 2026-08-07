@@ -4,7 +4,11 @@
 
 using Splat;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Drawing;
+#else
 namespace Akavache.Drawing;
+#endif
 
 /// <summary>Provides extension methods associated with the <see cref="IBitmap" /> interface.</summary>
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -23,7 +27,7 @@ public static class BitmapImageExtensions
         {
             ArgumentExceptionHelper.ThrowIfNull(image);
 
-            return Observable.FromAsync(async () =>
+            return Signal.FromAsync(async () =>
             {
                 // Pre-size the buffer to a typical small-PNG worst case so a sequence of regrowths
                 // (starting at 256 and doubling) is avoided for anything under ~16 KB.
@@ -368,7 +372,7 @@ public static class BitmapImageExtensions
         /// <param name="key">The key to associate with the image.</param>
         /// <param name="image">The bitmap image to save.</param>
         /// <returns>A Future result representing the completion of the save operation.</returns>
-        public IObservable<Unit> SaveImage(string key, IBitmap image) =>
+        public IObservable<RxVoid> SaveImage(string key, IBitmap image) =>
             blobCache.SaveImage(key, image, (DateTimeOffset?)null);
 
         /// <summary>Save an image to the blob cache.</summary>
@@ -376,7 +380,7 @@ public static class BitmapImageExtensions
         /// <param name="image">The bitmap image to save.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>A Future result representing the completion of the save operation.</returns>
-        public IObservable<Unit> SaveImage(string key, IBitmap image, DateTimeOffset? absoluteExpiration)
+        public IObservable<RxVoid> SaveImage(string key, IBitmap image, DateTimeOffset? absoluteExpiration)
         {
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
             ArgumentExceptionHelper.ThrowIfNull(image);
@@ -395,8 +399,8 @@ public static class BitmapImageExtensions
     /// <returns>An observable emitting the buffer, or signalling an error when invalid.</returns>
     internal static IObservable<byte[]> ThrowOnBadImageBuffer(byte[]? compressedImage) =>
         compressedImage is null || compressedImage.Length < 64
-            ? Observable.Throw<byte[]>(new InvalidOperationException("Invalid Image"))
-            : Observable.Return(compressedImage);
+            ? new ImmediateThrowSignal<byte[]>(new InvalidOperationException("Invalid Image"))
+            : Signal.Return(compressedImage);
 
     /// <summary>
     /// Routes a potentially null byte buffer from a blob cache through the
@@ -407,7 +411,7 @@ public static class BitmapImageExtensions
     /// <returns>An observable emitting <paramref name="bytes"/>, or an error.</returns>
     internal static IObservable<byte[]> ThrowOnNullOrBadImageBuffer(byte[]? bytes) =>
         bytes is null
-            ? Observable.Throw<byte[]>(new InvalidOperationException("Image data is null"))
+            ? new ImmediateThrowSignal<byte[]>(new InvalidOperationException("Image data is null"))
             : ThrowOnBadImageBuffer(bytes);
 
     /// <summary>Converts a compressed image byte array into an <see cref="IBitmap"/> using Splat's ambient <see cref="BitmapLoader.Current"/>.</summary>
@@ -420,7 +424,7 @@ public static class BitmapImageExtensions
     /// <param name="desiredHeight">Optional desired height.</param>
     /// <returns>An observable emitting the decoded bitmap.</returns>
     internal static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
-        Observable.FromAsync(async () =>
+        Signal.FromAsync(async () =>
         {
 #if NETFRAMEWORK
             using var ms = new MemoryStream(compressedImage, writable: false);

@@ -12,8 +12,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ReactiveUI.Primitives" ExcludeAssets="analyzers" />
     <PackageReference Include="System.Net.Http" Condition="$(TargetFramework.StartsWith('net4'))" />
     <PackageReference Include="System.Memory" Condition="$(TargetFramework.StartsWith('net4'))" />
+  </ItemGroup>
+
+  <!-- Akavache's own namespaces, turned into global usings by Directory.Build.targets (shifted to
+       Akavache.Reactive.* on the .Reactive leaf). -->
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Core.Observables" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
   </ItemGroup>
 
   <!-- Shared internals from Akavache.Core (see Akavache.Sqlite3.csproj for rationale). -->

@@ -4,7 +4,11 @@
 
 using System.Diagnostics;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Stored login information for a user.</summary>
 /// <remarks>

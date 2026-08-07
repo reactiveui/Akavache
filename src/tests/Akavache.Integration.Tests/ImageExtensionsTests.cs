@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for image extension methods.</summary>
 [Category("Akavache")]
@@ -260,7 +260,7 @@ public class ImageExtensionsTests
         SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             var imageData = new byte[128];
             for (var i = 0; i < imageData.Length; i++)
             {
@@ -296,7 +296,7 @@ public class ImageExtensionsTests
         SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
             try
             {
@@ -410,7 +410,7 @@ public class ImageExtensionsTests
     public async Task LoadImageBytesFromUrlShouldThrowArgumentNullExceptionWhenUrlIsNull()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -432,7 +432,7 @@ public class ImageExtensionsTests
     public async Task LoadImageBytesFromUrlUriShouldThrowArgumentNullExceptionWhenUrlIsNull()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -450,7 +450,7 @@ public class ImageExtensionsTests
     public async Task LoadImageBytesFromUrlWithKeyShouldThrowArgumentNullExceptionWhenUrlIsNull()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -472,7 +472,7 @@ public class ImageExtensionsTests
     public async Task LoadImageBytesFromUrlWithKeyAndUriShouldThrowArgumentNullExceptionWhenUrlIsNull()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         try
         {
@@ -590,7 +590,7 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesShouldThrowWhenCachedBytesAreTooSmall()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "too_small";
@@ -611,7 +611,7 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesShouldThrowWhenCachedBytesAreEmpty()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "empty";
@@ -635,7 +635,7 @@ public class ImageExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlStringShouldReturnCachedBytes()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             const string url = "http://example.com/cached-string.png";
@@ -658,7 +658,7 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlUriShouldReturnCachedBytes()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             Uri uri = new("http://example.com/cached-uri.png");
@@ -685,7 +685,7 @@ public class ImageExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlWithKeyAndStringShouldReturnCachedBytes()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "my-key";
@@ -709,7 +709,7 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlWithKeyAndUriShouldReturnCachedBytes()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "my-uri-key";
@@ -737,7 +737,7 @@ public class ImageExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlShouldThrowWhenCachedBytesAreTooSmall()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             const string url = "http://example.com/tiny.png";
@@ -884,7 +884,7 @@ public class ImageExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlStringShouldServeFromCache()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             var bytes = CreateImageData(SampleImageByteCount);
@@ -907,7 +907,7 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlUriShouldServeFromCache()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             Uri url = new(UnreachableImageUrl);
@@ -935,7 +935,7 @@ public class ImageExtensionsTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlKeyStringShouldServeFromCache()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "img-key";
@@ -959,7 +959,7 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlKeyUriShouldServeFromCache()
     {
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "img-key";
@@ -1001,7 +1001,7 @@ public class ImageExtensionsTests
         public ISerializer Serializer { get; } = new SystemJsonSerializer();
 
         /// <inheritdoc/>
-        public IScheduler Scheduler { get; } = ImmediateScheduler.Instance;
+        public ISequencer Scheduler { get; } = ImmediateSequencer.Instance;
 
         /// <inheritdoc/>
         public DateTimeKind? ForcedDateTimeKind { get; set; }
@@ -1012,49 +1012,49 @@ public class ImageExtensionsTests
         }
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush() => Observable.Return(Unit.Default);
+        public IObservable<RxVoid> Flush() => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush(Type type) => Observable.Return(Unit.Default);
+        public IObservable<RxVoid> Flush(Type type) => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
             Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
+        public IObservable<RxVoid> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data) =>
             Insert(key, data, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
             Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
+        public IObservable<RxVoid> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             Type type,
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
             Insert(key, data, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit>
+        public IObservable<RxVoid>
             Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<byte[]?> Get(string key) => Observable.Return<byte[]?>(null);
+        public IObservable<byte[]?> Get(string key) => Signal.Return<byte[]?>(null);
 
         /// <inheritdoc/>
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) =>
@@ -1091,40 +1091,40 @@ public class ImageExtensionsTests
         public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(string key) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key, Type type) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(string key, Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => throw new NotImplementedException();
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll(Type type) => throw new NotImplementedException();
+        public IObservable<RxVoid> InvalidateAll(Type type) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll() => throw new NotImplementedException();
+        public IObservable<RxVoid> InvalidateAll() => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Vacuum() => throw new NotImplementedException();
+        public IObservable<RxVoid> Vacuum() => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
+        public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(
+        public IObservable<RxVoid> UpdateExpiration(
             IEnumerable<string> keys,
             Type type,
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();

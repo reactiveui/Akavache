@@ -3,12 +3,14 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text.Json;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
 using Newtonsoft.Json.Bson;
 using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for SystemJsonBsonSerializer covering BSON-specific paths and edge cases.</summary>
 [Category("Akavache")]

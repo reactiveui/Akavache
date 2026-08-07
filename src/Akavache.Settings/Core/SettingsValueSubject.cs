@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Core;
+#else
 namespace Akavache.Settings.Core;
+#endif
 
 /// <summary>
 /// Lightweight BehaviorSubject-like primitive used by <see cref="SettingsStream{T}"/> to
@@ -103,7 +105,7 @@ internal sealed class SettingsValueSubject<T> : IObservable<T>, IDisposable
                 // "late subscriber gets the final state" contract. No need to register.
                 observer.OnNext(_current);
                 observer.OnCompleted();
-                return Disposable.Empty;
+                return Scope.Empty;
             }
 
             // Copy-on-write add. Allocating a fresh array keeps concurrent broadcasts

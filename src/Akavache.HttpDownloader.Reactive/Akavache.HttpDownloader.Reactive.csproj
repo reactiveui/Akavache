@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>Akavache.HttpDownloader.Reactive</AssemblyName>
+    <RootNamespace>Akavache.Reactive.HttpDownloader</RootNamespace>
+    <PackageId>Akavache.HttpDownloader.Reactive</PackageId>
+    <Description>HTTP download and caching extensions for Akavache, recompiled against System.Reactive</Description>
+    <PackageDescription>Akavache.HttpDownloader recompiled against System.Reactive's Unit and IScheduler, for consumers already on the System.Reactive stack.</PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Reactive\Akavache.Reactive.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI.Primitives.Reactive" ExcludeAssets="analyzers" />
+    <PackageReference Include="System.Net.Http" Condition="$(TargetFramework.StartsWith('net4'))" />
+    <PackageReference Include="System.Memory" Condition="$(TargetFramework.StartsWith('net4'))" />
+  </ItemGroup>
+
+  <!-- The same source the lean Akavache.HttpDownloader package ships, recompiled here under REACTIVE_SHIM. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.HttpDownloader\**\*.cs"
+             Exclude="..\Akavache.HttpDownloader\obj\**\*.cs;..\Akavache.HttpDownloader\bin\**\*.cs"
+             Link="Akavache.HttpDownloader\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Mirrors the lean project's shared-internals set; see Akavache.Sqlite3.csproj for the rationale. -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentValidation.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\Observables\SelectConstantObservable.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Core" />
+    <AkavacheInternalUsing Include="Akavache.Core.Observables" />
+    <AkavacheInternalUsing Include="Akavache.Helpers" />
+    <AkavacheInternalUsing Include="Akavache.Settings" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.HttpDownloader.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Reactive" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel.Reactive" />
+  </ItemGroup>
+</Project>

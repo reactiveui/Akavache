@@ -4,7 +4,11 @@
 
 using System.Text.Json.Serialization;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests.Mocks;
+#else
 namespace Akavache.Tests.Mocks;
+#endif
 
 /// <summary>Source-generated JSON serializer context for AOT testing.</summary>
 [JsonSerializable(typeof(SerializerTestModel))]

@@ -15,4 +15,23 @@
   <PropertyGroup Condition="$(TargetFramework.EndsWith('0-android'))">
     <DefineConstants>$(DefineConstants);AKAVACHE_MOBILE</DefineConstants>
   </PropertyGroup>
+
+  <!--
+    Akavache's own namespaces as global usings, shifted for the .Reactive leaf.
+
+    Source files carry no `using Akavache.X;` — the namespaces they need are declared once per project
+    as @(AkavacheInternalUsing), and turned into real global usings here. The .Reactive leaves compile
+    the same files under REACTIVE_SHIM, which puts every declaration in Akavache.Reactive.*, so their
+    imports have to shift the same way. Doing it as an item transform keeps each .Reactive twin csproj
+    a near-copy of its lean sibling instead of a hand-maintained second list that can drift.
+
+    This lives in Directory.Build.targets rather than the .props because @(AkavacheInternalUsing) is
+    declared in the csproj body, which MSBuild evaluates after the .props import and before this one.
+  -->
+  <ItemGroup Condition="'$(RxReactiveSeam)' != 'true'">
+    <Using Include="@(AkavacheInternalUsing)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RxReactiveSeam)' == 'true'">
+    <Using Include="@(AkavacheInternalUsing->Replace('Akavache', 'Akavache.Reactive'))" />
+  </ItemGroup>
 </Project>

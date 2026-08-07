@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Reactive.Threading.Tasks;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using BenchmarkDotNet.Attributes;
@@ -91,7 +90,7 @@ public class CacheDatabaseReadBenchmarks
 
         // Generate database synchronously to avoid deadlocks
         BlobCache = GenerateAGiantDatabaseSync(_tempDirectory);
-        Keys = BlobCache.GetAllKeys().ToList().FirstAsync().GetAwaiter().GetResult();
+        Keys = BlobCache.GetAllKeys().ToList().WaitForValue()!;
         Size = BenchmarkSize;
     }
 
@@ -132,7 +131,7 @@ public class CacheDatabaseReadBenchmarks
         for (var i = 0; i < Size; i++)
         {
             var randomKey = Keys[PerfHelper.Rng.Next(0, Keys.Count - 1)];
-            tasks.Add(BlobCache.Get(randomKey).FirstAsync().ToTask());
+            tasks.Add(BlobCache.Get(randomKey).FirstAsync());
         }
 
         await Task.WhenAll(tasks);
@@ -166,13 +165,13 @@ public class CacheDatabaseReadBenchmarks
             var giantDbSize = Math.Max(MinimumSeededItemCount, BenchmarkSize * SeededItemsPerBenchmarkItem);
             SqliteBlobCache cache = new(Path.Combine(path, "benchmarks-read.db"), new SystemJsonSerializer());
 
-            var keys = cache.GetAllKeys().ToList().FirstAsync().GetAwaiter().GetResult();
+            var keys = cache.GetAllKeys().ToList().WaitForValue()!;
             if (keys.Count >= giantDbSize)
             {
                 return cache;
             }
 
-            _ = cache.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
+            cache.InvalidateAll().WaitForCompletion();
 
             // Generate smaller chunks to avoid memory issues
             List<string> ret = [];
@@ -184,7 +183,7 @@ public class CacheDatabaseReadBenchmarks
                 var chunkSize = Math.Min(SeedChunkItemCount, remaining);
                 var toWrite = PerfHelper.GenerateRandomDatabaseContents(chunkSize);
 
-                _ = cache.Insert(toWrite).FirstAsync().GetAwaiter().GetResult();
+                cache.Insert(toWrite).WaitForCompletion();
 
                 ret.AddRange(toWrite.Keys);
 

@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net9.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
+    <!-- Builds against a published Akavache, not this source tree, so the lean/.Reactive seam does not apply. -->
+    <UsesAkavacheSeam>false</UsesAkavacheSeam>
     <!-- Benchmarks for legacy V10 APIs which use reflection by design - not AOT-compatible -->
     <IsAotCompatible>false</IsAotCompatible>
     <EnableTrimAnalyzer>false</EnableTrimAnalyzer>

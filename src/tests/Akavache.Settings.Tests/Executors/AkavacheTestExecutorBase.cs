@@ -2,12 +2,14 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.Tests;
 using Splat.Builder;
 using TUnit.Core.Interfaces;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests.Executors;
+#else
 namespace Akavache.Settings.Tests.Executors;
+#endif
 
 /// <summary>
 /// Base test executor that resets every piece of Akavache global state before and

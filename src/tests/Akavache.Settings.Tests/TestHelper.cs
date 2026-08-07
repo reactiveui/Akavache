@@ -4,7 +4,11 @@
 
 using System.Diagnostics;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests;
+#else
 namespace Akavache.Settings.Tests;
+#endif
 
 /// <summary>A helper for the different tests.</summary>
 internal static class TestHelper

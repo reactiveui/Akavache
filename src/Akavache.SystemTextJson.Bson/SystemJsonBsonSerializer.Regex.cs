@@ -4,7 +4,11 @@
 
 using System.Text.RegularExpressions;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.SystemTextJson;
+#else
 namespace Akavache.SystemTextJson;
+#endif
 
 /// <summary>
 /// Supplies the <c>"Date":(\d{15,})</c> regex that recognises tick-based BSON date fields.

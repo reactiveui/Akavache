@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests for <see cref="SqliteBlobCache"/> driven through the in-memory
@@ -67,7 +67,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryDisposedShouldThrowForAllOperations()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         cache.Dispose();
 
         var now = TimeProvider.System.GetLocalNow();
@@ -111,10 +111,10 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryBeforeWriteToDiskFilterShouldThrowWhenDisposed()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         cache.Dispose();
 
-        await SqliteBlobCacheDirectTests.AssertDisposed(cache.BeforeWriteToDiskFilter(ThreeBytePayload, ImmediateScheduler.Instance));
+        await SqliteBlobCacheDirectTests.AssertDisposed(cache.BeforeWriteToDiskFilter(ThreeBytePayload, ImmediateSequencer.Instance));
     }
 
     /// <summary>
@@ -126,10 +126,10 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryBeforeWriteToDiskFilterShouldReturnDataWhenNotDisposed()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
-            var result = cache.BeforeWriteToDiskFilter(WriteFilterProbePayload, ImmediateScheduler.Instance).SubscribeGetValue();
+            var result = cache.BeforeWriteToDiskFilter(WriteFilterProbePayload, ImmediateSequencer.Instance).SubscribeGetValue();
             await Assert.That(result).IsEquivalentTo(WriteFilterProbePayload);
         }
         finally
@@ -150,7 +150,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         const int StoredKeyCount = 2;
 
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             // Insert and Get
@@ -189,7 +189,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryDoubleDisposeShouldNotThrow()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         cache.Dispose();
         cache.Dispose();
@@ -214,7 +214,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryUpdateExpirationShouldMutateEntry()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             const int UpdatedExpiryHours = 2;
@@ -244,7 +244,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         const int FarFutureYears = 10;
 
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var initialExpiry = TimeProvider.System.GetUtcNow().AddMinutes(1);
@@ -283,7 +283,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         const int UpdatedExpiryHours = 5;
 
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Insert("k1", FirstEntryPayload).SubscribeAndComplete();
@@ -316,7 +316,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         const int FarFutureYears = 10;
 
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Insert("a", FirstEntryPayload, typeof(string), TimeProvider.System.GetUtcNow().AddMinutes(1)).SubscribeAndComplete();
@@ -350,7 +350,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryFlushShouldRequestPassiveCheckpoint()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Flush().SubscribeAndComplete();
@@ -372,7 +372,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryTypedInsertShouldCheckpointAfterWrite()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var before = connection.CheckpointCount;
@@ -392,7 +392,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryVacuumShouldCallCompact()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Vacuum().SubscribeAndComplete();
@@ -413,7 +413,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryDisposeShouldCheckpointAndReleaseAuxiliary()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         cache.Dispose();
 
@@ -432,7 +432,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         InMemoryAkavacheConnection connection = new();
         connection.LegacyV10Store["legacyKey"] = LegacyUntypedPayload;
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var data = cache.Get("legacyKey").SubscribeGetValue();
@@ -456,7 +456,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         InMemoryAkavacheConnection connection = new();
         connection.LegacyV10Store["legacyTyped"] = LegacyTypedPayload;
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var data = cache.Get("legacyTyped", typeof(string)).SubscribeGetValue();
@@ -479,7 +479,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryGetMissingKeyShouldThrowKeyNotFound()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             await Assert.That(SqliteBlobCacheDirectTests.CaptureError(cache.Get("missing"))).IsTypeOf<KeyNotFoundException>();
@@ -500,7 +500,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryInvalidateWithTypeShouldOnlyRemoveTypedEntries()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Insert("a", FirstEntryPayload, typeof(string)).SubscribeAndComplete();
@@ -524,7 +524,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryInvalidateAllWithTypeShouldOnlyRemoveTypedEntries()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Insert("a", FirstEntryPayload, typeof(string)).SubscribeAndComplete();
@@ -549,7 +549,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryGetCreatedAtShouldReturnStoredTime()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Insert("k", FirstEntryPayload).SubscribeAndComplete();
@@ -571,7 +571,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryFlushSwallowsCheckpointFailure()
     {
         InMemoryAkavacheConnection connection = new() { FailCheckpoint = true };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             // Should not throw, even though CheckpointAsync raises.
@@ -596,7 +596,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryTypedInsertSurfacesUpsertFailure()
     {
         InMemoryAkavacheConnection connection = new() { FailUpsert = true, };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var error = cache.Insert("k", FirstEntryPayload, typeof(string)).SubscribeGetError();
@@ -620,7 +620,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryTypedInsertToleratesCheckpointFailure()
     {
         InMemoryAkavacheConnection connection = new() { FailCheckpoint = true, };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Insert("k", FirstEntryPayload, typeof(string)).SubscribeAndComplete();
@@ -644,7 +644,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryDisposeFallsBackToCompactWhenCheckpointFails()
     {
         InMemoryAkavacheConnection connection = new() { FailCheckpoint = true };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         // Dispose enqueues a best-effort checkpoint (which fails here) then
         // calls Connection.Dispose(). No compact fallback — the checkpoint
@@ -661,7 +661,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryDisposeTolerantOfAllTeardownFailures()
     {
         InMemoryAkavacheConnection connection = new() { FailCheckpoint = true, FailCompact = true, };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         // Should not throw even though every teardown operation raises.
         cache.Dispose();
@@ -684,7 +684,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public void InMemorySyncDisposeTolerantOfAllFailures()
     {
         InMemoryAkavacheConnection connection = new() { FailCheckpoint = true, };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         // Should not throw.
         cache.Dispose();
@@ -699,7 +699,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task InMemoryInitializationFailureShouldPropagate()
     {
         InMemoryAkavacheConnection connection = new() { FailCreateTable = true };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             await Assert.That(SqliteBlobCacheDirectTests.CaptureError(cache.Get("k"))).IsTypeOf<InvalidOperationException>();
@@ -725,7 +725,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         connection.SeedRaw(NullValueKey, new(NullValueKey, TypeName: null, Value: null, default, ExpiresAt: null));
         connection.SeedRaw(WellFormedKey, new(WellFormedKey, TypeName: null, WellFormedPayload, default, ExpiresAt: null));
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var results = cache.Get([NullIdKey, NullValueKey, WellFormedKey]).ToList().SubscribeGetValue();
@@ -751,7 +751,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         connection.SeedRaw(NullValueKey, new(NullValueKey, typeof(string).FullName, Value: null, default, ExpiresAt: null));
         connection.SeedRaw(WellFormedKey, new(WellFormedKey, typeof(string).FullName, WellFormedPayload, default, ExpiresAt: null));
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var results = cache.Get([NullIdKey, NullValueKey, WellFormedKey], typeof(string)).ToList().SubscribeGetValue();
@@ -774,7 +774,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         connection.SeedRaw(NullValueKey, new(NullValueKey, typeof(string).FullName, Value: null, default, ExpiresAt: null));
         connection.SeedRaw(WellFormedKey, new(WellFormedKey, typeof(string).FullName, WellFormedPayload, default, ExpiresAt: null));
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var results = cache.GetAll(typeof(string)).ToList().SubscribeGetValue();
@@ -796,7 +796,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         connection.SeedRaw(NullIdKey, new(Id: null, TypeName: null, FirstEntryPayload, default, ExpiresAt: null));
         connection.SeedRaw(WellFormedKey, new(WellFormedKey, TypeName: null, WellFormedPayload, default, ExpiresAt: null));
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -818,7 +818,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         connection.SeedRaw(NullIdKey, new(Id: null, typeof(string).FullName, FirstEntryPayload, default, ExpiresAt: null));
         connection.SeedRaw(WellFormedKey, new(WellFormedKey, typeof(string).FullName, WellFormedPayload, default, ExpiresAt: null));
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var keys = cache.GetAllKeys(typeof(string)).ToList().SubscribeGetValue();
@@ -843,7 +843,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         connection.SeedRaw(NullIdKey, new(Id: null, TypeName: null, FirstEntryPayload, TimeProvider.System.GetUtcNow().UtcDateTime, ExpiresAt: null));
         connection.SeedRaw(WellFormedKey, new(WellFormedKey, TypeName: null, WellFormedPayload, TimeProvider.System.GetUtcNow().UtcDateTime, ExpiresAt: null));
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var results = cache.GetCreatedAt([NullIdKey, WellFormedKey]).ToList().SubscribeGetValue();
@@ -868,7 +868,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         connection.SeedRaw(NullIdKey, new(Id: null, typeof(string).FullName, FirstEntryPayload, TimeProvider.System.GetUtcNow().UtcDateTime, ExpiresAt: null));
         connection.SeedRaw(WellFormedKey, new(WellFormedKey, typeof(string).FullName, WellFormedPayload, TimeProvider.System.GetUtcNow().UtcDateTime, ExpiresAt: null));
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var results = cache.GetCreatedAt([NullIdKey, WellFormedKey], typeof(string)).ToList().SubscribeGetValue();
@@ -892,7 +892,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         InMemoryAkavacheConnection connection = new() { BypassPredicate = true };
         connection.SeedRaw(NullIdKey, new(Id: null, TypeName: null, FirstEntryPayload, TimeProvider.System.GetUtcNow().UtcDateTime, ExpiresAt: null));
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             // Defensive Where filters out the null-Id entry; the DefaultIfEmpty fallback yields null.
@@ -916,7 +916,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
         InMemoryAkavacheConnection connection = new() { BypassPredicate = true };
         connection.SeedRaw(NullIdKey, new(Id: null, typeof(string).FullName, FirstEntryPayload, TimeProvider.System.GetUtcNow().UtcDateTime, ExpiresAt: null));
 
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             var result = cache.GetCreatedAt(NullIdKey, typeof(string)).SubscribeGetValue();
@@ -937,7 +937,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task ConstructingCacheShouldCreateCacheEntryTable()
     {
         InMemoryAkavacheConnection connection = new();
-        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         cache.Insert("k", FirstEntryPayload).SubscribeAndComplete();
 
@@ -954,7 +954,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     public async Task FailedCreateTableShouldPropagateToOperations()
     {
         InMemoryAkavacheConnection connection = new() { FailCreateTable = true };
-        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         await Assert.That(SqliteBlobCacheDirectTests.CaptureError(cache.Insert("k", FirstEntryPayload))).IsTypeOf<Exception>();
     }
@@ -968,7 +968,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task TypedBulkInsertWithEmptyCollectionShouldReturnUnit()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Insert([], typeof(string)).SubscribeAndComplete();
@@ -991,7 +991,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task InvalidateAllWithNullTypeShouldThrowArgumentNullException()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             await Assert.That(SqliteBlobCacheDirectTests.CaptureError(cache.InvalidateAll((Type)null!))).IsTypeOf<ArgumentNullException>();
@@ -1011,7 +1011,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task DisposeSwallowsCheckpointException()
     {
         InMemoryAkavacheConnection connection = new() { FailCheckpoint = true };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         // Dispose should not throw even though Checkpoint(Full) raises.
         cache.Dispose();
@@ -1026,7 +1026,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task DisposeSwallowsSynchronousCheckpointThrow()
     {
         InMemoryAkavacheConnection connection = new() { ThrowOnCheckpointCall = true };
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         cache.Dispose();
 
@@ -1042,7 +1042,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task Invalidate_WithEmptyHashSet_IsNoop()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             HashSet<string> noKeys = [];
@@ -1067,7 +1067,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task InvalidateTyped_WithEmptyHashSet_IsNoop()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             HashSet<string> noKeys = [];
@@ -1092,7 +1092,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task UpdateExpiration_WithEmptyHashSet_IsNoop()
     {
         InMemoryAkavacheConnection connection = new();
-        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         HashSet<string> noKeys = [];
         cache.Insert("keep", FirstEntryPayload, TimeProvider.System.GetLocalNow().Add(ShortLifetime)).SubscribeAndComplete();
@@ -1113,7 +1113,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task UpdateExpirationTyped_WithEmptyHashSet_IsNoop()
     {
         InMemoryAkavacheConnection connection = new();
-        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         HashSet<string> noKeys = [];
         cache.Insert("keep", FirstEntryPayload, typeof(string), TimeProvider.System.GetLocalNow().Add(ShortLifetime)).SubscribeAndComplete();
         cache.UpdateExpiration(noKeys, typeof(string), TimeProvider.System.GetLocalNow().Add(ExtendedLifetime)).SubscribeAndComplete();
@@ -1135,7 +1135,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task Dispose_CalledTwice_SecondCallIsIdempotent()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         cache.Dispose();
         cache.Dispose();
@@ -1153,7 +1153,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task Insert_EmptyKeyValuePairs_ReturnsUnitWithoutUpsert()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Insert([]).SubscribeAndComplete();
@@ -1177,7 +1177,7 @@ public class SqliteBlobCacheInMemoryConnectionTests
     internal async Task InsertTyped_EmptyKeyValuePairs_ReturnsUnitWithoutUpsert()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Insert([], typeof(string)).SubscribeAndComplete();

@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for IBlobCache interface core functionality and helper methods.</summary>
 [Category("Akavache")]
@@ -84,7 +86,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Test basic byte array operations
         byte[] testData = [1, 2, 3, 4, 5];
@@ -124,7 +126,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Test bulk byte array operations
         Dictionary<string, byte[]> testData = new() { ["key1"] = SamplePayload, ["key2"] = SecondSamplePayload, ["key3"] = ThirdSamplePayload };
@@ -161,7 +163,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         byte[] testData = [1, 2, 3, 4, 5];
         var expiration = TimeProvider.System.GetLocalNow().AddSeconds(1);
@@ -209,7 +211,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert multiple items
         cache.Insert("key1", SamplePayload).SubscribeAndComplete();
@@ -246,7 +248,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert data
         cache.Insert("flush_test", SamplePayload).SubscribeAndComplete();
@@ -267,7 +269,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert and remove data to create fragmentation
         cache.Insert("vacuum_test1", SamplePayload).SubscribeAndComplete();
@@ -290,7 +292,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Test null key validation - these should consistently throw ArgumentNullException
         var insertNullError = cache.Insert(null!, SamplePayload).SubscribeGetError();
@@ -358,7 +360,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Test Scheduler property
         await Assert.That(cache.Scheduler).IsNotNull();
@@ -382,7 +384,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert some data
         cache.Insert("dispose_test", SamplePayload).SubscribeAndComplete();
@@ -405,7 +407,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // GetCreatedAt for non-existent key should return null
         var createdAt = cache.GetCreatedAt("non_existent_key").SubscribeGetValue();
@@ -419,7 +421,7 @@ public class IBlobCacheInterfaceTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         byte[] testData = [1, 2, 3, 4, 5];
         var userType = typeof(string);
@@ -485,7 +487,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Test GetCreatedAt with multiple keys - simplified approach
         string[] testKeys = ["key1", "key2", "key3"];
@@ -549,7 +551,7 @@ public class IBlobCacheInterfaceTests
         // Arrange
         SystemJsonSerializer serializer = new();
 
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Test with empty collections
         string[] emptyKeys = [];

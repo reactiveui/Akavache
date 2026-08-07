@@ -1,13 +1,14 @@
 // Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-using Akavache.NewtonsoftJson;
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests;
+
 using Splat.Builder;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Tests;
+#else
 namespace Akavache.Settings.Tests;
+#endif
 
 /// <summary>
 /// Tests for the unencrypted settings cache, isolated per test to avoid static state leakage.
@@ -143,7 +144,7 @@ public class SettingsCacheTests
             appName,
             (builder, ct) =>
             {
-                _ = builder.WithSettingsStore<ViewSettings>(s => captured = s, null, ImmediateScheduler.Instance);
+                _ = builder.WithSettingsStore<ViewSettings>(s => captured = s, null, ImmediateSequencer.Instance);
                 return Task.CompletedTask;
             },
             async (instance, _) =>
@@ -305,7 +306,7 @@ public class SettingsCacheTests
                 async builder =>
                 {
                     await Task.CompletedTask.ConfigureAwait(false);
-                    cache = new(dbPath, builder.Serializer!, ImmediateScheduler.Instance);
+                    cache = new(dbPath, builder.Serializer!, ImmediateSequencer.Instance);
                 },
                 static _ => Task.CompletedTask)
             .ConfigureAwait(false);

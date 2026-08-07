@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests covering the <see cref="SqliteOperationQueue"/> internal logic:
@@ -176,7 +177,7 @@ public class SqliteOperationQueueTests
             {
                 var stream = new SqliteRowObservable<int>();
                 Exception? caught = null;
-                _ = stream.Subscribe(System.Reactive.Observer.Create<int>(
+                _ = stream.Subscribe(Witness.Create<int>(
                     static _ => { },
                     ex => caught = ex,
                     static () => { }));
@@ -213,7 +214,7 @@ public class SqliteOperationQueueTests
                 var stream = new SqliteRowObservable<int>();
                 var items = new List<int>();
                 var completed = false;
-                _ = stream.Subscribe(System.Reactive.Observer.Create<int>(
+                _ = stream.Subscribe(Witness.Create<int>(
                     items.Add,
                     static _ => { },
                     () => completed = true));
@@ -247,7 +248,7 @@ public class SqliteOperationQueueTests
     {
         var stream = new SqliteRowObservable<int>();
         Exception? caught = null;
-        _ = stream.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = stream.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));

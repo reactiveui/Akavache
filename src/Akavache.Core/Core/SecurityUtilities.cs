@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core;
+#else
 namespace Akavache.Core;
+#endif
 
 /// <summary>Security utilities for path validation and sanitization to prevent path traversal attacks.</summary>
 internal static class SecurityUtilities

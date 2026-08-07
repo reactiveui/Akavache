@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests covering the argument guards on the serializer extensions.</summary>
 public partial class SerializerExtensionsTests
@@ -193,7 +193,7 @@ public partial class SerializerExtensionsTests
     public async Task GetAllObjectsStaticExtensionShouldReturnStoredObjects()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         try
         {
             UserObject user1 = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
@@ -223,7 +223,7 @@ public partial class SerializerExtensionsTests
     public async Task InvalidateAllObjectsStaticExtensionShouldRemoveAllObjectsOfType()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         try
         {
             UserObject user1 = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
@@ -254,7 +254,7 @@ public partial class SerializerExtensionsTests
     [Test]
     public async Task GetOrFetchObjectShouldThrowOnNullCache() =>
         await Assert.That(static () =>
-                SerializerExtensions.GetOrFetchObject(null!, "key", static () => Observable.Return(SingleEntryValue)))
+                SerializerExtensions.GetOrFetchObject(null!, "key", static () => Signal.Return(SingleEntryValue)))
             .Throws<ArgumentNullException>();
 
     /// <summary>Tests GetOrFetchObject throws on null fetchFunc.</summary>

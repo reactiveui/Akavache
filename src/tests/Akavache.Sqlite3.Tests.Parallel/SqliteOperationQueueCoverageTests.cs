@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests targeting uncovered lines in <see cref="SqliteOperationQueue"/>: dispose paths,
@@ -70,7 +71,7 @@ public class SqliteOperationQueueCoverageTests
             var conn = SqlitePclRawConnection.Create(dbPath, password: null, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
 
-            var replies = new List<IObservable<Unit>>();
+            var replies = new List<IObservable<RxVoid>>();
             for (var i = 0; i < QueuedWriteCount; i++)
             {
                 replies.Add(conn.Upsert(
@@ -395,7 +396,7 @@ public class SqliteOperationQueueCoverageTests
             var conn = SqlitePclRawConnection.Create(dbPath, password: null, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
 
-            var observables = new List<IObservable<Unit>>();
+            var observables = new List<IObservable<RxVoid>>();
             for (var i = 0; i < QueuedWriteCount; i++)
             {
                 observables.Add(conn.Upsert(
@@ -766,13 +767,13 @@ public class SqliteOperationQueueCoverageTests
             BlockWorker(queue, workerGate);
 
             // Flood with coalescable writes from dedicated threads, then dispose.
-            var replies = new IObservable<Unit>[writeCount];
+            var replies = new IObservable<RxVoid>[writeCount];
             using var allEnqueued = new CountdownEvent(writeCount);
 
             for (var i = 0; i < writeCount; i++)
             {
                 var idx = i;
-                _ = StartEnqueueThread(() => replies[idx] = queue.Enqueue(static _ => Unit.Default, coalescable: true), allEnqueued);
+                _ = StartEnqueueThread(() => replies[idx] = queue.Enqueue(static _ => RxVoid.Default, coalescable: true), allEnqueued);
             }
 
             _ = allEnqueued.Wait(GateTimeout);
@@ -1025,7 +1026,7 @@ public class SqliteOperationQueueCoverageTests
         _ = queue.Enqueue(c =>
         {
             _ = gate.Wait(GateTimeout);
-            return Unit.Default;
+            return RxVoid.Default;
         });
 
     /// <summary>Creates (but does not start) a thread that signals then runs the queue's shutdown.</summary>

@@ -6,7 +6,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.SystemTextJson;
+#else
 namespace Akavache.SystemTextJson;
+#endif
 
 /// <summary>A serializer using System.Text.Json for JSON serialization.</summary>
 public class SystemJsonSerializer : ISerializer

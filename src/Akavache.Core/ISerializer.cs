@@ -4,7 +4,11 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Determines how to serialize to and from a byte.</summary>
 public interface ISerializer

@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.SystemTextJson;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Smoke coverage for the UniversalSerializer Task-returning shim.</summary>
 [Category("Akavache")]
@@ -28,7 +29,7 @@ public class UniversalSerializerAsyncSmokeTests
     public async Task TryFindDataAsyncShouldReturnDefaultForEmptyCache()
     {
         SystemJsonSerializer serializer = new();
-        using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        using var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, serializer);
 
         var result = await UniversalSerializer
             .TryFindDataWithAlternativeKeysAsync<string>(cache, "missing", serializer);

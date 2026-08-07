@@ -4,7 +4,11 @@
 
 using System.Text.Json.Serialization.Metadata;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.SystemTextJson;
+#else
 namespace Akavache.SystemTextJson;
+#endif
 
 /// <summary>
 /// Extension methods that expose the AOT-safe <see cref="JsonTypeInfo{T}"/> overloads

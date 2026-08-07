@@ -2,12 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.NewtonsoftJson;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests.TestBases;
+#else
 namespace Akavache.Tests.TestBases;
+#endif
 
 /// <summary>Base class for tests associated with object based bulk operations.</summary>
 public abstract class ObjectBulkOperationsTestBase : IDisposable

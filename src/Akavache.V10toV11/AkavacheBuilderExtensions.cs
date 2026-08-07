@@ -2,12 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.Sqlite3;
-
 using Splat;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.V10toV11;
+#else
 namespace Akavache.V10toV11;
+#endif
 
 /// <summary>
 /// Provides extension methods for configuring Akavache V11 to work with V10 database files
@@ -113,17 +114,17 @@ public static class AkavacheBuilderExtensions
                 .Concat(BuildMigration(builder, LocalMachine, options.MigrateLocalMachine, builder.LocalMachine as SqliteBlobCache, serializer, options))
                 .Concat(BuildMigration(builder, Secure, options.MigrateSecure, GetUnderlyingBlobCache(builder.Secure) as SqliteBlobCache, serializer, options));
 
-            _ = pipeline.Wait();
+            pipeline.WaitForCompletion();
 
             return builder;
         }
     }
 
     /// <summary>
-    /// Wraps a single cache-kind migration in an <see cref="IObservable{Unit}"/> that
+    /// Wraps a single cache-kind migration in an <see cref="IObservable{RxVoid}"/> that
     /// short-circuits when the kind is disabled, the underlying cache is not a
     /// <see cref="SqliteBlobCache"/>, or no V10 database file exists for it. The
-    /// returned observable emits a single <see cref="Unit"/> on completion regardless
+    /// returned observable emits a single <see cref="RxVoid"/> on completion regardless
     /// of which branch fired — so callers can <c>Concat</c> multiple kinds into one
     /// pipeline without tracking each one individually.
     /// </summary>
@@ -142,7 +143,7 @@ public static class AkavacheBuilderExtensions
     /// <returns>A one-shot observable that completes when migration for this kind finishes (or is skipped).</returns>
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
-    internal static IObservable<Unit> BuildMigration(
+    internal static IObservable<RxVoid> BuildMigration(
         IAkavacheBuilder builder,
         string cacheName,
         bool enabled,
@@ -152,12 +153,12 @@ public static class AkavacheBuilderExtensions
     {
         if (!enabled || sqliteCache is null)
         {
-            return Observable.Return(Unit.Default);
+            return ImmutableReturnRxVoidSignal.Instance;
         }
 
         var v10Path = GetV10DatabasePath(builder, cacheName);
         return v10Path is null
-            ? Observable.Return(Unit.Default)
+            ? ImmutableReturnRxVoidSignal.Instance
             : V10MigrationService.Migrate(v10Path, sqliteCache, serializer, options);
     }
 

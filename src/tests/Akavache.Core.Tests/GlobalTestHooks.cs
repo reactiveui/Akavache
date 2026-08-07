@@ -2,13 +2,16 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Tests;
 using Splat.Builder;
 
 [assembly: NotInParallel]
-[assembly: TestExecutor<Akavache.Tests.Executors.AkavacheTestExecutor>]
+[assembly: TestExecutor<AkavacheTestExecutor>]
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core.Tests;
+#else
 namespace Akavache.Core.Tests;
+#endif
 
 /// <summary>Resets shared Akavache static state around each core-focused test.</summary>
 public static class GlobalTestHooks

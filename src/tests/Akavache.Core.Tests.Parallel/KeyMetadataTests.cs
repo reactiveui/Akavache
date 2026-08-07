@@ -4,9 +4,12 @@
 
 using System.Reflection;
 using System.Reflection.Emit;
-using Akavache.Core;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests for <see cref="KeyMetadata"/> / <see cref="KeyMetadata{T}"/>. The static generic class

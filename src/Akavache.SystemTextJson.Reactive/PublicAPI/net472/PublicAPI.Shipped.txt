@@ -1,0 +1,20 @@
+#nullable enable
+Akavache.Reactive.SystemTextJson.AkavacheBuilderExtensions
+Akavache.Reactive.SystemTextJson.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!)
+Akavache.Reactive.SystemTextJson.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!).UseSystemTextJsonSerializer(System.Action<System.Text.Json.JsonSerializerOptions!>! configure) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.SystemTextJson.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!).WithSerializerSystemTextJson() -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.SystemTextJson.AkavacheBuilderExtensions.extension(Akavache.Reactive.IAkavacheBuilder!).WithSerializerSystemTextJson(System.Text.Json.JsonSerializerOptions! settings) -> Akavache.Reactive.IAkavacheBuilder!
+Akavache.Reactive.SystemTextJson.SystemJsonSerializer
+Akavache.Reactive.SystemTextJson.SystemJsonSerializer.Deserialize<T>(byte[]! bytes) -> T?
+Akavache.Reactive.SystemTextJson.SystemJsonSerializer.ForcedDateTimeKind.get -> System.DateTimeKind?
+Akavache.Reactive.SystemTextJson.SystemJsonSerializer.ForcedDateTimeKind.set -> void
+Akavache.Reactive.SystemTextJson.SystemJsonSerializer.GetEffectiveOptions() -> System.Text.Json.JsonSerializerOptions!
+Akavache.Reactive.SystemTextJson.SystemJsonSerializer.Options.get -> System.Text.Json.JsonSerializerOptions?
+Akavache.Reactive.SystemTextJson.SystemJsonSerializer.Options.set -> void
+Akavache.Reactive.SystemTextJson.SystemJsonSerializer.Serialize<T>(T item) -> byte[]!
+Akavache.Reactive.SystemTextJson.SystemJsonSerializer.SystemJsonSerializer() -> void
+static Akavache.Reactive.SystemTextJson.AkavacheBuilderExtensions.UseSystemTextJsonSerializer(this Akavache.Reactive.IAkavacheBuilder! builder, System.Action<System.Text.Json.JsonSerializerOptions!>! configure) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.SystemTextJson.AkavacheBuilderExtensions.WithSerializerSystemTextJson(this Akavache.Reactive.IAkavacheBuilder! builder) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.SystemTextJson.AkavacheBuilderExtensions.WithSerializerSystemTextJson(this Akavache.Reactive.IAkavacheBuilder! builder, System.Text.Json.JsonSerializerOptions! settings) -> Akavache.Reactive.IAkavacheBuilder!
+static Akavache.Reactive.SystemTextJson.SystemJsonSerializer.DeserializeAot<T>(byte[]! bytes, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo) -> T?
+static Akavache.Reactive.SystemTextJson.SystemJsonSerializer.SerializeAot<T>(T item, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo) -> byte[]!

@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core.Observables;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for <see cref="CatchReturnObservable{T}"/> covering success forwarding, error swallowing with fallback, empty sources, and multi-value streams.</summary>
 [Category("Akavache")]
@@ -21,7 +23,7 @@ public class CatchReturnObservableTests
     [Test]
     public async Task Success_ForwardsValue()
     {
-        var sut = new CatchReturnObservable<int>(Observable.Return(SuccessValue), -1);
+        var sut = new CatchReturnObservable<int>(Signal.Return(SuccessValue), -1);
 
         var result = await sut.FirstAsync();
         await Assert.That(result).IsEqualTo(SuccessValue);
@@ -33,7 +35,7 @@ public class CatchReturnObservableTests
     public async Task Error_EmitsFallback()
     {
         var sut = new CatchReturnObservable<string>(
-            Observable.Throw<string>(new InvalidOperationException("boom")),
+            Signal.Throw<string>(new InvalidOperationException("boom")),
             "recovered");
 
         var result = await sut.FirstAsync();
@@ -45,7 +47,7 @@ public class CatchReturnObservableTests
     [Test]
     public async Task Empty_CompletesWithNoValue()
     {
-        var sut = new CatchReturnObservable<int>(Observable.Empty<int>(), -1);
+        var sut = new CatchReturnObservable<int>(Signal.Empty<int>(), -1);
 
         var result = await sut.ToList();
         await Assert.That(result).IsEmpty();
@@ -69,7 +71,7 @@ public class CatchReturnObservableTests
     [Test]
     public async Task AsyncError_ForwardsValuesThenFallback()
     {
-        using var subject = new Subject<int>();
+        using var subject = new Signal<int>();
 
         var results = new List<int>();
         var completed = false;
@@ -92,7 +94,7 @@ public class CatchReturnObservableTests
     [Test]
     public async Task AsyncSuccess_ForwardsValues()
     {
-        using var subject = new Subject<string>();
+        using var subject = new Signal<string>();
 
         var results = new List<string>();
         var completed = false;

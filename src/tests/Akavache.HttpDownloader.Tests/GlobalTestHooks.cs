@@ -6,7 +6,11 @@
 // Run sequentially to avoid TCP resource contention across simultaneous MTP assemblies.
 [assembly: NotInParallel]
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.HttpDownloader.Tests;
+#else
 namespace Akavache.HttpDownloader.Tests;
+#endif
 
 /// <summary>One-time assembly setup for HTTP tests.</summary>
 public static class GlobalTestHooks

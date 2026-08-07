@@ -6,7 +6,11 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests.Helpers;
+#else
 namespace Akavache.Tests.Helpers;
+#endif
 
 /// <summary>Tests to help with the integration tests.</summary>
 public static class IntegrationTestHelper

@@ -2,12 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.EncryptedSqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for EncryptedSqliteBlobCache covering disposed-state error paths, null arg validation, and type-aware overloads.</summary>
 [Category("Akavache")]
@@ -542,7 +541,7 @@ public class EncryptedSqliteBlobCacheDirectTests
     internal async Task TypedBulkInsertWithEmptyCollectionShouldReturnUnit()
     {
         InMemoryAkavacheConnection connection = new();
-        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             cache.Insert([], typeof(string)).SubscribeAndComplete();
@@ -562,7 +561,7 @@ public class EncryptedSqliteBlobCacheDirectTests
     internal async Task InvalidateAllWithNullTypeShouldThrowArgumentNullException()
     {
         InMemoryAkavacheConnection connection = new();
-        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
             Exception? ex = null;
@@ -581,7 +580,7 @@ public class EncryptedSqliteBlobCacheDirectTests
     internal async Task DisposeSwallowsCheckpointException()
     {
         InMemoryAkavacheConnection connection = new() { FailCheckpoint = true };
-        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 
         // Dispose should not throw even though Checkpoint(Full) raises.
         cache.Dispose();
@@ -690,5 +689,5 @@ public class EncryptedSqliteBlobCacheDirectTests
     /// <param name="path">The directory used to host the temporary cache database.</param>
     /// <returns>A new encrypted blob cache instance.</returns>
     private static EncryptedSqliteBlobCache CreateCache(string path) =>
-        new(Path.Combine(path, $"test_{Guid.NewGuid():N}.db"), TestPassword, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        new(Path.Combine(path, $"test_{Guid.NewGuid():N}.db"), TestPassword, new SystemJsonSerializer(), ImmediateSequencer.Instance);
 }

@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text.Json;
-using Akavache.Core;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Executors;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for Akavache.SystemTextJson.AkavacheBuilderExtensions.</summary>
 [Category("Akavache")]
@@ -124,7 +125,7 @@ public class SystemTextJsonBuilderExtensionsTests
 
         // Pass a primary that isn't SystemJsonSerializer so the registered factories
         // are kept in the alternatives list and therefore invoked.
-        var alternatives = UniversalSerializer.GetAvailableAlternativeSerializers(new NewtonsoftJson.NewtonsoftSerializer());
+        var alternatives = UniversalSerializer.GetAvailableAlternativeSerializers(new NewtonsoftSerializer());
 
         await Assert.That(alternatives.Count).IsGreaterThanOrEqualTo(1);
 

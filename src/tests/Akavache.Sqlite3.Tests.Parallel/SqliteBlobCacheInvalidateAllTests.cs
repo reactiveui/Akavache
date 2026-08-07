@@ -2,11 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests focused on SqliteBlobCache.InvalidateAll behavior.</summary>
 [Category("Akavache")]
@@ -42,7 +42,7 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldRemove_AllItems()
     {
         SystemJsonSerializer serializer = new();
-        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateSequencer.Instance);
 
         const int InsertedKeyCount = 3;
 
@@ -77,7 +77,7 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldRemove_TypedAndUntypedItems()
     {
         SystemJsonSerializer serializer = new();
-        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateSequencer.Instance);
 
         const int InsertedKeyCount = 4;
 
@@ -119,7 +119,7 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldIgnore_ExpiredEntriesButStillClearAll()
     {
         SystemJsonSerializer serializer = new();
-        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateSequencer.Instance);
 
         // Arrange: one expired, one not
         cache.Insert("live", FirstUntypedPayload, TimeProvider.System.GetLocalNow().Add(LiveEntryLifetime)).SubscribeAndComplete();

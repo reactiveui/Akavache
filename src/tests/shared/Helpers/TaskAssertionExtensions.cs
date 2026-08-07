@@ -4,7 +4,11 @@
 
 using TUnit.Assertions.Exceptions;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Task-based exception assertions used by tests instead of TUnit's

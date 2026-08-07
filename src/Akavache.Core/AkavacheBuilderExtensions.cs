@@ -5,12 +5,14 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO.IsolatedStorage;
 using System.Reflection;
-using Akavache.Core;
-using Akavache.Helpers;
 using Splat;
 using Splat.Builder;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>Provides extension methods for configuring Akavache cache database with Splat application builders.</summary>
 public static class AkavacheBuilderExtensions

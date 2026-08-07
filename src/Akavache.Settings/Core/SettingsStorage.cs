@@ -7,9 +7,12 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Akavache.Helpers;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Settings.Core;
+#else
 namespace Akavache.Settings.Core;
+#endif
 
 /// <summary>
 /// Provides a base class for implementing observable application settings storage using
@@ -94,20 +97,20 @@ public class SettingsStorage : ISettingsStorage
     /// <returns>A one-shot observable that completes when every stream's cold load has finished.</returns>
     [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
     [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
-    public IObservable<Unit> Initialize() =>
-        Observable.Defer(() =>
+    public IObservable<RxVoid> Initialize() =>
+        Signal.Defer(() =>
         {
             EagerCreateStreams(this, GetType().GetRuntimeProperties());
 
-            List<IObservable<Unit>> loaders = new(_streams.Count);
+            List<IObservable<RxVoid>> loaders = new(_streams.Count);
             foreach (var entry in _streams)
             {
                 loaders.Add(entry.Value.EnsureLoaded());
             }
 
             return loaders.Count == 0
-                ? Observable.Return(Unit.Default)
-                : loaders.Merge().IgnoreElements().Concat(Observable.Return(Unit.Default));
+                ? ImmutableReturnRxVoidSignal.Instance
+                : loaders.Merge().IgnoreElements().Concat(ImmutableReturnRxVoidSignal.Instance);
         });
 
     /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
@@ -217,10 +220,10 @@ public class SettingsStorage : ISettingsStorage
     /// <see cref="CallerMemberNameAttribute"/> because the caller is <c>SetFoo(value)</c>, not
     /// <c>Foo</c> — pass the matching getter's name explicitly with <c>nameof(Foo)</c>.
     /// </param>
-    /// <returns>An observable that fires <see cref="Unit"/> when the persistent write completes.</returns>
+    /// <returns>An observable that fires <see cref="RxVoid"/> when the persistent write completes.</returns>
     [RequiresUnreferencedCode("SetObservable requires types to be preserved for serialization.")]
     [RequiresDynamicCode("SetObservable requires types to be preserved for serialization.")]
-    protected IObservable<Unit> SetObservable<T>(T value, [CallerMemberName] string? key = null)
+    protected IObservable<RxVoid> SetObservable<T>(T value, [CallerMemberName] string? key = null)
     {
         ArgumentExceptionHelper.ThrowIfNull(key);
 
@@ -260,7 +263,10 @@ public class SettingsStorage : ISettingsStorage
         _disposedValue = true;
     }
 
-    /// <summary>Disposes every active per-property stream and clears the registry. Called from <see cref="Dispose(bool)"/> to release the backing <see cref="BehaviorSubject{T}"/> resources.</summary>
+    /// <summary>
+    /// Disposes every active per-property stream and clears the registry. Called from
+    /// <see cref="Dispose(bool)"/> to release the backing <see cref="SettingsValueSubject{T}"/> resources.
+    /// </summary>
     private void DisposeStreams()
     {
         foreach (var entry in _streams)

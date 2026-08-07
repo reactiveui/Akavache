@@ -3,9 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
-using Akavache.Core;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for RequestCache functionality.</summary>
 [Category("Akavache")]
@@ -72,7 +75,7 @@ public class RequestCacheTests
         IObservable<string> Factory()
         {
             var currentCount = Interlocked.Increment(ref callCount);
-            return Observable.Return($"result_{currentCount}").Delay(TimeSpan.FromMilliseconds(FactoryOverlapDelayMilliseconds)); // Add delay to ensure overlap
+            return Signal.Return($"result_{currentCount}").Delay(TimeSpan.FromMilliseconds(FactoryOverlapDelayMilliseconds)); // Add delay to ensure overlap
         }
 
         // Act - Make truly concurrent requests by starting them simultaneously
@@ -111,7 +114,7 @@ public class RequestCacheTests
         {
             ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(callCounts, key, out _);
             value++;
-            return Observable.Return($"result_{key}_{value}");
+            return Signal.Return($"result_{key}_{value}");
         }
 
         // Act - Make requests with different keys
@@ -151,7 +154,7 @@ public class RequestCacheTests
         IObservable<string> Factory()
         {
             callCount++;
-            return Observable.Return($"result_{callCount}");
+            return Signal.Return($"result_{callCount}");
         }
 
         // Act - Make request, clear, then make another request
@@ -184,8 +187,8 @@ public class RequestCacheTests
         {
             callCount++;
             return callCount == 1
-                ? Observable.Throw<string>(new InvalidOperationException("First call fails"))
-                : Observable.Return($"success_{callCount}");
+                ? Signal.Throw<string>(new InvalidOperationException("First call fails"))
+                : Signal.Return($"success_{callCount}");
         }
 
         // Act & Assert - First call should throw
@@ -210,9 +213,9 @@ public class RequestCacheTests
         RequestCache.Clear();
 
         // Act - Test with different types
-        var stringResult = RequestCache.GetOrCreateRequest("string_key", static () => Observable.Return("test_string")).SubscribeGetValue();
-        var intResult = RequestCache.GetOrCreateRequest("int_key", static () => Observable.Return(IntRequestValue)).SubscribeGetValue();
-        var compositeResult = RequestCache.GetOrCreateRequest("object_key", static () => Observable.Return((Name: "Test", Value: CompositeRequestValue))).SubscribeGetValue();
+        var stringResult = RequestCache.GetOrCreateRequest("string_key", static () => Signal.Return("test_string")).SubscribeGetValue();
+        var intResult = RequestCache.GetOrCreateRequest("int_key", static () => Signal.Return(IntRequestValue)).SubscribeGetValue();
+        var compositeResult = RequestCache.GetOrCreateRequest("object_key", static () => Signal.Return((Name: "Test", Value: CompositeRequestValue))).SubscribeGetValue();
 
         using (Assert.Multiple())
         {
@@ -233,7 +236,7 @@ public class RequestCacheTests
         RequestCache.Clear();
 
         // Act & Assert - Should handle null key without throwing
-        var result = RequestCache.GetOrCreateRequest(null!, static () => Observable.Return("null_key_result")).SubscribeGetValue();
+        var result = RequestCache.GetOrCreateRequest(null!, static () => Signal.Return("null_key_result")).SubscribeGetValue();
         await Assert.That(result).IsEqualTo("null_key_result");
     }
 
@@ -249,7 +252,7 @@ public class RequestCacheTests
         IObservable<string> Factory()
         {
             callCount++;
-            return Observable.Return($"empty_key_result_{callCount}");
+            return Signal.Return($"empty_key_result_{callCount}");
         }
 
         // Act - Make requests with empty key
@@ -278,7 +281,7 @@ public class RequestCacheTests
         IObservable<string> AsyncFactory()
         {
             callCount++;
-            return Observable.FromAsync(async () =>
+            return Signal.FromAsync(async () =>
             {
                 await Task.Delay(SimulatedAsyncWorkMilliseconds); // Simulate async work
                 return $"async_result_{callCount}";
@@ -317,7 +320,7 @@ public class RequestCacheTests
         IObservable<string> Factory()
         {
             var currentCount = Interlocked.Increment(ref callCount);
-            return Observable.Return($"concurrent_result_{currentCount}").Delay(TimeSpan.FromMilliseconds(HighConcurrencyFactoryDelayMilliseconds));
+            return Signal.Return($"concurrent_result_{currentCount}").Delay(TimeSpan.FromMilliseconds(HighConcurrencyFactoryDelayMilliseconds));
         }
 
         // Act - Create all observables first, then convert to tasks to ensure true concurrency
@@ -350,7 +353,7 @@ public class RequestCacheTests
         IObservable<int> Factory()
         {
             _ = Interlocked.Increment(ref callCount);
-            return Observable.Range(1, ExpectedSequence.Length); // Emits 1, 2, 3
+            return Signal.Range(1, ExpectedSequence.Length); // Emits 1, 2, 3
         }
 
         // Act - Get the observable sequence with proper replay behavior
@@ -387,7 +390,7 @@ public class RequestCacheTests
         {
             var key = $"memory_test_{i}";
             var currentIndex = i;
-            _ = RequestCache.GetOrCreateRequest(key, () => Observable.Return(currentIndex)).SubscribeGetValue();
+            _ = RequestCache.GetOrCreateRequest(key, () => Signal.Return(currentIndex)).SubscribeGetValue();
         }
 
         // Clear to free memory
@@ -407,7 +410,7 @@ public class RequestCacheTests
         RequestCache.Clear();
         const string key = "null_result_test";
 
-        static IObservable<string?> Factory() => Observable.Return<string?>(null);
+        static IObservable<string?> Factory() => Signal.Return<string?>(null);
 
         // Act
         var result1 = RequestCache.GetOrCreateRequest(key, Factory).SubscribeGetValue();
@@ -437,7 +440,7 @@ public class RequestCacheTests
     public async Task GetOrCreateRequestShouldRemoveOnError()
     {
         RequestCache.Clear();
-        var observable = RequestCache.GetOrCreateRequest("error_key", static () => Observable.Throw<string>(new InvalidOperationException("test")));
+        var observable = RequestCache.GetOrCreateRequest("error_key", static () => Signal.Throw<string>(new InvalidOperationException("test")));
 
         var error = observable.SubscribeGetError();
 
@@ -453,7 +456,7 @@ public class RequestCacheTests
     public async Task GetOrCreateRequestShouldRemoveOnCompletion()
     {
         RequestCache.Clear();
-        var observable = RequestCache.GetOrCreateRequest("complete_key", static () => Observable.Return("value"));
+        var observable = RequestCache.GetOrCreateRequest("complete_key", static () => Signal.Return("value"));
 
         var result = observable.SubscribeGetValue();
 
@@ -478,7 +481,7 @@ public class RequestCacheTests
         RequestCache.Clear();
 
         // Use a never-completing observable to keep the request in flight
-        _ = RequestCache.GetOrCreateRequest(RemoveRequestKey, static () => Observable.Never<string>());
+        _ = RequestCache.GetOrCreateRequest(RemoveRequestKey, static () => Signal.Never<string>());
         await Assert.That(RequestCache.HasInFlightRequest(RemoveRequestKey, typeof(string))).IsTrue();
 
         RequestCache.RemoveRequest(RemoveRequestKey, typeof(string));
@@ -502,8 +505,8 @@ public class RequestCacheTests
     public async Task RemoveRequestsForKeyShouldRemoveMatchingEntries()
     {
         RequestCache.Clear();
-        _ = RequestCache.GetOrCreateRequest(MultiTypeRequestKey, static () => Observable.Never<string>());
-        _ = RequestCache.GetOrCreateRequest(MultiTypeRequestKey, static () => Observable.Never<int>());
+        _ = RequestCache.GetOrCreateRequest(MultiTypeRequestKey, static () => Signal.Never<string>());
+        _ = RequestCache.GetOrCreateRequest(MultiTypeRequestKey, static () => Signal.Never<int>());
 
         await Assert.That(RequestCache.HasInFlightRequest(MultiTypeRequestKey, typeof(string))).IsTrue();
         await Assert.That(RequestCache.HasInFlightRequest(MultiTypeRequestKey, typeof(int))).IsTrue();
@@ -538,8 +541,8 @@ public class RequestCacheTests
         RequestCache.Clear();
         await Assert.That(RequestCache.Count).IsEqualTo(0);
 
-        _ = RequestCache.GetOrCreateRequest("count_test_1", static () => Observable.Never<string>());
-        _ = RequestCache.GetOrCreateRequest("count_test_2", static () => Observable.Never<string>());
+        _ = RequestCache.GetOrCreateRequest("count_test_1", static () => Signal.Never<string>());
+        _ = RequestCache.GetOrCreateRequest("count_test_2", static () => Signal.Never<string>());
 
         await Assert.That(RequestCache.Count).IsEqualTo(InFlightRequestCount);
 

@@ -3,10 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Akavache.Core;
-using Akavache.Core.Observables;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive;
+#else
 namespace Akavache;
+#endif
 
 /// <summary>
 /// CacheDatabase is the main entry point for interacting with Akavache. It provides
@@ -19,9 +21,9 @@ public static class CacheDatabase
     private static IAkavacheInstance? _instance;
 
     /// <summary>Gets or sets the Scheduler used for task pools.</summary>
-    public static IScheduler TaskpoolScheduler
+    public static ISequencer TaskpoolScheduler
     {
-        get => field ?? TaskPoolScheduler.Default;
+        get => field ?? TaskPoolSequencer.Default;
         set;
     }
 
@@ -79,13 +81,13 @@ public static class CacheDatabase
     /// all data is properly saved.
     /// </summary>
     /// <returns>An observable that completes when shutdown is finished.</returns>
-    public static IObservable<Unit> Shutdown()
+    public static IObservable<RxVoid> Shutdown()
     {
         // Snapshot to avoid concurrent modification issues during shutdown.
         var instance = Volatile.Read(ref _instance);
         if (instance is null)
         {
-            return CachedObservables.UnitDefault;
+            return ImmutableReturnRxVoidSignal.Instance;
         }
 
         // Dispose registered blob caches and settings stores synchronously.
@@ -103,7 +105,7 @@ public static class CacheDatabase
 
         try
         {
-            List<IObservable<Unit>> flushTasks =
+            List<IObservable<RxVoid>> flushTasks =
             [
                 FlushOrComplete(instance.UserAccount),
                 FlushOrComplete(instance.LocalMachine),
@@ -115,7 +117,7 @@ public static class CacheDatabase
         }
         catch (Exception ex)
         {
-            return Observable.Throw<Unit>(ex);
+            return new ImmediateThrowSignal<RxVoid>(ex);
         }
     }
 
@@ -294,11 +296,11 @@ public static class CacheDatabase
 
     /// <summary>Resets all CacheDatabase state for testing purposes.</summary>
     /// <returns>An observable that completes once shutdown and reset are done.</returns>
-    internal static IObservable<Unit> ResetForTests()
+    internal static IObservable<RxVoid> ResetForTests()
     {
         var shutdown = Volatile.Read(ref _instance) is not null
-            ? Shutdown().Catch<Unit, Exception>(static _ => Observable.Return(Unit.Default))
-            : Observable.Return(Unit.Default);
+            ? Shutdown().Catch<RxVoid, Exception>(static _ => ImmutableReturnRxVoidSignal.Instance)
+            : ImmutableReturnRxVoidSignal.Instance;
 
         return shutdown.Do(static _ =>
         {
@@ -314,8 +316,8 @@ public static class CacheDatabase
     /// </summary>
     /// <param name="cache">The cache occupying one of the instance's four slots, if any.</param>
     /// <returns>An observable that completes once the flush finishes.</returns>
-    internal static IObservable<Unit> FlushOrComplete(IBlobCache? cache) =>
-        cache?.Flush() ?? CachedObservables.UnitDefault;
+    internal static IObservable<RxVoid> FlushOrComplete(IBlobCache? cache) =>
+        cache?.Flush() ?? ImmutableReturnRxVoidSignal.Instance;
 
     /// <summary>Internal method to set the instance.</summary>
     /// <param name="builder">The configured instance.</param>

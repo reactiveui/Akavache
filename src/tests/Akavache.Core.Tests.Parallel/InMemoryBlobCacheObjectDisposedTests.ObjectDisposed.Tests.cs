@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests covering ObjectDisposedException behavior for InMemoryBlobCache operations.</summary>
 [Category("Akavache")]
@@ -16,7 +18,7 @@ public class InMemoryBlobCacheObjectDisposedTests
     public async Task CacheShouldHandleObjectDisposedExceptionCorrectly()
     {
         SystemJsonSerializer serializer = new();
-        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         cache.InsertObject("test", "value").SubscribeAndComplete();
         cache.Dispose();

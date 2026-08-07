@@ -1,0 +1,99 @@
+#nullable enable
+Akavache.V10toV11.AkavacheBuilderExtensions
+Akavache.V10toV11.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!)
+Akavache.V10toV11.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).MigrateFromV10() -> Akavache.IAkavacheBuilder!
+Akavache.V10toV11.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).MigrateFromV10(System.Action<Akavache.V10toV11.V10MigrationOptions!>? configure) -> Akavache.IAkavacheBuilder!
+Akavache.V10toV11.AkavacheBuilderExtensions.extension(Akavache.IAkavacheBuilder!).WithV10FileNames() -> Akavache.IAkavacheBuilder!
+Akavache.V10toV11.V10MigrationOptions
+Akavache.V10toV11.V10MigrationOptions.<Clone>$() -> Akavache.V10toV11.V10MigrationOptions!
+Akavache.V10toV11.V10MigrationOptions.Deconstruct(out bool DeleteOldFiles, out bool ReserializeToCurrentFormat, out bool MigrateLocalMachine, out bool MigrateUserAccount, out bool MigrateSecure, out System.Action<string!>? Logger) -> void
+Akavache.V10toV11.V10MigrationOptions.DeleteOldFiles.get -> bool
+Akavache.V10toV11.V10MigrationOptions.DeleteOldFiles.init -> void
+Akavache.V10toV11.V10MigrationOptions.Equals(Akavache.V10toV11.V10MigrationOptions? other) -> bool
+Akavache.V10toV11.V10MigrationOptions.Logger.get -> System.Action<string!>?
+Akavache.V10toV11.V10MigrationOptions.Logger.init -> void
+Akavache.V10toV11.V10MigrationOptions.MigrateLocalMachine.get -> bool
+Akavache.V10toV11.V10MigrationOptions.MigrateLocalMachine.init -> void
+Akavache.V10toV11.V10MigrationOptions.MigrateSecure.get -> bool
+Akavache.V10toV11.V10MigrationOptions.MigrateSecure.init -> void
+Akavache.V10toV11.V10MigrationOptions.MigrateUserAccount.get -> bool
+Akavache.V10toV11.V10MigrationOptions.MigrateUserAccount.init -> void
+Akavache.V10toV11.V10MigrationOptions.ReserializeToCurrentFormat.get -> bool
+Akavache.V10toV11.V10MigrationOptions.ReserializeToCurrentFormat.init -> void
+Akavache.V10toV11.V10MigrationOptions.V10MigrationOptions(bool DeleteOldFiles = false, bool ReserializeToCurrentFormat = true, bool MigrateLocalMachine = true, bool MigrateUserAccount = true, bool MigrateSecure = true, System.Action<string!>? Logger = null) -> void
+System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute.DoesNotReturnAttribute() -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute.DoesNotReturnIfAttribute(bool parameterValue) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute.ParameterValue.get -> bool (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.MemberNotNullAttribute(params string![]! members) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.MemberNotNullAttribute(string! member) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.Members.get -> string![]! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.NotNullAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.NotNullAttribute.NotNullAttribute() -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.Message.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.RequiresDynamicCodeAttribute(string! message) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.Url.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute.Url.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.Message.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.RequiresUnreferencedCodeAttribute(string! message) -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.Url.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute.Url.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Category.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.CheckId.get -> string! (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Justification.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Justification.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.MessageId.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.MessageId.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Scope.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Scope.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Target.get -> string? (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.Target.set -> void (forwarded, contained in System.Runtime)
+System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute.UnconditionalSuppressMessageAttribute(string! category, string! checkId) -> void (forwarded, contained in System.Runtime)
+System.HashCode (forwarded, contained in System.Runtime)
+System.HashCode.Add<T>(T value) -> void (forwarded, contained in System.Runtime)
+System.HashCode.Add<T>(T value, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void (forwarded, contained in System.Runtime)
+System.HashCode.AddBytes(System.ReadOnlySpan<byte> value) -> void (forwarded, contained in System.Runtime)
+System.HashCode.HashCode() -> void (forwarded, contained in System.Runtime)
+System.HashCode.ToHashCode() -> int (forwarded, contained in System.Runtime)
+System.Index (forwarded, contained in System.Runtime)
+System.Index.Equals(System.Index other) -> bool (forwarded, contained in System.Runtime)
+System.Index.GetOffset(int length) -> int (forwarded, contained in System.Runtime)
+System.Index.Index() -> void (forwarded, contained in System.Runtime)
+System.Index.Index(int value, bool fromEnd = false) -> void (forwarded, contained in System.Runtime)
+System.Index.IsFromEnd.get -> bool (forwarded, contained in System.Runtime)
+System.Index.Value.get -> int (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.CallerArgumentExpressionAttribute (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.CallerArgumentExpressionAttribute.CallerArgumentExpressionAttribute(string! parameterName) -> void (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.CallerArgumentExpressionAttribute.ParameterName.get -> string! (forwarded, contained in System.Runtime)
+System.Runtime.CompilerServices.IsExternalInit (forwarded, contained in System.Runtime)
+override Akavache.V10toV11.V10MigrationOptions.Equals(object? obj) -> bool
+override Akavache.V10toV11.V10MigrationOptions.GetHashCode() -> int
+override Akavache.V10toV11.V10MigrationOptions.ToString() -> string!
+override System.HashCode.Equals(object? obj) -> bool (forwarded, contained in System.Runtime)
+override System.HashCode.GetHashCode() -> int (forwarded, contained in System.Runtime)
+override System.Index.Equals(object? value) -> bool (forwarded, contained in System.Runtime)
+override System.Index.GetHashCode() -> int (forwarded, contained in System.Runtime)
+override System.Index.ToString() -> string! (forwarded, contained in System.Runtime)
+static Akavache.V10toV11.AkavacheBuilderExtensions.MigrateFromV10(this Akavache.IAkavacheBuilder! builder) -> Akavache.IAkavacheBuilder!
+static Akavache.V10toV11.AkavacheBuilderExtensions.MigrateFromV10(this Akavache.IAkavacheBuilder! builder, System.Action<Akavache.V10toV11.V10MigrationOptions!>? configure) -> Akavache.IAkavacheBuilder!
+static Akavache.V10toV11.AkavacheBuilderExtensions.WithV10FileNames(this Akavache.IAkavacheBuilder! builder) -> Akavache.IAkavacheBuilder!
+static Akavache.V10toV11.V10MigrationOptions.operator !=(Akavache.V10toV11.V10MigrationOptions? left, Akavache.V10toV11.V10MigrationOptions? right) -> bool
+static Akavache.V10toV11.V10MigrationOptions.operator ==(Akavache.V10toV11.V10MigrationOptions? left, Akavache.V10toV11.V10MigrationOptions? right) -> bool
+static System.HashCode.Combine<T1, T2, T3, T4, T5, T6, T7, T8>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4, T5, T6, T7>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4, T5, T6>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4, T5>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3, T4>(T1 value1, T2 value2, T3 value3, T4 value4) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2, T3>(T1 value1, T2 value2, T3 value3) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1, T2>(T1 value1, T2 value2) -> int (forwarded, contained in System.Runtime)
+static System.HashCode.Combine<T1>(T1 value1) -> int (forwarded, contained in System.Runtime)
+static System.Index.End.get -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.FromEnd(int value) -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.FromStart(int value) -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.Start.get -> System.Index (forwarded, contained in System.Runtime)
+static System.Index.implicit operator System.Index(int value) -> System.Index (forwarded, contained in System.Runtime)

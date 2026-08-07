@@ -2,12 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests;
-using Akavache.Tests.Helpers;
-using Akavache.Tests.Mocks;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for AOT compatibility and edge cases.</summary>
 [Category("Akavache")]
@@ -53,7 +52,7 @@ public class AotCompatibilityTests
     [Test]
     public async Task SerializeWithContextShouldHandleNullValues()
     {
-        InMemoryBlobCache blobCache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache blobCache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         // Act
         var result = SerializerExtensions.SerializeWithContext<string?>(null, blobCache);
@@ -68,7 +67,7 @@ public class AotCompatibilityTests
     [Test]
     public async Task DeserializeWithContextShouldHandleNullData()
     {
-        InMemoryBlobCache blobCache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache blobCache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         // Act & Assert
         var nullResult = SerializerExtensions.DeserializeWithContext<string>(null!, blobCache);
@@ -85,7 +84,7 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+            using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
             // Test with a Dictionary that can cause circular reference issues
             Dictionary<string, object> problemObject = [];
@@ -119,7 +118,7 @@ public class AotCompatibilityTests
         using (Utility.WithEmptyDirectory(out _))
         {
             using InMemoryBlobCache cache =
-                new(ImmediateScheduler.Instance, new SystemJsonSerializer()) { ForcedDateTimeKind = DateTimeKind.Utc };
+                new(ImmediateSequencer.Instance, new SystemJsonSerializer()) { ForcedDateTimeKind = DateTimeKind.Utc };
 
             DateTime localDateTime = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Local);
 
@@ -149,7 +148,7 @@ public class AotCompatibilityTests
     [Test]
     public async Task ArgumentValidationShouldWorkCorrectly()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         // Act & Assert - InMemoryBlobCache may not validate empty strings the same way
         // Try to test actual argument validation if it exists
@@ -172,7 +171,7 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+            using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
             // Test actual type conversion behavior rather than expecting specific exceptions
             // This test verifies that serialization maintains type integrity
@@ -209,7 +208,7 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+            using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
             // Act - perform multiple concurrent operations
             List<Task> tasks = [];
@@ -244,7 +243,7 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+            using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
             // Insert and remove data multiple times
             for (var i = 0; i < TemporaryEntryCount; i++)
@@ -273,7 +272,7 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+            using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
             // Create a large object
             string largeString = new('x', LargeStringCharCount); // 100KB string
@@ -293,7 +292,7 @@ public class AotCompatibilityTests
     [Test]
     public async Task ObservableExtensionMethodsShouldWork()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         // Test InsertObject and GetObject work with First operator
         cache.InsertObject("test", PrimaryValue).SubscribeAndComplete();
@@ -315,7 +314,7 @@ public class AotCompatibilityTests
         InMemoryBlobCache cache;
 
         // Test using statement disposal
-        using (cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer()))
+        using (cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer()))
         {
             cache.InsertObject("test", PrimaryValue).SubscribeAndComplete();
             var result = cache.GetObject<string>("test").SubscribeGetValue();
@@ -323,7 +322,7 @@ public class AotCompatibilityTests
         }
 
         // Test explicit disposal
-        cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         cache.InsertObject("test2", SecondaryValue).SubscribeAndComplete();
         cache.Dispose();
 
@@ -336,7 +335,7 @@ public class AotCompatibilityTests
     [Test]
     public async Task BulkOperationsShouldWorkCorrectly()
     {
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
         // Test bulk insert
         KeyValuePair<string, string>[] data =

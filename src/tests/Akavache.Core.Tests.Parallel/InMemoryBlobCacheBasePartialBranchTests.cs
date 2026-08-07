@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for partial branch coverage in <see cref="InMemoryBlobCacheBase"/>.</summary>
 [Category("Akavache")]
@@ -19,12 +21,12 @@ public class InMemoryBlobCacheBasePartialBranchTests
     internal async Task Insert_EmptyCollection_ReturnsUnitWithoutLock()
     {
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         var result = cache.Insert(
             []).SubscribeGetValue();
 
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
     }
 
     /// <summary>
@@ -36,13 +38,13 @@ public class InMemoryBlobCacheBasePartialBranchTests
     internal async Task Insert_EmptyCollectionTyped_ReturnsUnitWithoutLock()
     {
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         var result = cache.Insert(
             [],
             typeof(string)).SubscribeGetValue();
 
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
     }
 
     /// <summary>Double-dispose exercises the Interlocked.CompareExchange branch at line 822 where the second dispose is a no-op.</summary>
@@ -51,7 +53,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
     internal async Task Dispose_CalledTwice_IsIdempotent()
     {
         SystemJsonSerializer serializer = new();
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, serializer);
 
         cache.Dispose();
         cache.Dispose();
@@ -71,7 +73,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
     internal async Task Insert_NonEmptyThenEmpty_BothBranches()
     {
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Non-empty collection — takes the normal path.
         byte[] payload = [1, 2, 3];
@@ -82,7 +84,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
         var result = cache.Insert(
             []).SubscribeGetValue();
 
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
 
         // Verify the first insert actually worked.
         var value = cache.Get("k1").SubscribeGetValue();
@@ -98,7 +100,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
     internal async Task Insert_NonEmptyTypedThenEmpty_BothBranches()
     {
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Non-empty typed collection — takes the normal path.
         byte[] payload = [1, 2, 3];
@@ -111,7 +113,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
             [],
             typeof(string)).SubscribeGetValue();
 
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
     }
 
     /// <summary>
@@ -124,7 +126,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
     internal async Task Insert_NonCollectionEnumerable_BypassesEmptyGuard()
     {
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // A Select() projection is IEnumerable but not ICollection, so the
         // pattern match `keyValuePairs is ICollection { Count: 0 }` is false.
@@ -149,7 +151,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
     internal async Task Insert_NonCollectionEnumerableTyped_BypassesEmptyGuard()
     {
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // .Select(x => x) intentionally wraps the array in a non-ICollection IEnumerable to bypass the Count guard.
         byte[] payload = [1, 2];

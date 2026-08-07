@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -18,11 +18,22 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="DynamicData" />
     <PackageReference Include="ReactiveUI.WPF" />
     <PackageReference Include="SQLite3MC.PCLRaw.bundle" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <!-- DynamicData brings System.Reactive in, whose ObservableExtensions.Subscribe ties with the
+       Primitives SubscribeExtensions on every call site. Drop the bare import and let Subscribe bind
+       to System.Reactive; the Primitives types the sample uses come from the narrower namespaces. -->
+  <ItemGroup>
+    <Using Remove="ReactiveUI.Primitives" />
+    <Using Include="ReactiveUI.Primitives.RxVoid" Alias="RxVoid" />
+    <Using Include="ReactiveUI.Primitives.LinqExtensions" Static="true" />
+    <Using Include="ReactiveUI.Primitives.ConnectableSignalRxNameExtensions" Static="true" />
   </ItemGroup>
 
   <ItemGroup>

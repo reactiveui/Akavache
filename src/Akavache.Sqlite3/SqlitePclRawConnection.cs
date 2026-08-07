@@ -6,9 +6,17 @@ using SQLitePCL;
 using static SQLitePCL.raw;
 
 #if ENCRYPTED
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.EncryptedSqlite3;
+#else
 namespace Akavache.EncryptedSqlite3;
+#endif
+#else
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Sqlite3;
 #else
 namespace Akavache.Sqlite3;
+#endif
 #endif
 
 /// <summary>
@@ -391,11 +399,11 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     internal bool InTransaction { get; set; }
 
     /// <inheritdoc/>
-    public IObservable<Unit> CreateSchema() =>
+    public IObservable<RxVoid> CreateSchema() =>
         Queue.Enqueue(static conn =>
         {
             conn.ExecuteNonQuery(SchemaSql);
-            return Unit.Default;
+            return RxVoid.Default;
         });
 
     /// <inheritdoc/>
@@ -548,7 +556,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
-    public IObservable<Unit> Upsert(IReadOnlyList<CacheEntry> entries)
+    public IObservable<RxVoid> Upsert(IReadOnlyList<CacheEntry> entries)
     {
         ArgumentExceptionHelper.ThrowIfNull(entries);
         return Queue.Enqueue(
@@ -556,7 +564,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             {
                 if (entries.Count == 0)
                 {
-                    return Unit.Default;
+                    return RxVoid.Default;
                 }
 
                 RunInOwnedTransaction(conn, () =>
@@ -599,13 +607,13 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
                     }
                 });
 
-                return Unit.Default;
+                return RxVoid.Default;
             },
             coalescable: true);
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(IReadOnlyList<string> keys, string? typeFullName)
+    public IObservable<RxVoid> Invalidate(IReadOnlyList<string> keys, string? typeFullName)
     {
         ArgumentExceptionHelper.ThrowIfNull(keys);
         return Queue.Enqueue(
@@ -613,7 +621,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             {
                 if (keys.Count == 0)
                 {
-                    return Unit.Default;
+                    return RxVoid.Default;
                 }
 
                 RunInOwnedTransaction(conn, () =>
@@ -636,13 +644,13 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
                     }
                 });
 
-                return Unit.Default;
+                return RxVoid.Default;
             },
             coalescable: true);
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> InvalidateAll(string? typeFullName) =>
+    public IObservable<RxVoid> InvalidateAll(string? typeFullName) =>
         Queue.Enqueue(
             conn =>
             {
@@ -660,7 +668,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
                 try
                 {
                     StepAndCheck(statement, conn.Db, "invalidate-all step");
-                    return Unit.Default;
+                    return RxVoid.Default;
                 }
                 finally
                 {
@@ -671,7 +679,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             coalescable: true);
 
     /// <inheritdoc/>
-    public IObservable<Unit> SetExpiry(string key, string? typeFullName, DateTimeOffset? expiresAt) =>
+    public IObservable<RxVoid> SetExpiry(string key, string? typeFullName, DateTimeOffset? expiresAt) =>
         Queue.Enqueue(conn =>
         {
             sqlite3_stmt statement;
@@ -692,7 +700,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             try
             {
                 StepAndCheck(statement, conn.Db, "set-expiry step");
-                return Unit.Default;
+                return RxVoid.Default;
             }
             finally
             {
@@ -702,7 +710,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
-    public IObservable<Unit> VacuumExpired(DateTimeOffset now) =>
+    public IObservable<RxVoid> VacuumExpired(DateTimeOffset now) =>
         Queue.Enqueue(conn =>
         {
             var statement = conn.EnsurePrepared(ref conn._stmtVacuumExpired, SqlVacuumExpired);
@@ -710,7 +718,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             try
             {
                 StepAndCheck(statement, conn.Db, "vacuum-expired step");
-                return Unit.Default;
+                return RxVoid.Default;
             }
             finally
             {
@@ -720,7 +728,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
-    public IObservable<Unit> Checkpoint(CheckpointMode mode) =>
+    public IObservable<RxVoid> Checkpoint(CheckpointMode mode) =>
         Queue.Enqueue(conn =>
         {
             var pragmaCommand = mode switch
@@ -730,18 +738,18 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
                 _ => "PRAGMA wal_checkpoint(PASSIVE)",
             };
             conn.ExecuteNonQuery(pragmaCommand);
-            return Unit.Default;
+            return RxVoid.Default;
         });
 
     /// <inheritdoc/>
-    public IObservable<Unit> Compact() =>
+    public IObservable<RxVoid> Compact() =>
         Queue.Enqueue(static conn =>
         {
             // VACUUM requires all prepared statements to be finalized first.
             // They will be automatically re-prepared during the next operation.
             conn.DisposeStatements();
             conn.ExecuteNonQuery("VACUUM");
-            return Unit.Default;
+            return RxVoid.Default;
         });
 
     /// <inheritdoc/>

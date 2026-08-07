@@ -1,4 +1,85 @@
 <Project>
+  <!--
+    The lean/.Reactive seam.
+
+    Every Akavache assembly ships twice from one set of source files. Akavache.X compiles against
+    ReactiveUI.Primitives, so its public API speaks RxVoid and ISequencer and it carries no
+    System.Reactive at runtime. Akavache.X.Reactive links the same .cs files with REACTIVE_SHIM
+    defined and compiles them against ReactiveUI.Primitives.Reactive — the same Primitives source
+    recompiled with RxVoid bound to System.Reactive.Unit and ISequencer to IScheduler — so its
+    public API is the System.Reactive one.
+
+    The source names Primitives types directly (RxVoid, ISequencer, Signal, and the
+    ReactiveUI.Primitives.Advanced sinks). Only the namespaces differ between leaves, and the
+    aliases below supply them, so no .cs file carries a per-leaf using. Files that declare a
+    namespace shift it under REACTIVE_SHIM, so the two assemblies never collide in a consumer
+    that references both.
+
+    RxReactiveSeam also matches '<leaf>.Reactive_<hash>_wpftmp', the WPF XAML markup-compile temp
+    project, which does not itself end with 'Reactive'. No other Akavache name contains 'Reactive'.
+  -->
+  <PropertyGroup>
+    <RxReactiveSeam Condition="$(MSBuildProjectName.EndsWith('Reactive')) or $(MSBuildProjectName.Contains('Reactive_'))">true</RxReactiveSeam>
+    <!-- Projects that build against a published Akavache rather than this source tree (the v10/v11
+         compatibility writers and the v10 comparison benchmark) set this to false: they resolve
+         System.Reactive through those packages and must not get the seam's imports. -->
+    <UsesAkavacheSeam Condition="'$(UsesAkavacheSeam)' == ''">true</UsesAkavacheSeam>
+  </PropertyGroup>
+
+  <!-- Disposables are the same package and namespace on both sides of the seam. -->
+  <ItemGroup Condition="'$(UsesAkavacheSeam)' == 'true'">
+    <Using Include="ReactiveUI.Primitives.Disposables" />
+  </ItemGroup>
+
+  <!-- Seam-exempt projects consume a published Akavache and so speak System.Reactive throughout. -->
+  <ItemGroup Condition="'$(UsesAkavacheSeam)' != 'true'">
+    <Using Include="System.Reactive" />
+    <Using Include="System.Reactive.Concurrency" />
+    <Using Include="System.Reactive.Disposables" />
+    <Using Include="System.Reactive.Linq" />
+    <Using Include="System.Reactive.Subjects" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UsesAkavacheSeam)' == 'true' and '$(RxReactiveSeam)' != 'true'">
+    <Using Include="ReactiveUI.Primitives" />
+    <Using Include="ReactiveUI.Primitives.Advanced" />
+    <Using Include="ReactiveUI.Primitives.Concurrency" />
+    <Using Include="ReactiveUI.Primitives.Core" />
+    <Using Include="ReactiveUI.Primitives.Signals" />
+    <Using Include="ReactiveUI.Primitives.Extensions" />
+  </ItemGroup>
+
+  <!-- Primitives only shifts the types carrying RxVoid/ISequencer in their signatures, so the
+       .Reactive leaf imports both the shifted namespaces and the seam-free Core ones. -->
+  <PropertyGroup Condition="'$(RxReactiveSeam)' == 'true'">
+    <DefineConstants>$(DefineConstants);REACTIVE_SHIM</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UsesAkavacheSeam)' == 'true' and '$(RxReactiveSeam)' == 'true'">
+    <!-- Deliberately no bare ReactiveUI.Primitives import here. Its SubscribeExtensions would tie
+         with System.Reactive's ObservableExtensions.Subscribe on every call site; each leaf should
+         bind Subscribe to its own stack. The types the source needs from that namespace all have a
+         shifted counterpart under ReactiveUI.Primitives.Reactive. -->
+    <Using Include="ReactiveUI.Primitives.Advanced" />
+    <Using Include="ReactiveUI.Primitives.Core" />
+    <Using Include="ReactiveUI.Primitives.Signals" />
+    <Using Include="ReactiveUI.Primitives.Reactive" />
+    <Using Include="ReactiveUI.Primitives.Reactive.Advanced" />
+    <Using Include="ReactiveUI.Primitives.Reactive.Concurrency" />
+    <Using Include="ReactiveUI.Primitives.Reactive.Core" />
+    <Using Include="ReactiveUI.Primitives.Reactive.Signals" />
+    <Using Include="ReactiveUI.Primitives.Extensions.Reactive" />
+    <!-- Primitives.Reactive maps the whole scheduling contract onto System.Reactive's, so the
+         sequencer names the source uses have no counterpart there and bind straight across. -->
+    <Using Include="System.Reactive.Concurrency" />
+    <Using Include="System.Reactive.Unit" Alias="RxVoid" />
+    <Using Include="System.Reactive.Concurrency.IScheduler" Alias="ISequencer" />
+    <Using Include="System.Reactive.Concurrency.Scheduler" Alias="Sequencer" />
+    <Using Include="System.Reactive.Concurrency.TaskPoolScheduler" Alias="TaskPoolSequencer" />
+    <Using Include="System.Reactive.Concurrency.ThreadPoolScheduler" Alias="ThreadPoolSequencer" />
+    <Using Include="System.Reactive.Concurrency.ImmediateScheduler" Alias="ImmediateSequencer" />
+    <Using Include="System.Reactive.Concurrency.CurrentThreadScheduler" Alias="CurrentThreadSequencer" />
+  </ItemGroup>
+
   <PropertyGroup>
     <Copyright>Copyright (c) ReactiveUI and Contributors</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -84,10 +165,6 @@
     <!-- System.Linq is not implicitly imported: LINQ on a cache hot path should be a deliberate,
          visible `using`, not something that compiles because the SDK imported it for you. -->
     <Using Remove="System.Linq" />
-    <Using Include="System.Reactive"/>
-    <Using Include="System.Reactive.Concurrency"/>
-    <Using Include="System.Reactive.Linq"/>
-    <Using Include="System.Reactive.Subjects"/>
     <Using Include="System.Text"/>
   </ItemGroup>
 
@@ -109,8 +186,11 @@
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <Using Include="System.ArgumentNullException" Alias="ArgumentExceptionHelper" />
   </ItemGroup>
-  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) and '$(RxReactiveSeam)' != 'true'">
     <Using Include="Akavache.Helpers.ArgumentValidation" Alias="ArgumentExceptionHelper" />
+  </ItemGroup>
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) and '$(RxReactiveSeam)' == 'true'">
+    <Using Include="Akavache.Reactive.Helpers.ArgumentValidation" Alias="ArgumentExceptionHelper" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
@@ -138,7 +218,9 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="TUnit" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
-    <PackageReference Include="ReactiveUI.Testing" />
+    <!-- Splat directly, not via ReactiveUI.Testing: that package pulls ReactiveUI.Core, which depends
+         on the lean ReactiveUI.Primitives unconditionally and would make Signal ambiguous in a .Reactive twin. -->
+    <PackageReference Include="Splat" />
   </ItemGroup>
 
   <!-- MinVer (versioning) — replaces Nerdbank.GitVersioning. Floor at 12.1
@@ -161,20 +243,23 @@
     <PackageReference Include="Blazor.Common.Analyzers" PrivateAssets="All" />
   </ItemGroup>
 
+  <!-- Public-API tracking (RS0016 / RS0017 / RS0037): a per-TFM Shipped/Unshipped pair under
+       <Project>/PublicAPI/<tfm>/. Both leaves of the seam are tracked, so a change to the shared
+       source shows up as a diff on the lean and the .Reactive surface alike. Regenerate with
+       tools/generate-publicapi.sh (or the .ps1 sibling on Windows, which reaches the Apple TFMs). -->
   <PropertyGroup>
-    <!-- Public-API tracking: one always-current PublicAPI.txt per TFM. Regenerate by running
-         `dotnet format analyzers` over the project for a single target framework, restricted to the
-         PAS0001 and PAS0003 diagnostics at severity info. -->
     <TrackPublicApi Condition="'$(TrackPublicApi)' == ''">true</TrackPublicApi>
     <TrackPublicApi Condition="'$(IsTestProject)' == 'true'">false</TrackPublicApi>
+    <!-- Nothing under these trees ships, so none of it has a public surface worth pinning. -->
+    <TrackPublicApi Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)benchmarks$([System.IO.Path]::DirectorySeparatorChar)'))">false</TrackPublicApi>
+    <TrackPublicApi Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)samples$([System.IO.Path]::DirectorySeparatorChar)'))">false</TrackPublicApi>
+    <TrackPublicApi Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)compat$([System.IO.Path]::DirectorySeparatorChar)'))">false</TrackPublicApi>
     <!-- The WPF markup pass generates '<Project>_<hash>_wpftmp.csproj' in the real project's
          directory, so it resolves the same baseline path and would overwrite it. -->
     <TrackPublicApi Condition="$(MSBuildProjectName.EndsWith('_wpftmp'))">false</TrackPublicApi>
-    <EnablePublicApiBaseline>$(TrackPublicApi)</EnablePublicApiBaseline>
   </PropertyGroup>
-  <!-- The package's own targets resolve PublicAPI/$(TargetFramework)/PublicAPI.txt per inner build
-       and add it to @(AdditionalFiles), so multi-targeting needs no wiring here. -->
   <ItemGroup Condition="'$(TrackPublicApi)' == 'true'">
-    <PackageReference Include="PublicApiSharp.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)\PublicAPI\$(TargetFramework)\PublicAPI.*.txt" />
   </ItemGroup>
 </Project>

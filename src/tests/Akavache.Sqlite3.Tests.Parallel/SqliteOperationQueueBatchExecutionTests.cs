@@ -4,10 +4,11 @@
 
 using System.Collections.Concurrent;
 
-using Akavache.Sqlite3;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests for the batch-execution statics on <see cref="SqliteOperationQueue"/> —

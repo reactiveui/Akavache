@@ -2,12 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.NewtonsoftJson;
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Focused serialization compatibility tests to ensure proper cross-serializer compatibility.</summary>
 [Category("Akavache")]
@@ -284,14 +283,14 @@ public class SerializationCompatibilityTests
             TestObject testObject = new() { Name = "TestUser", Value = PersistedValue, Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc) };
 
             // Test storage phase
-            using (SqliteBlobCache writeCache = new(dbPath, serializer, ImmediateScheduler.Instance))
+            using (SqliteBlobCache writeCache = new(dbPath, serializer, ImmediateSequencer.Instance))
             {
                 writeCache.InsertObject("test_key", testObject).WaitForCompletion();
                 writeCache.Flush().WaitForCompletion(); // Ensure data is written to disk
             }
 
             // Test retrieval phase with new cache instance
-            using SqliteBlobCache readCache = new(dbPath, serializer, ImmediateScheduler.Instance);
+            using SqliteBlobCache readCache = new(dbPath, serializer, ImmediateSequencer.Instance);
             var retrievedObject = readCache.GetObject<TestObject>("test_key").WaitForValue();
 
             await Assert.That(retrievedObject).IsNotNull();
@@ -336,7 +335,7 @@ public class SerializationCompatibilityTests
             {
                 var writeSerializer = (ISerializer)Activator.CreateInstance(writeSerializerType)!;
 
-                using SqliteBlobCache writeCache = new(dbPath, writeSerializer, ImmediateScheduler.Instance);
+                using SqliteBlobCache writeCache = new(dbPath, writeSerializer, ImmediateSequencer.Instance);
                 writeCache.InsertObject("cross_test", testObject).WaitForCompletion();
                 writeCache.Flush().WaitForCompletion();
             }
@@ -345,7 +344,7 @@ public class SerializationCompatibilityTests
             {
                 var readSerializer = (ISerializer)Activator.CreateInstance(readSerializerType)!;
 
-                using SqliteBlobCache readCache = new(dbPath, readSerializer, ImmediateScheduler.Instance);
+                using SqliteBlobCache readCache = new(dbPath, readSerializer, ImmediateSequencer.Instance);
 
                 try
                 {
@@ -396,7 +395,7 @@ public class SerializationCompatibilityTests
             TestObject testObject = new() { Name = "SimpleTest", Value = SimpleValue, Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc) };
 
             // Test in single cache instance to see if issue is with multiple instances
-            using SqliteBlobCache cache = new(dbPath, serializer, ImmediateScheduler.Instance);
+            using SqliteBlobCache cache = new(dbPath, serializer, ImmediateSequencer.Instance);
 
             // Insert
             cache.InsertObject("simple_key", testObject).WaitForCompletion();
@@ -449,7 +448,7 @@ public class SerializationCompatibilityTests
 
             // Phase 1: Store data with explicit disposal and verification
             {
-                SqliteBlobCache cache1 = new(dbPath, serializer, ImmediateScheduler.Instance);
+                SqliteBlobCache cache1 = new(dbPath, serializer, ImmediateSequencer.Instance);
                 cache1.InsertObject("debug_key", testObject).WaitForCompletion();
                 cache1.Flush().WaitForCompletion();
 
@@ -466,7 +465,7 @@ public class SerializationCompatibilityTests
 
             // Phase 2: Try to read with a new instance
             {
-                SqliteBlobCache cache2 = new(dbPath, serializer, ImmediateScheduler.Instance);
+                SqliteBlobCache cache2 = new(dbPath, serializer, ImmediateSequencer.Instance);
 
                 // Check if file exists
                 await Assert.That(File.Exists(dbPath)).IsTrue();

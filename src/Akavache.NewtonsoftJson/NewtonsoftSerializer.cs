@@ -3,11 +3,14 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Akavache.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.NewtonsoftJson;
+#else
 namespace Akavache.NewtonsoftJson;
+#endif
 
 /// <summary>
 /// A unified serializer using Newtonsoft.Json with automatic format detection.

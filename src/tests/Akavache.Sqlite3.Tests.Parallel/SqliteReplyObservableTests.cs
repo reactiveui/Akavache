@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for <see cref="SqliteReplyObservable{T}"/> covering idempotent set, late subscribe, replay, and single-subscriber enforcement.</summary>
 [Category("Akavache")]
@@ -25,7 +27,7 @@ public class SqliteReplyObservableTests
         int? received = null;
         var completed = false;
         _ = sut.Subscribe(
-            System.Reactive.Observer.Create<int>(
+            Witness.Create<int>(
                 v => received = v,
                 static _ => { },
                 () => completed = true));
@@ -48,7 +50,7 @@ public class SqliteReplyObservableTests
 
         Exception? caught = null;
         _ = sut.Subscribe(
-            System.Reactive.Observer.Create<int>(
+            Witness.Create<int>(
                 static _ => { },
                 ex => caught = ex,
                 static () => { }));
@@ -67,7 +69,7 @@ public class SqliteReplyObservableTests
         string? received = null;
         var completed = false;
         _ = sut.Subscribe(
-            System.Reactive.Observer.Create<string>(
+            Witness.Create<string>(
                 v => received = v,
                 static _ => { },
                 () => completed = true));
@@ -87,7 +89,7 @@ public class SqliteReplyObservableTests
 
         Exception? caught = null;
         _ = sut.Subscribe(
-            System.Reactive.Observer.Create<int>(
+            Witness.Create<int>(
                 static _ => { },
                 ex => caught = ex,
                 static () => { }));
@@ -102,7 +104,7 @@ public class SqliteReplyObservableTests
     {
         var sut = new SqliteReplyObservable<int>();
 
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             static _ => { },
             static () => { }));
@@ -110,7 +112,7 @@ public class SqliteReplyObservableTests
         await Assert.ThrowsAsync<InvalidOperationException>(
             () =>
             {
-                _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+                _ = sut.Subscribe(Witness.Create<int>(
                     static _ => { },
                     static _ => { },
                     static () => { }));
@@ -127,7 +129,7 @@ public class SqliteReplyObservableTests
         var op = new SqliteOperation<int>(static _ => 1, reply, coalescable: false);
 
         Exception? caught = null;
-        _ = reply.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = reply.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -155,7 +157,7 @@ public class SqliteReplyObservableTests
 
         int? received = null;
         var completed = false;
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             v => received = v,
             static _ => { },
             () => completed = true));
@@ -180,7 +182,7 @@ public class SqliteReplyObservableTests
         sut.SetError(expected);
 
         Exception? caught = null;
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -204,7 +206,7 @@ public class SqliteReplyObservableTests
         sut.SetError(second);
 
         Exception? caught = null;
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -229,7 +231,7 @@ public class SqliteReplyObservableTests
 
         int? received = null;
         var completed = false;
-        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+        _ = sut.Subscribe(Witness.Create<int>(
             v => received = v,
             static _ => { },
             () => completed = true));
@@ -255,7 +257,7 @@ public class SqliteReplyObservableTests
         const int ReplayedValue = 42;
         int? received = null;
         var completed = false;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             v => received = v,
             static _ => { },
             () => completed = true);
@@ -272,7 +274,7 @@ public class SqliteReplyObservableTests
     internal async Task ReplayTo_StateError_ReplaysError()
     {
         Exception? caught = null;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { });
@@ -292,7 +294,7 @@ public class SqliteReplyObservableTests
         const int RejectedValue = 42;
         var state = SqliteReplyObservable<int>.StateSuccess;
         int value = default;
-        IObserver<int>? observer = System.Reactive.Observer.Create<int>(static _ => { });
+        IObserver<int>? observer = Witness.Create<int>(static _ => { });
 
         var result = SqliteReplyObservable<int>.TryTransitionToSuccess(
             ref state,
@@ -312,7 +314,7 @@ public class SqliteReplyObservableTests
         const int TransitionedValue = 42;
         var state = SqliteReplyObservable<int>.StatePending;
         int value = default;
-        IObserver<int>? observer = System.Reactive.Observer.Create<int>(static _ => { });
+        IObserver<int>? observer = Witness.Create<int>(static _ => { });
 
         var result = SqliteReplyObservable<int>.TryTransitionToSuccess(
             ref state,
@@ -333,7 +335,7 @@ public class SqliteReplyObservableTests
     {
         var state = SqliteReplyObservable<int>.StateError;
         Exception? error = null;
-        IObserver<int>? observer = System.Reactive.Observer.Create<int>(static _ => { });
+        IObserver<int>? observer = Witness.Create<int>(static _ => { });
 
         var result = SqliteReplyObservable<int>.TryTransitionToError(
             ref state,
@@ -352,7 +354,7 @@ public class SqliteReplyObservableTests
     {
         var state = SqliteReplyObservable<int>.StatePending;
         Exception? error = null;
-        IObserver<int>? observer = System.Reactive.Observer.Create<int>(static _ => { });
+        IObserver<int>? observer = Witness.Create<int>(static _ => { });
         var expected = new InvalidOperationException("boom");
 
         var result = SqliteReplyObservable<int>.TryTransitionToError(
@@ -377,7 +379,7 @@ public class SqliteReplyObservableTests
         int value = default;
         Exception? error = null;
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
 
         await Assert.That(() => SqliteReplyObservable<int>.CaptureAndSubscribe(
             ref subscribed,
@@ -399,7 +401,7 @@ public class SqliteReplyObservableTests
         int value = default;
         Exception? error = null;
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
 
         var (s, v, e) = SqliteReplyObservable<int>.CaptureAndSubscribe(
             ref subscribed,
@@ -425,7 +427,7 @@ public class SqliteReplyObservableTests
         int value = TerminalValue;
         Exception? error = null;
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
 
         var (s, v, e) = SqliteReplyObservable<int>.CaptureAndSubscribe(
             ref subscribed,
@@ -458,7 +460,7 @@ public class SqliteReplyObservableTests
         const int DeliveredValue = 77;
         int? received = null;
         var completed = false;
-        var observer = System.Reactive.Observer.Create<int>(
+        var observer = Witness.Create<int>(
             v => received = v,
             static _ => { },
             () => completed = true);

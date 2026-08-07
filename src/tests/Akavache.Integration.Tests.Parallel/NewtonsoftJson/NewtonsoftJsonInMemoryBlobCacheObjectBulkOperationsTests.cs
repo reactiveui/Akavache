@@ -2,14 +2,16 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Tests.TestBases;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for object bulk operations associated with the <see cref="InMemoryBlobCache"/> class.</summary>
 [InheritsTests]
 public class NewtonsoftJsonInMemoryBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTestBase
 {
     /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) => new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) => new InMemoryBlobCache(ImmediateSequencer.Instance, serializer);
 }

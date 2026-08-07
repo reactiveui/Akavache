@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests.Mocks;
+#else
 namespace Akavache.Tests.Mocks;
+#endif
 
 /// <summary>Test object for doing DateTimeOffset tests.</summary>
 public class TestObjectDateTimeOffset

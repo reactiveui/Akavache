@@ -2,7 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core.Observables;
+#else
 namespace Akavache.Core.Observables;
+#endif
 
 /// <summary>
 /// Fused <c>Where(predicate).Select(selector)</c> operator. Replaces the two-operator

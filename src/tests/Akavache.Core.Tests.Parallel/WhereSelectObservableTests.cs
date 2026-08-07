@@ -2,9 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core.Observables;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for <see cref="WhereSelectObservable{TIn, TOut}"/> covering OnError and OnCompleted pass-through paths.</summary>
 [Category("Akavache")]
@@ -16,7 +18,7 @@ public class WhereSelectObservableTests
     internal async Task OnError_FromSource_IsPassedThrough()
     {
         var expected = new InvalidOperationException("source-error");
-        var source = Observable.Throw<int>(expected);
+        var source = Signal.Throw<int>(expected);
 
         Exception? caught = null;
         var completed = false;
@@ -26,7 +28,7 @@ public class WhereSelectObservableTests
             static _ => true,
             static x => x.ToString());
 
-        _ = observable.Subscribe(Observer.Create<string>(
+        _ = observable.Subscribe(Witness.Create<string>(
             static _ => { },
             ex => caught = ex,
             () => completed = true));
@@ -40,7 +42,7 @@ public class WhereSelectObservableTests
     [Test]
     internal async Task OnCompleted_FromSource_IsPassedThrough()
     {
-        var source = Observable.Empty<int>();
+        var source = Signal.Empty<int>();
 
         var completed = false;
 
@@ -49,7 +51,7 @@ public class WhereSelectObservableTests
             static _ => true,
             static x => x.ToString());
 
-        _ = observable.Subscribe(Observer.Create<string>(
+        _ = observable.Subscribe(Witness.Create<string>(
             static _ => { },
             static _ => { },
             () => completed = true));
@@ -62,7 +64,7 @@ public class WhereSelectObservableTests
     [Test]
     internal async Task OnNext_PredicateThrows_RoutesToOnError()
     {
-        var source = Observable.Return(1);
+        var source = Signal.Return(1);
 
         Exception? caught = null;
 
@@ -71,7 +73,7 @@ public class WhereSelectObservableTests
             static _ => throw new InvalidOperationException("pred-boom"),
             static x => x);
 
-        _ = observable.Subscribe(Observer.Create<int>(
+        _ = observable.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));
@@ -85,7 +87,7 @@ public class WhereSelectObservableTests
     [Test]
     internal async Task OnNext_SelectorThrows_RoutesToOnError()
     {
-        var source = Observable.Return(1);
+        var source = Signal.Return(1);
 
         Exception? caught = null;
 
@@ -94,7 +96,7 @@ public class WhereSelectObservableTests
             static _ => true,
             static _ => throw new InvalidOperationException("sel-boom"));
 
-        _ = observable.Subscribe(Observer.Create<int>(
+        _ = observable.Subscribe(Witness.Create<int>(
             static _ => { },
             ex => caught = ex,
             static () => { }));

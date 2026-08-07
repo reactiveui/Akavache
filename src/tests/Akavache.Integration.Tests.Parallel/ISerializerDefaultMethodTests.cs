@@ -5,9 +5,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
-using Akavache.SystemTextJson;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>
 /// Tests for the <see cref="SerializerExtensions"/> extension methods that expose

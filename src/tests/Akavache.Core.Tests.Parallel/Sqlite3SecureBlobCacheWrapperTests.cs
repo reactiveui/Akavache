@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-using Akavache.SystemTextJson;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper.</summary>
 [Category("Akavache")]
@@ -322,7 +323,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
     [Test]
     public async Task DisposeShouldDisposeInner()
     {
-        InMemoryBlobCache inner = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache inner = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var wrapper = new SecureBlobCacheWrapper(inner);
 
         wrapper.Dispose();
@@ -334,7 +335,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
     [Test]
     public async Task DoubleDisposeShouldNotThrow()
     {
-        InMemoryBlobCache inner = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache inner = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var wrapper = new SecureBlobCacheWrapper(inner);
 
         wrapper.Dispose();
@@ -346,122 +347,122 @@ public class Sqlite3SecureBlobCacheWrapperTests
     /// <summary>Creates a fresh <see cref="SecureBlobCacheWrapper"/> over an in-memory backing cache.</summary>
     /// <returns>A new wrapper instance.</returns>
     private static SecureBlobCacheWrapper CreateWrapper() =>
-        new(new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
+        new(new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
     /// <summary>Fake IBlobCache with null Serializer to test the null guard in SecureBlobCacheWrapper.</summary>
     private sealed class FakeNullSerializerBlobCache : IBlobCache
     {
         /// <summary>Shared already-completed result: every mutating member of this fake does nothing.</summary>
-        private static readonly IObservable<Unit> NoOpResult = Observable.Return(Unit.Default);
+        private static readonly IObservable<RxVoid> NoOpResult = Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
         public DateTimeKind? ForcedDateTimeKind { get; set; }
 
         /// <inheritdoc/>
-        public IScheduler Scheduler => ImmediateScheduler.Instance;
+        public ISequencer Scheduler => ImmediateSequencer.Instance;
 
         /// <inheritdoc/>
         public ISerializer Serializer => null!;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
             Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration) => NoOpResult;
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data) =>
             Insert(key, data, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) => NoOpResult;
+        public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
             Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
+        public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+        public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
             Insert(key, data, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
+        public IObservable<RxVoid> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<byte[]?> Get(string key) => Observable.Return<byte[]?>(null);
+        public IObservable<byte[]?> Get(string key) => Signal.Return<byte[]?>(null);
 
         /// <inheritdoc/>
-        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) => Observable.Empty<KeyValuePair<string, byte[]>>();
+        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) => Signal.Empty<KeyValuePair<string, byte[]>>();
 
         /// <inheritdoc/>
-        public IObservable<byte[]?> Get(string key, Type type) => Observable.Return<byte[]?>(null);
+        public IObservable<byte[]?> Get(string key, Type type) => Signal.Return<byte[]?>(null);
 
         /// <inheritdoc/>
-        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) => Observable.Empty<KeyValuePair<string, byte[]>>();
+        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) => Signal.Empty<KeyValuePair<string, byte[]>>();
 
         /// <inheritdoc/>
-        public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) => Observable.Empty<KeyValuePair<string, byte[]>>();
+        public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) => Signal.Empty<KeyValuePair<string, byte[]>>();
 
         /// <inheritdoc/>
-        public IObservable<string> GetAllKeys() => Observable.Empty<string>();
+        public IObservable<string> GetAllKeys() => Signal.Empty<string>();
 
         /// <inheritdoc/>
-        public IObservable<string> GetAllKeys(Type type) => Observable.Empty<string>();
+        public IObservable<string> GetAllKeys(Type type) => Signal.Empty<string>();
 
         /// <inheritdoc/>
-        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) => Observable.Empty<(string Key, DateTimeOffset? Time)>();
+        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) => Signal.Empty<(string Key, DateTimeOffset? Time)>();
 
         /// <inheritdoc/>
-        public IObservable<DateTimeOffset?> GetCreatedAt(string key) => Observable.Return<DateTimeOffset?>(null);
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key) => Signal.Return<DateTimeOffset?>(null);
 
         /// <inheritdoc/>
-        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => Observable.Empty<(string Key, DateTimeOffset? Time)>();
+        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => Signal.Empty<(string Key, DateTimeOffset? Time)>();
 
         /// <inheritdoc/>
-        public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => Observable.Return<DateTimeOffset?>(null);
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => Signal.Return<DateTimeOffset?>(null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush() => NoOpResult;
+        public IObservable<RxVoid> Flush() => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush(Type type) => NoOpResult;
+        public IObservable<RxVoid> Flush(Type type) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key) => NoOpResult;
+        public IObservable<RxVoid> Invalidate(string key) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key, Type type) => NoOpResult;
+        public IObservable<RxVoid> Invalidate(string key, Type type) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => NoOpResult;
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => NoOpResult;
+        public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll() => NoOpResult;
+        public IObservable<RxVoid> InvalidateAll() => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll(Type type) => NoOpResult;
+        public IObservable<RxVoid> InvalidateAll(Type type) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Vacuum() => NoOpResult;
+        public IObservable<RxVoid> Vacuum() => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => NoOpResult;
+        public IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
+        public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => NoOpResult;
+        public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
+        public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
         public void Dispose()

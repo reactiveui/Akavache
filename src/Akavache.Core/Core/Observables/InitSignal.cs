@@ -2,12 +2,16 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Core.Observables;
+#else
 namespace Akavache.Core.Observables;
+#endif
 
 /// <summary>
 /// One-shot "initialization complete" latch used as the gate in front of every hot-path
 /// cache operation in <c>Akavache.Sqlite3.SqliteBlobCache</c>. Semantically similar to
-/// <see cref="System.Reactive.Subjects.AsyncSubject{T}"/> but exposes a synchronous
+/// <see cref="AsyncSignal{T}"/> but exposes a synchronous
 /// <see cref="IsReady"/> probe so call sites can fast-path past the gate without
 /// allocating any Rx operator state once initialization has fired — the common case
 /// after the first couple of operations on a newly-constructed cache.
@@ -24,7 +28,7 @@ namespace Akavache.Core.Observables;
 /// Contract: <see cref="Complete"/> / <see cref="Fail"/> are idempotent and may be
 /// called at most once each — the first call wins; subsequent calls are no-ops. The
 /// error path poisons the signal permanently so every subsequent <see cref="Gate{T}"/>
-/// call short-circuits to <see cref="Observable.Throw{TResult}(Exception)"/>
+/// call short-circuits to <see cref="Signal.Throw{T}(Exception)"/>
 /// with the captured exception.
 /// </para>
 /// </remarks>
@@ -36,7 +40,7 @@ internal sealed class InitSignal
     /// <summary>Completed successfully: <see cref="Gate{T}"/> fast-paths to the factory.</summary>
     private const int StateReady = 1;
 
-    /// <summary>Completed with error: <see cref="Gate{T}"/> fast-paths to <see cref="Observable.Throw{TResult}(Exception)"/>.</summary>
+    /// <summary>Completed with error: <see cref="Gate{T}"/> fast-paths to <see cref="Signal.Throw{T}(Exception)"/>.</summary>
     private const int StateFailed = 2;
 
     /// <summary>
@@ -95,7 +99,7 @@ internal sealed class InitSignal
     /// <summary>
     /// Signals failure. Any pending gated subscriptions receive <see cref="IObserver{T}.OnError"/>
     /// with <paramref name="error"/>, and every subsequent <see cref="Gate{T}"/> call
-    /// short-circuits to <see cref="Observable.Throw{TResult}(Exception)"/>.
+    /// short-circuits to <see cref="Signal.Throw{T}(Exception)"/>.
     /// Idempotent — a second call (or a call after <see cref="Complete"/>) is a no-op.
     /// </summary>
     /// <param name="error">The terminal error to publish.</param>
@@ -152,7 +156,7 @@ internal sealed class InitSignal
             return factory();
         }
 
-        return state == StateFailed ? Observable.Throw<T>(_error!) : new GatedByInitObservable<T>(this, factory);
+        return state == StateFailed ? new ImmediateThrowSignal<T>(_error!) : new GatedByInitObservable<T>(this, factory);
     }
 
     /// <summary>

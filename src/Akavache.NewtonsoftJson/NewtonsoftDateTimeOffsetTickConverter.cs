@@ -5,7 +5,11 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.NewtonsoftJson;
+#else
 namespace Akavache.NewtonsoftJson;
+#endif
 
 /// <summary>
 /// JSON converter for DateTimeOffset that preserves ticks and offset appropriately.

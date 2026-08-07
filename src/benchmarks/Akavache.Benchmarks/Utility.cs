@@ -2,8 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-
 namespace Akavache.Benchmarks;
 
 /// <summary> A set of utility helper methods for use throughout the benchmarks. </summary>
@@ -75,6 +73,6 @@ internal static class Utility
         di.Create();
 
         directoryPath = di.FullName;
-        return Disposable.Create(di.FullName, DeleteDirectory);
+        return Scope.Create(di.FullName, DeleteDirectory);
     }
 }

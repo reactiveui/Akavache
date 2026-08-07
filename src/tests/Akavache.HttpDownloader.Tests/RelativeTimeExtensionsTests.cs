@@ -2,10 +2,11 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>Tests for relative time extension methods.</summary>
 [Category("Akavache")]
@@ -44,7 +45,7 @@ public class RelativeTimeExtensionsTests
         SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
             // Use a longer expiration to avoid CI timing issues
             var expiration = TimeSpan.FromMinutes(ExpirationMinutes);
@@ -78,7 +79,7 @@ public class RelativeTimeExtensionsTests
         SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             var testObject = (Name: "Test", Value: SampleValue);
             var expiration = TimeSpan.FromMinutes(1);
             var beforeInsert = TimeProvider.System.GetLocalNow();
@@ -224,7 +225,7 @@ public class RelativeTimeExtensionsTests
         using (Utility.WithEmptyDirectory(out _))
         {
             SystemJsonSerializer serializer = new();
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             var expiration = TimeSpan.FromSeconds(seconds);
             var beforeInsert = TimeProvider.System.GetLocalNow();
 
@@ -252,7 +253,7 @@ public class RelativeTimeExtensionsTests
         SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             var expiration = TimeSpan.Zero;
 
             // Act - Zero timespan should set expiration to current time (immediate expiration)
@@ -275,7 +276,7 @@ public class RelativeTimeExtensionsTests
         SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+            InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
             var expiration = TimeSpan.FromSeconds(-1); // Past expiration
 
             // Act - Negative timespan should set expiration to past time
@@ -566,8 +567,8 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>Creates a fresh in-memory cache wired to <see cref="ImmediateScheduler"/>.</summary>
+    /// <summary>Creates a fresh in-memory cache wired to <see cref="ImmediateSequencer"/>.</summary>
     /// <returns>A new <see cref="InMemoryBlobCache"/>.</returns>
     private static InMemoryBlobCache CreateCache() =>
-        new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 }

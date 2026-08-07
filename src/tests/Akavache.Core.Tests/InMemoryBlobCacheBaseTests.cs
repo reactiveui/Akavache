@@ -2,12 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.SystemTextJson;
-using Akavache.Tests.Executors;
-using Akavache.Tests.Mocks;
 using Splat;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Tests;
+#else
 namespace Akavache.Tests;
+#endif
 
 /// <summary>
 /// Tests for <see cref="InMemoryBlobCacheBase"/> covering disposed-state error paths,
@@ -717,7 +718,7 @@ public class InMemoryBlobCacheBaseTests
     {
         using var cache = CreateCache();
         var result = cache.Flush().SubscribeGetValue();
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
     }
 
     /// <summary>Tests Flush(type) completes successfully.</summary>
@@ -727,7 +728,7 @@ public class InMemoryBlobCacheBaseTests
     {
         using var cache = CreateCache();
         var result = cache.Flush(typeof(UserObject)).SubscribeGetValue();
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
     }
 
     /// <summary>Tests Invalidate(key, type) removes the entry.</summary>
@@ -999,7 +1000,7 @@ public class InMemoryBlobCacheBaseTests
     /// <returns>A task.</returns>
     [Test]
     public async Task ConstructorShouldThrowOnNullSerializer() =>
-        await Assert.That(static () => new InMemoryBlobCache(ImmediateScheduler.Instance, null))
+        await Assert.That(static () => new InMemoryBlobCache(ImmediateSequencer.Instance, null))
             .Throws<ArgumentNullException>();
 
     /// <summary>Tests that the single-arg ISerializer constructor throws on null serializer.</summary>
@@ -1492,7 +1493,7 @@ public class InMemoryBlobCacheBaseTests
     /// <summary>Creates a new <see cref="InMemoryBlobCache"/> using the immediate scheduler and System.Text.Json serializer.</summary>
     /// <returns>A new in-memory blob cache instance.</returns>
     private static InMemoryBlobCache CreateCache() =>
-        new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
     /// <summary>
     /// A minimal <see cref="ISerializer"/> stub used to verify the

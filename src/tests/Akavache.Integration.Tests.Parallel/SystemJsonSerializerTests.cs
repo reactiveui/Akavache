@@ -3,10 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text.Json;
-using Akavache.SystemTextJson;
-using Akavache.Tests.Mocks;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for SystemJsonSerializer covering all paths including JsonTypeInfo AOT-safe overloads.</summary>
 [Category("Akavache")]

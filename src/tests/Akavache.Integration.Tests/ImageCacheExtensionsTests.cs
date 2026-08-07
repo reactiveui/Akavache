@@ -2,12 +2,13 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Drawing;
-using Akavache.SystemTextJson;
-using Akavache.Tests;
 using Splat;
 
+#if REACTIVE_SHIM
+namespace Akavache.Reactive.Integration.Tests;
+#else
 namespace Akavache.Integration.Tests;
+#endif
 
 /// <summary>Tests for Akavache.Drawing ImageCacheExtensions functionality.</summary>
 [Category("Akavache")]
@@ -162,7 +163,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         byte[]? nullFallback = null;
 
         // Act & Assert
@@ -198,7 +199,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         byte[]? nullFallback = null;
 
         // Act & Assert
@@ -275,7 +276,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         Func<string, bool>? nullPattern = null;
 
         // Act & Assert
@@ -289,7 +290,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         string[] emptyKeys = [];
 
         // Act
@@ -306,14 +307,14 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         string[] emptyUrls = [];
 
         // Act
         var result = cache.PreloadImagesFromUrls(emptyUrls).SubscribeGetValue();
 
         // Assert
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
     }
 
     /// <summary>Tests that LoadImages gracefully handles missing keys.</summary>
@@ -323,7 +324,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         string[] keys = ["missing_key1", "missing_key2"];
 
         // Act
@@ -340,7 +341,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Use URLs that will cause UriFormatException to test error handling
         string[] invalidUrls = ["not-a-url", "also/invalid"];
@@ -349,7 +350,7 @@ public partial class ImageCacheExtensionsTests
         try
         {
             var result = cache.PreloadImagesFromUrls(invalidUrls).SubscribeGetValue();
-            await Assert.That(result).IsEqualTo(Unit.Default);
+            await Assert.That(result).IsEqualTo(RxVoid.Default);
         }
         catch (Exception ex) when (ex is UriFormatException || ex.InnerException is UriFormatException)
         {
@@ -367,7 +368,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var fallbackBytes = new byte[128]; // Valid size fallback
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -397,7 +398,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Force immediate error to avoid any real network and ensure fallback path
         cache.SetHttpService(new ThrowingHttpService());
@@ -430,7 +431,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Act & Assert
         var error = cache.GetImageSize("nonexistent_image")
@@ -445,7 +446,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
@@ -483,7 +484,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert some test data
         byte[] firstImageBytes = [1, 2, 3];
@@ -514,7 +515,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert some test data
         byte[] retainedBytes = [1, 2, 3];
@@ -539,7 +540,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         string[] keys = ["missing1", "missing2"]; // Use missing keys to test error handling
 
         // Act
@@ -557,7 +558,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         string[] urls = ["http://invalid1.com", "http://invalid2.com"]; // Use invalid URLs to test error handling
         var expiration = TimeProvider.System.GetLocalNow().AddHours(1);
 
@@ -566,7 +567,7 @@ public partial class ImageCacheExtensionsTests
             .SubscribeGetValue();
 
         // Assert - Should complete gracefully
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
     }
 
     /// <summary>Tests that LoadImages returns key/bitmap pairs for successfully loaded images.</summary>
@@ -576,7 +577,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -619,7 +620,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         cache.SetHttpService(new SuccessHttpService());
 
         string[] urls = ["http://example.com/a.png", "http://example.com/b.png"];
@@ -629,7 +630,7 @@ public partial class ImageCacheExtensionsTests
             .SubscribeGetValue();
 
         // Assert
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
     }
 
     /// <summary>Tests that CreateAndCacheThumbnail loads the source image and saves a thumbnail.</summary>
@@ -639,7 +640,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -678,7 +679,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -710,7 +711,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
@@ -747,7 +748,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var fallbackBytes = new byte[128];
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -782,7 +783,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -820,7 +821,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         cache.SetHttpService(new SuccessHttpService());
 
         string[] urls = ["http://example.com/success_a.png", "http://example.com/success_b.png"];
@@ -830,7 +831,7 @@ public partial class ImageCacheExtensionsTests
             .SubscribeGetValue();
 
         // Assert
-        await Assert.That(result).IsEqualTo(Unit.Default);
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
     }
 
     /// <summary>Tests that CreateAndCacheThumbnail loads the source image and saves a thumbnail under the new key.</summary>
@@ -840,7 +841,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -880,7 +881,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -919,7 +920,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var imageData = new byte[128];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -953,7 +954,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var imageData = new byte[128];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -986,7 +987,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var fallbackBytes = new byte[128];
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -1017,7 +1018,7 @@ public partial class ImageCacheExtensionsTests
     {
         // Arrange
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var fallbackBytes = new byte[128];
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -1158,7 +1159,7 @@ public partial class ImageCacheExtensionsTests
     public async Task LoadImagesAtWidthShouldDecodeEveryKeyAtNativeHeight()
     {
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var imageData = CreateDecodableImageBytes();
 
         cache.Insert(FirstWidthOnlyImageKey, imageData).SubscribeAndComplete();
@@ -1197,7 +1198,7 @@ public partial class ImageCacheExtensionsTests
     public async Task LoadImageWithFallbackAtWidthShouldDecodeFallbackAtNativeHeight()
     {
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var fallbackBytes = CreateFallbackImageBytes();
 
         var originalLoader = GetCurrentBitmapLoader();
@@ -1236,7 +1237,7 @@ public partial class ImageCacheExtensionsTests
     {
         const string url = "http://example.com/fallback_fetch_always.png";
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         CacheBackedHttpService httpService = new();
         cache.SetHttpService(httpService);
         cache.Insert(url, CreateDecodableImageBytes()).SubscribeAndComplete();
@@ -1275,7 +1276,7 @@ public partial class ImageCacheExtensionsTests
     {
         const string url = "http://example.com/fallback_width_only.png";
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         CacheBackedHttpService httpService = new();
         cache.SetHttpService(httpService);
         cache.Insert(url, CreateDecodableImageBytes()).SubscribeAndComplete();
@@ -1314,7 +1315,7 @@ public partial class ImageCacheExtensionsTests
     {
         const string url = "http://example.com/fallback_sized.png";
         SystemJsonSerializer serializer = new();
-        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         CacheBackedHttpService httpService = new();
         cache.SetHttpService(httpService);
         cache.Insert(url, CreateDecodableImageBytes()).SubscribeAndComplete();
