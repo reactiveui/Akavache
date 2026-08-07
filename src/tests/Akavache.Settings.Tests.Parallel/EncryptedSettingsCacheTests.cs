@@ -381,10 +381,12 @@ public class EncryptedSettingsCacheTests
                 {
                     await TestHelper.EventuallyAsync(() => originalSettings is not null).ConfigureAwait(false);
 
-                    await WriteModifiedSettingsAsync(instance, testName).ConfigureAwait(false);
-
-                    // Dispose the initially captured instance to release any handles.
+                    // Release the store the builder created before opening a second one on the same
+                    // file. Two live connections to one encrypted database contend on the schema
+                    // write, which surfaces as SQLITE_BUSY.
                     originalSettings?.Dispose();
+
+                    await WriteModifiedSettingsAsync(instance, testName).ConfigureAwait(false);
 
                     await ReopenAndVerifyAsync(instance, testName).ConfigureAwait(false);
                 }
@@ -422,15 +424,15 @@ public class EncryptedSettingsCacheTests
                     // Wait until the initial store is created.
                     await TestHelper.EventuallyAsync(() => initialSettings is not null).ConfigureAwait(false);
 
+                    // Release the store the builder created, and its file handles, before opening a
+                    // second one on the same file. Two live connections to one encrypted database
+                    // contend on the schema write, which surfaces as SQLITE_BUSY.
+                    initialSettings?.Dispose();
+                    await instance.DisposeSettingsStore<ViewSettings>(testName);
+
                     // IMPORTANT: Do NOT write using the captured 'initialSettings'.
                     // Instead, open a *fresh* store, perform the write, and dispose it.
                     await WriteSecretAsync(instance, testName).ConfigureAwait(false);
-
-                    // Release the initial settings instance after we've successfully written using a fresh store.
-                    initialSettings?.Dispose();
-
-                    // Fully release file handles to avoid race on Windows paths.
-                    await instance.DisposeSettingsStore<ViewSettings>(testName);
 
                     var wrongPasswordWorked =
                         await SecretReadableWithWrongPasswordAsync(instance, testName).ConfigureAwait(false);
