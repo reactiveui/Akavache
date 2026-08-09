@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive;
@@ -21,6 +22,7 @@ public static class SerializerExtensions
         /// <typeparam name="T">The type of items to insert.</typeparam>
         /// <param name="keyValuePairs">The key-value pairs to insert.</param>
         /// <returns>An observable that signals when the operation is complete.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
         public IObservable<RxVoid> InsertObjects<T>(IEnumerable<KeyValuePair<string, T>> keyValuePairs) =>
@@ -43,6 +45,7 @@ public static class SerializerExtensions
         /// <summary>Insert several objects of mixed types into the cache.</summary>
         /// <param name="keyValuePairs">The data to insert into the cache.</param>
         /// <returns>A Future result representing the completion of the insert.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
         public IObservable<RxVoid> InsertObjects(IDictionary<string, object> keyValuePairs) =>
@@ -102,6 +105,7 @@ public static class SerializerExtensions
         /// <param name="key">The key to associate with the object.</param>
         /// <param name="value">The object to serialize and cache.</param>
         /// <returns>An observable that signals when the insertion is complete.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization.")]
         public IObservable<RxVoid> InsertObject<T>(string key, T value) =>
@@ -113,6 +117,7 @@ public static class SerializerExtensions
         /// <param name="value">The object to serialize and cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date for the cached data.</param>
         /// <returns>An observable that signals when the insertion is complete.</returns>
+        /// <exception cref="InvalidOperationException"></exception>
         [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization.")]
         public IObservable<RxVoid> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration)
@@ -279,6 +284,7 @@ public static class SerializerExtensions
         /// <typeparam name="T">The type of item.</typeparam>
         /// <param name="keyValuePairs">The data to insert into the cache.</param>
         /// <returns>A Future result representing the completion of the insert.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using InsertAllObjects requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertAllObjects requires types to be preserved for serialization.")]
         public IObservable<RxVoid> InsertAllObjects<T>(IEnumerable<KeyValuePair<string, T>> keyValuePairs) =>
@@ -321,6 +327,7 @@ public static class SerializerExtensions
         /// <typeparam name="T">The type of item to get.</typeparam>
         /// <returns>A Future result representing the deserialized object from
         /// the cache.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
         public IObservable<T?> GetOrFetchObject<T>(string key, Func<IObservable<T>> fetchFunc) =>
@@ -385,6 +392,7 @@ public static class SerializerExtensions
         /// key. </param>
         /// <returns>A Future result representing the deserialized object from
         /// the cache.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
         public IObservable<T?> GetOrFetchObject<T>(string key, Func<Task<T>> fetchFunc) =>
@@ -409,6 +417,7 @@ public static class SerializerExtensions
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>A Future result representing the deserialized object from
         /// the cache.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
         public IObservable<T?> GetOrFetchObject<T>(string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration) =>
@@ -470,6 +479,7 @@ public static class SerializerExtensions
         /// <param name="fetchFunc">A method to fetch a observable.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         public IObservable<T?> GetAndFetchLatest<T>(string key, Func<IObservable<T>> fetchFunc) =>
@@ -505,6 +515,7 @@ public static class SerializerExtensions
         /// this parameter is ignored and the item is always fetched.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         public IObservable<T?> GetAndFetchLatest<T>(string key, Func<IObservable<T>> fetchFunc, Func<DateTimeOffset, bool>? fetchPredicate) =>
@@ -541,6 +552,7 @@ public static class SerializerExtensions
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         public IObservable<T?> GetAndFetchLatest<T>(string key, Func<IObservable<T>> fetchFunc, Func<DateTimeOffset, bool>? fetchPredicate, DateTimeOffset? absoluteExpiration) =>
@@ -579,6 +591,7 @@ public static class SerializerExtensions
         /// be cleared when an exception occurs in fetchFunc.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         public IObservable<T?> GetAndFetchLatest<T>(
@@ -635,7 +648,7 @@ public static class SerializerExtensions
             Func<T, bool>? cacheValidationPredicate)
         {
             var fetch = Signal.Defer(() => blobCache.GetObjectCreatedAt<T>(key))
-                .Select(x => ShouldRefetchCachedValue(fetchPredicate, x))
+                .Select(x => SerializerHelpers.ShouldRefetchCachedValue(fetchPredicate, x))
                 .Where(static x => x)
                 .SelectMany(_ =>
                 {
@@ -694,6 +707,7 @@ public static class SerializerExtensions
         /// <param name="fetchFunc">A method that will fetch the task.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         public IObservable<T?> GetAndFetchLatest<T>(string key, Func<Task<T>> fetchFunc) =>
@@ -729,6 +743,7 @@ public static class SerializerExtensions
         /// this parameter is ignored and the item is always fetched.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         public IObservable<T?> GetAndFetchLatest<T>(string key, Func<Task<T>> fetchFunc, Func<DateTimeOffset, bool>? fetchPredicate) =>
@@ -765,6 +780,7 @@ public static class SerializerExtensions
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         public IObservable<T?> GetAndFetchLatest<T>(string key, Func<Task<T>> fetchFunc, Func<DateTimeOffset, bool>? fetchPredicate, DateTimeOffset? absoluteExpiration) =>
@@ -803,6 +819,7 @@ public static class SerializerExtensions
         /// be cleared when an exception occurs in fetchFunc.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         public IObservable<T?> GetAndFetchLatest<T>(
@@ -848,6 +865,7 @@ public static class SerializerExtensions
         /// if the fetched value should be cached.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
         public IObservable<T?> GetAndFetchLatest<T>(
@@ -936,7 +954,7 @@ public static class SerializerExtensions
         try
         {
             // For DateTime objects, use the Universal Serializer Shim for better compatibility
-            if (IsDateTime(typeof(T)))
+            if (SerializerHelpers.IsDateTime(typeof(T)))
             {
                 return UniversalSerializer.Serialize(value, serializer, cache.ForcedDateTimeKind);
             }
@@ -986,7 +1004,7 @@ public static class SerializerExtensions
         try
         {
             // For DateTime objects, use the Universal Serializer Shim for better compatibility
-            if (IsDateTime(typeof(T)))
+            if (SerializerHelpers.IsDateTime(typeof(T)))
             {
                 return UniversalSerializer.Deserialize<T>(data, serializer, cache.ForcedDateTimeKind);
             }
@@ -1004,7 +1022,7 @@ public static class SerializerExtensions
             // For critical DateTime failures, try the Universal Serializer Shim as a fallback.
             // UniversalSerializer.Deserialize swallows exceptions internally and returns
             // default rather than throwing, so no inner try/catch is needed here.
-            if (IsDateTimeOrDateTimeOffset(typeof(T)))
+            if (SerializerHelpers.IsDateTimeOrDateTimeOffset(typeof(T)))
             {
                 return UniversalSerializer.Deserialize<T>(data, serializer, cache.ForcedDateTimeKind);
             }
@@ -1013,25 +1031,6 @@ public static class SerializerExtensions
                 $"Failed to deserialize data to type {typeof(T).Name}. Data length: {data.Length} bytes. Please ensure the data was serialized with a compatible serializer. Error: {ex.Message}",
                 ex);
         }
-    }
-
-    /// <summary>
-    /// Decides whether <c>GetAndFetchLatest</c> should bypass the cache and refetch the value.
-    /// Returns <c>true</c> when no fetch predicate has been supplied, when the cache has no
-    /// creation timestamp, or when the predicate evaluates to <c>true</c> against the
-    /// existing timestamp.
-    /// </summary>
-    /// <param name="fetchPredicate">Optional predicate that decides whether the cached value is stale.</param>
-    /// <param name="createdAt">The cache entry's creation timestamp, or <c>null</c> if missing.</param>
-    /// <returns><c>true</c> if the cache should be bypassed and the value refetched.</returns>
-    internal static bool ShouldRefetchCachedValue(Func<DateTimeOffset, bool>? fetchPredicate, DateTimeOffset? createdAt)
-    {
-        if (fetchPredicate is null)
-        {
-            return true;
-        }
-
-        return createdAt is null ? true : fetchPredicate(createdAt.Value);
     }
 
     /// <summary>
@@ -1052,15 +1051,4 @@ public static class SerializerExtensions
             yield return new(pair.Key, blobCache.Serializer.Serialize(pair.Value));
         }
     }
-
-    /// <summary>Determines whether <paramref name="type"/> is <see cref="DateTime"/> or its nullable form.</summary>
-    /// <param name="type">The type to test.</param>
-    /// <returns><c>true</c> when the type needs the DateTime-aware serialization shim.</returns>
-    internal static bool IsDateTime(Type type) => type == typeof(DateTime) || type == typeof(DateTime?);
-
-    /// <summary>Determines whether <paramref name="type"/> is <see cref="DateTime"/>, <see cref="DateTimeOffset"/>, or either of their nullable forms.</summary>
-    /// <param name="type">The type to test.</param>
-    /// <returns><c>true</c> when the type can be recovered by the DateTime-aware deserialization fallback.</returns>
-    internal static bool IsDateTimeOrDateTimeOffset(Type type) =>
-        IsDateTime(type) || type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?);
 }

@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -9,6 +9,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Focused serialization compatibility tests to ensure proper cross-serializer compatibility.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class SerializationCompatibilityTests
 {
@@ -91,6 +92,7 @@ public class SerializationCompatibilityTests
     /// <param name="writeSerializerFactory">Factory for the writer serializer.</param>
     /// <param name="readSerializerFactory">Factory for the reader serializer.</param>
     /// <returns>A task representing the asynchronous test operation.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     [Test]
     [MethodDataSource(nameof(GetSerializerCombinations))]
     public async Task CrossSerializerCompatibilityShouldWork(
@@ -310,6 +312,7 @@ public class SerializationCompatibilityTests
     /// <param name="writeSerializerType">The serializer to use for writing.</param>
     /// <param name="readSerializerType">The serializer to use for reading.</param>
     /// <returns>A task representing the test operation.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     [Arguments(typeof(SystemJsonSerializer), typeof(SystemJsonSerializer))]
     [Arguments(typeof(SystemJsonBsonSerializer), typeof(SystemJsonBsonSerializer))]
     [Arguments(typeof(NewtonsoftSerializer), typeof(NewtonsoftSerializer))]

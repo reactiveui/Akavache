@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
@@ -47,6 +47,7 @@ namespace Akavache.Settings.Core;
 /// updates, or call <c>await settings.Enabled.FirstAsync()</c> for a one-shot read.
 /// </para>
 /// </remarks>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public class SettingsStorage : ISettingsStorage
 {
     /// <summary>The underlying blob cache used for persistent storage of settings values.</summary>
@@ -64,7 +65,7 @@ public class SettingsStorage : ISettingsStorage
     private readonly string _keyPrefix;
 
     /// <summary>Tracks whether <see cref="Dispose(bool)"/> has already run.</summary>
-    private bool _disposedValue;
+    private int _disposedValue;
 
     /// <summary>Initializes a new instance of the <see cref="SettingsStorage"/> class.</summary>
     /// <param name="keyPrefix">The prefix used for all settings keys in the blob cache. Should be unique to avoid key collisions.</param>
@@ -95,6 +96,7 @@ public class SettingsStorage : ISettingsStorage
     /// default value briefly before the disk-loaded value arrives.
     /// </summary>
     /// <returns>A one-shot observable that completes when every stream's cold load has finished.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
     [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
     public IObservable<RxVoid> Initialize() =>
@@ -238,29 +240,33 @@ public class SettingsStorage : ISettingsStorage
     }
 
     /// <summary>Raises the <see cref="PropertyChanged"/> event for the specified property name.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void OnPropertyChanged() =>
         OnPropertyChanged((string?)null);
 
     /// <summary>Raises the <see cref="PropertyChanged"/> event for the specified property name.</summary>
     /// <param name="propertyName">The name of the property that changed.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void OnPropertyChanged(string? propertyName) => PropertyChanged?.Invoke(this, new(propertyName));
 
     /// <summary>Releases unmanaged and - optionally - managed resources.</summary>
     /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposedValue)
+        // Claimed up front so a second caller returns immediately rather than racing the first
+        // through the disposal below.
+        if (Interlocked.Exchange(ref _disposedValue, 1) != 0)
         {
             return;
         }
 
-        if (disposing)
+        if (!disposing)
         {
-            DisposeStreams();
-            _blobCache.Dispose();
+            return;
         }
 
-        _disposedValue = true;
+        DisposeStreams();
+        _blobCache.Dispose();
     }
 
     /// <summary>

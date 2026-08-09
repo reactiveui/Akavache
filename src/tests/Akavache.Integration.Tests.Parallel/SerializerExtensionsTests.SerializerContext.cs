@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -920,7 +920,7 @@ public partial class SerializerExtensionsTests
     }
 
     /// <summary>
-    /// Verifies <see cref="SerializerExtensions.ShouldRefetchCachedValue"/> returns <c>true</c>
+    /// Verifies <see cref="SerializerHelpers.ShouldRefetchCachedValue"/> returns <c>true</c>
     /// when no fetch predicate is supplied — the helper short-circuits and the cached value
     /// is always considered stale.
     /// </summary>
@@ -928,23 +928,23 @@ public partial class SerializerExtensionsTests
     [Test]
     public async Task ShouldRefetchCachedValueShouldReturnTrueWhenPredicateIsNull()
     {
-        var result = SerializerExtensions.ShouldRefetchCachedValue(null, TimeProvider.System.GetUtcNow());
+        var result = SerializerHelpers.ShouldRefetchCachedValue(null, TimeProvider.System.GetUtcNow());
 
         await Assert.That(result).IsTrue();
     }
 
-    /// <summary>Verifies <see cref="SerializerExtensions.ShouldRefetchCachedValue"/> returns <c>true</c> when the cache has no creation timestamp, regardless of the predicate.</summary>
+    /// <summary>Verifies <see cref="SerializerHelpers.ShouldRefetchCachedValue"/> returns <c>true</c> when the cache has no creation timestamp, regardless of the predicate.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldRefetchCachedValueShouldReturnTrueWhenCreatedAtIsNull()
     {
-        var result = SerializerExtensions.ShouldRefetchCachedValue(static _ => false, null);
+        var result = SerializerHelpers.ShouldRefetchCachedValue(static _ => false, null);
 
         await Assert.That(result).IsTrue();
     }
 
     /// <summary>
-    /// Verifies <see cref="SerializerExtensions.ShouldRefetchCachedValue"/> defers to the
+    /// Verifies <see cref="SerializerHelpers.ShouldRefetchCachedValue"/> defers to the
     /// predicate's verdict when both the predicate and timestamp are present and the
     /// predicate accepts the timestamp.
     /// </summary>
@@ -952,17 +952,17 @@ public partial class SerializerExtensionsTests
     [Test]
     public async Task ShouldRefetchCachedValueShouldHonourPredicateWhenItReturnsTrue()
     {
-        var result = SerializerExtensions.ShouldRefetchCachedValue(static _ => true, TimeProvider.System.GetUtcNow());
+        var result = SerializerHelpers.ShouldRefetchCachedValue(static _ => true, TimeProvider.System.GetUtcNow());
 
         await Assert.That(result).IsTrue();
     }
 
-    /// <summary>Verifies <see cref="SerializerExtensions.ShouldRefetchCachedValue"/> returns <c>false</c> when the predicate rejects the timestamp — the cached value is considered fresh.</summary>
+    /// <summary>Verifies <see cref="SerializerHelpers.ShouldRefetchCachedValue"/> returns <c>false</c> when the predicate rejects the timestamp — the cached value is considered fresh.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldRefetchCachedValueShouldHonourPredicateWhenItReturnsFalse()
     {
-        var result = SerializerExtensions.ShouldRefetchCachedValue(static _ => false, TimeProvider.System.GetUtcNow());
+        var result = SerializerHelpers.ShouldRefetchCachedValue(static _ => false, TimeProvider.System.GetUtcNow());
 
         await Assert.That(result).IsFalse();
     }

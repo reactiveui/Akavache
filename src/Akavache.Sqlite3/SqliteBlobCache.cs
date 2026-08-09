@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if ENCRYPTED
 using System.Diagnostics.CodeAnalysis;
@@ -23,9 +25,11 @@ namespace Akavache.Sqlite3;
 /// This cache stores data in a SQLite database file for reliable persistence across application restarts.
 /// </summary>
 #if ENCRYPTED
+[System.Diagnostics.DebuggerDisplay("{Connection}")]
 [SuppressMessage("Documentation", "SST1649:File name should match the first type", Justification = "Reused file.")]
 public class EncryptedSqliteBlobCache : ISecureBlobCache
 #else
+[System.Diagnostics.DebuggerDisplay("{Connection}")]
 public class SqliteBlobCache : IBlobCache
 #endif
 {
@@ -396,6 +400,7 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
         Insert(keyValuePairs, (DateTimeOffset?)null);
 
@@ -425,14 +430,17 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Insert(string key, byte[] data) =>
         Insert(key, data, (DateTimeOffset?)null);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
         Insert([new KeyValuePair<string, byte[]>(key, data)], absoluteExpiration);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
         Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
@@ -474,6 +482,7 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
         Insert(key, data, type, (DateTimeOffset?)null);
 
@@ -711,6 +720,7 @@ public class SqliteBlobCache : IBlobCache
     /// <summary>Converts an optional offset to UTC time.</summary>
     /// <param name="absoluteExpiration">The expiration, or null.</param>
     /// <returns>The UTC time, or null.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static DateTime? ToExpiryValue(DateTimeOffset? absoluteExpiration) =>
         absoluteExpiration?.UtcDateTime;
 
@@ -720,6 +730,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="now">Current time for expiry checks.</param>
     /// <param name="type">Type filter.</param>
     /// <returns>The raw legacy bytes, or <see langword="null"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IObservable<byte[]?> TryGetLegacyValue(IAkavacheConnection connection, string key, DateTimeOffset now, Type? type) =>
         connection.TryReadLegacyV10Value(key, now, type);
 
@@ -727,6 +738,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="connection">The Akavache SQLite connection.</param>
     /// <param name="gate">The initialization signal.</param>
     /// <param name="scheduler">The scheduler.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void InitializeDatabase(IAkavacheConnection connection, InitSignal gate, ISequencer scheduler) =>
         connection.CreateSchema()
             .SubscribeOn(scheduler)
@@ -781,6 +793,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="key">The cache key.</param>
     /// <param name="type">Optional type filter.</param>
     /// <returns>The stored bytes or errors if not found.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IObservable<byte[]> ReadValueWithLegacyFallback(string key, Type? type) =>
         new ReadWithLegacyFallbackObservable(Connection, key, type, Clock);
 

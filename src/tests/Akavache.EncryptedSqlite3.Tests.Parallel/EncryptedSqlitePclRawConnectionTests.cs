@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -12,6 +12,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for <see cref="SqlitePclRawConnection"/> (encrypted variant) covering static helpers and typed query paths.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class EncryptedSqlitePclRawConnectionTests
 {
@@ -174,7 +175,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task TableExists_KnownTable_ReturnsTrue()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var exists = cache.Connection.TableExists(nameof(CacheEntry)).WaitForValue();
         await Assert.That(exists).IsTrue();
@@ -186,7 +187,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task TableExists_UnknownTable_ReturnsFalse()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var exists = cache.Connection.TableExists("NonExistentTable").WaitForValue();
         await Assert.That(exists).IsFalse();
@@ -201,7 +202,7 @@ public class EncryptedSqlitePclRawConnectionTests
         const int expectedMatches = 2;
 
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         byte[] firstPayload = [1, 2, 3];
@@ -229,7 +230,7 @@ public class EncryptedSqlitePclRawConnectionTests
         const int expectedMatches = 2;
 
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         byte[] secondPayload = [2];
@@ -256,7 +257,7 @@ public class EncryptedSqlitePclRawConnectionTests
         const int expectedMatches = 2;
 
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         byte[] secondPayload = [2];
@@ -281,7 +282,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Invalidate_WithTypeName_DeletesOnlyMatchingType()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         byte[] secondPayload = [2];
@@ -305,7 +306,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Invalidate_WithWrongTypeName_DoesNotDelete()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([new CacheEntry("e1", StoredTypeName, [1], now, null)]).WaitForCompletion();
@@ -323,7 +324,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task InvalidateAll_WithTypeName_RemovesOnlyMatchingType()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         byte[] secondPayload = [2];
@@ -353,7 +354,7 @@ public class EncryptedSqlitePclRawConnectionTests
         const int farFutureYears = 10;
 
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         var farFuture = now.AddYears(farFutureYears);
@@ -382,7 +383,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task SetExpiry_NullExpiration_ClearsExpiry()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         var expiry = now.AddHours(1);
@@ -404,7 +405,7 @@ public class EncryptedSqlitePclRawConnectionTests
         const int expectedSurvivors = 2;
 
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         var past = now.AddHours(-1);
@@ -433,7 +434,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Upsert_NullValue_RoundTripsAsNull()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([new CacheEntry("nullval", null, null, now, null)]).WaitForCompletion();
@@ -450,7 +451,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Upsert_NullExpiresAt_RoundTripsAsNull()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([new CacheEntry("noexp", "SomeType", [1], now, null)]).WaitForCompletion();
@@ -467,7 +468,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Upsert_NullTypeName_RoundTripsAsNull()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         byte[] payload = [42];
@@ -485,7 +486,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Upsert_EmptyList_IsNoop()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         cache.Connection.Upsert([]).WaitForCompletion();
 
@@ -500,7 +501,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Invalidate_EmptyList_IsNoop()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([new CacheEntry("keep", null, [1], now, null)]).WaitForCompletion();
@@ -518,7 +519,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task GetMany_EmptyList_ReturnsEmpty()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var results = cache.Connection.GetMany([], null, TimeProvider.System.GetUtcNow()).ToList().WaitForValue()!;
         await Assert.That(results.Count).IsEqualTo(0);
@@ -531,7 +532,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Get_WithTypeName_ReturnsOnlyMatchingType()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([new CacheEntry(TypedEntryKey, MatchingTypeName, [1], now, null)]).WaitForCompletion();
@@ -551,7 +552,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Get_MissingKey_ReturnsNull()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var result = cache.Connection.Get("nonexistent", null, TimeProvider.System.GetUtcNow()).WaitForValue();
         await Assert.That(result).IsNull();
@@ -564,7 +565,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Get_ExpiredEntry_ReturnsNull()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         var past = now.AddHours(-1);
@@ -581,7 +582,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Checkpoint_FullMode_Succeeds()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([new CacheEntry("cp1", null, [1], now, null)]).WaitForCompletion();
@@ -597,7 +598,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Checkpoint_TruncateMode_Succeeds()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([new CacheEntry("cp2", null, [1], now, null)]).WaitForCompletion();
@@ -613,7 +614,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Checkpoint_PassiveMode_Succeeds()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([new CacheEntry("cp3", null, [1], now, null)]).WaitForCompletion();
@@ -630,7 +631,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task Compact_Succeeds_AndDatabaseRemainsUsable()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([new CacheEntry("c1", null, [1], now, null)]).WaitForCompletion();
@@ -666,7 +667,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task TryReadLegacyV10Value_NoLegacyTable_ReturnsNull()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var result = cache.Connection.TryReadLegacyV10Value("somekey", TimeProvider.System.GetUtcNow(), typeof(string)).WaitForValue();
         await Assert.That(result).IsNull();
@@ -678,7 +679,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task TryReadLegacyV10Value_NullType_ReturnsNull()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var result = cache.Connection.TryReadLegacyV10Value("somekey", TimeProvider.System.GetUtcNow(), null).WaitForValue();
         await Assert.That(result).IsNull();
@@ -741,7 +742,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task GetMany_WithExpiredEntries_FiltersExpired()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         var past = now.AddHours(-1);
@@ -764,7 +765,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task GetAll_EmptyDatabase_ReturnsEmpty()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var results = cache.Connection.GetAll(null, TimeProvider.System.GetUtcNow()).ToList().WaitForValue()!;
         await Assert.That(results.Count).IsEqualTo(0);
@@ -777,7 +778,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task GetAllKeys_EmptyDatabase_ReturnsEmpty()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var keys = cache.Connection.GetAllKeys(null, TimeProvider.System.GetUtcNow()).ToList().WaitForValue()!;
         await Assert.That(keys.Count).IsEqualTo(0);
@@ -790,7 +791,7 @@ public class EncryptedSqlitePclRawConnectionTests
     internal async Task InvalidateAll_NoType_RemovesAllEntries()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using EncryptedSqliteBlobCache cache = CreateCache(path);
+        using var cache = CreateCache(path);
 
         var now = TimeProvider.System.GetUtcNow();
         byte[] secondPayload = [2];

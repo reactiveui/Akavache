@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Akavache;
@@ -17,8 +16,8 @@ var dbPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "aka
 Console.WriteLine($"V10 Writer starting. DB path: {dbPath}");
 
 // Ensure parent directory exists
-var dbDir = Path.GetDirectoryName(dbPath)!;
-Directory.CreateDirectory(dbDir);
+var dbDir = Path.GetDirectoryName(dbPath);
+_ = Directory.CreateDirectory(dbDir);
 
 // V10 initialization
 BlobCache.ApplicationName = "AkavacheCompatTest";
@@ -42,23 +41,23 @@ var valueBytes = "ByteArray:CAFEBABE"u8.ToArray();
 try
 {
     // Insert string
-    cache.InsertObject(keyString, valueString).Wait();
+    _ = cache.InsertObject(keyString, valueString).Wait();
     Console.WriteLine($"Inserted: key='{keyString}', type=string, value='{valueString}'");
 
     // Insert int
-    cache.InsertObject(keyInt, valueInt).Wait();
+    _ = cache.InsertObject(keyInt, valueInt).Wait();
     Console.WriteLine($"Inserted: key='{keyInt}', type=int, value={valueInt}");
 
     // Insert complex object
-    cache.InsertObject(keyPerson, valuePerson).Wait();
+    _ = cache.InsertObject(keyPerson, valuePerson).Wait();
     Console.WriteLine($"Inserted: key='{keyPerson}', type=Person, value={{Name={valuePerson.Name},Age={valuePerson.Age},Email={valuePerson.Email}}}");
 
     // Insert raw bytes
-    cache.Insert(keyBytes, valueBytes).Wait();
+    _ = cache.Insert(keyBytes, valueBytes).Wait();
     Console.WriteLine($"Inserted: key='{keyBytes}', type=byte[], value='{BitConverter.ToString(valueBytes)}'");
 
     // Force flush
-    cache.Flush().Wait();
+    _ = cache.Flush().Wait();
 }
 catch (Exception ex)
 {
@@ -81,6 +80,7 @@ Console.WriteLine("V10 Writer completed.");
 /// <summary>
 /// Represents a person for testing serialization.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{Name}")]
 public class Person
 {
     /// <summary>

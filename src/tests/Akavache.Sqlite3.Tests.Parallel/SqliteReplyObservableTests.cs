@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -9,6 +9,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for <see cref="SqliteReplyObservable{T}"/> covering idempotent set, late subscribe, replay, and single-subscriber enforcement.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class SqliteReplyObservableTests
 {
@@ -294,7 +295,7 @@ public class SqliteReplyObservableTests
         const int RejectedValue = 42;
         var state = SqliteReplyObservable<int>.StateSuccess;
         int value = default;
-        IObserver<int>? observer = Witness.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
 
         var result = SqliteReplyObservable<int>.TryTransitionToSuccess(
             ref state,
@@ -314,7 +315,7 @@ public class SqliteReplyObservableTests
         const int TransitionedValue = 42;
         var state = SqliteReplyObservable<int>.StatePending;
         int value = default;
-        IObserver<int>? observer = Witness.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
 
         var result = SqliteReplyObservable<int>.TryTransitionToSuccess(
             ref state,
@@ -335,7 +336,7 @@ public class SqliteReplyObservableTests
     {
         var state = SqliteReplyObservable<int>.StateError;
         Exception? error = null;
-        IObserver<int>? observer = Witness.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
 
         var result = SqliteReplyObservable<int>.TryTransitionToError(
             ref state,
@@ -354,7 +355,7 @@ public class SqliteReplyObservableTests
     {
         var state = SqliteReplyObservable<int>.StatePending;
         Exception? error = null;
-        IObserver<int>? observer = Witness.Create<int>(static _ => { });
+        var observer = Witness.Create<int>(static _ => { });
         var expected = new InvalidOperationException("boom");
 
         var result = SqliteReplyObservable<int>.TryTransitionToError(
@@ -424,7 +425,7 @@ public class SqliteReplyObservableTests
         const int TerminalValue = 99;
         var subscribed = false;
         var state = SqliteReplyObservable<int>.StateSuccess;
-        int value = TerminalValue;
+        var value = TerminalValue;
         Exception? error = null;
         IObserver<int>? observerSlot = null;
         var observer = Witness.Create<int>(static _ => { });

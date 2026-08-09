@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Splat;
 
 #if REACTIVE_SHIM
@@ -51,6 +52,7 @@ public static class BitmapImageExtensions
         /// <param name="key">The key to look up in the cache.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImage(string key) =>
             blobCache.LoadImage(key, (float?)null, (float?)null);
 
@@ -59,6 +61,7 @@ public static class BitmapImageExtensions
         /// <param name="desiredWidth">Optional desired width, if not specified will be the default size.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImage(string key, float? desiredWidth) =>
             blobCache.LoadImage(key, desiredWidth, (float?)null);
 
@@ -74,8 +77,8 @@ public static class BitmapImageExtensions
 
             return blobCache.Get(key)
                 .SelectManyThen(
-                    ThrowOnNullOrBadImageBuffer,
-                    x => BytesToImage(x, desiredWidth, desiredHeight));
+                    BitmapHelpers.ThrowOnNullOrBadImageBuffer,
+                    x => BitmapHelpers.BytesToImage(x, desiredWidth, desiredHeight));
         }
 
         /// <summary>
@@ -86,6 +89,7 @@ public static class BitmapImageExtensions
         /// <param name="url">The URL to download.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string url) =>
             blobCache.LoadImageFromUrl(url, false, (float?)null, (float?)null, (DateTimeOffset?)null);
 
@@ -98,6 +102,7 @@ public static class BitmapImageExtensions
         /// <param name="fetchAlways">If we should always fetch the image from the URL even if we have one in the blob.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string url, bool fetchAlways) =>
             blobCache.LoadImageFromUrl(url, fetchAlways, (float?)null, (float?)null, (DateTimeOffset?)null);
 
@@ -111,6 +116,7 @@ public static class BitmapImageExtensions
         /// <param name="desiredWidth">Optional desired width, if not specified will be the default size.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string url, bool fetchAlways, float? desiredWidth) =>
             blobCache.LoadImageFromUrl(url, fetchAlways, desiredWidth, (float?)null, (DateTimeOffset?)null);
 
@@ -125,6 +131,7 @@ public static class BitmapImageExtensions
         /// <param name="desiredHeight">Optional desired height, if not specified will be the default size.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string url, bool fetchAlways, float? desiredWidth, float? desiredHeight) =>
             blobCache.LoadImageFromUrl(url, fetchAlways, desiredWidth, desiredHeight, (DateTimeOffset?)null);
 
@@ -145,7 +152,7 @@ public static class BitmapImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectManyThen(ThrowOnBadImageBuffer, x => BytesToImage(x, desiredWidth, desiredHeight));
+                .SelectManyThen(BitmapHelpers.ThrowOnBadImageBuffer, x => BitmapHelpers.BytesToImage(x, desiredWidth, desiredHeight));
         }
 
         /// <summary>
@@ -156,6 +163,7 @@ public static class BitmapImageExtensions
         /// <param name="url">The URL to download.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(Uri url) =>
             blobCache.LoadImageFromUrl(url, false, (float?)null, (float?)null, (DateTimeOffset?)null);
 
@@ -168,6 +176,7 @@ public static class BitmapImageExtensions
         /// <param name="fetchAlways">If we should always fetch the image from the URL even if we have one in the blob.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(Uri url, bool fetchAlways) =>
             blobCache.LoadImageFromUrl(url, fetchAlways, (float?)null, (float?)null, (DateTimeOffset?)null);
 
@@ -181,6 +190,7 @@ public static class BitmapImageExtensions
         /// <param name="desiredWidth">Optional desired width, if not specified will be the default size.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(Uri url, bool fetchAlways, float? desiredWidth) =>
             blobCache.LoadImageFromUrl(url, fetchAlways, desiredWidth, (float?)null, (DateTimeOffset?)null);
 
@@ -195,6 +205,7 @@ public static class BitmapImageExtensions
         /// <param name="desiredHeight">Optional desired height, if not specified will be the default size.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(Uri url, bool fetchAlways, float? desiredWidth, float? desiredHeight) =>
             blobCache.LoadImageFromUrl(url, fetchAlways, desiredWidth, desiredHeight, (DateTimeOffset?)null);
 
@@ -215,7 +226,7 @@ public static class BitmapImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectManyThen(ThrowOnBadImageBuffer, x => BytesToImage(x, desiredWidth, desiredHeight));
+                .SelectManyThen(BitmapHelpers.ThrowOnBadImageBuffer, x => BitmapHelpers.BytesToImage(x, desiredWidth, desiredHeight));
         }
 
         /// <summary>
@@ -227,6 +238,7 @@ public static class BitmapImageExtensions
         /// <param name="url">The URL to download.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string key, string url) =>
             blobCache.LoadImageFromUrl(key, url, false, (float?)null, (float?)null, (DateTimeOffset?)null);
 
@@ -240,6 +252,7 @@ public static class BitmapImageExtensions
         /// <param name="fetchAlways">If we should always fetch the image from the URL even if we have one in the blob.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string key, string url, bool fetchAlways) =>
             blobCache.LoadImageFromUrl(key, url, fetchAlways, (float?)null, (float?)null, (DateTimeOffset?)null);
 
@@ -254,6 +267,7 @@ public static class BitmapImageExtensions
         /// <param name="desiredWidth">Optional desired width, if not specified will be the default size.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string key, string url, bool fetchAlways, float? desiredWidth) =>
             blobCache.LoadImageFromUrl(key, url, fetchAlways, desiredWidth, (float?)null, (DateTimeOffset?)null);
 
@@ -269,6 +283,7 @@ public static class BitmapImageExtensions
         /// <param name="desiredHeight">Optional desired height, if not specified will be the default size.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string key, string url, bool fetchAlways, float? desiredWidth, float? desiredHeight) =>
             blobCache.LoadImageFromUrl(key, url, fetchAlways, desiredWidth, desiredHeight, (DateTimeOffset?)null);
 
@@ -290,7 +305,7 @@ public static class BitmapImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectManyThen(ThrowOnBadImageBuffer, x => BytesToImage(x, desiredWidth, desiredHeight));
+                .SelectManyThen(BitmapHelpers.ThrowOnBadImageBuffer, x => BitmapHelpers.BytesToImage(x, desiredWidth, desiredHeight));
         }
 
         /// <summary>
@@ -302,6 +317,7 @@ public static class BitmapImageExtensions
         /// <param name="url">The URL to download.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string key, Uri url) =>
             blobCache.LoadImageFromUrl(key, url, false, (float?)null, (float?)null, (DateTimeOffset?)null);
 
@@ -315,6 +331,7 @@ public static class BitmapImageExtensions
         /// <param name="fetchAlways">If we should always fetch the image from the URL even if we have one in the blob.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string key, Uri url, bool fetchAlways) =>
             blobCache.LoadImageFromUrl(key, url, fetchAlways, (float?)null, (float?)null, (DateTimeOffset?)null);
 
@@ -329,6 +346,7 @@ public static class BitmapImageExtensions
         /// <param name="desiredWidth">Optional desired width, if not specified will be the default size.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string key, Uri url, bool fetchAlways, float? desiredWidth) =>
             blobCache.LoadImageFromUrl(key, url, fetchAlways, desiredWidth, (float?)null, (DateTimeOffset?)null);
 
@@ -344,6 +362,7 @@ public static class BitmapImageExtensions
         /// <param name="desiredHeight">Optional desired height, if not specified will be the default size.</param>
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<IBitmap> LoadImageFromUrl(string key, Uri url, bool fetchAlways, float? desiredWidth, float? desiredHeight) =>
             blobCache.LoadImageFromUrl(key, url, fetchAlways, desiredWidth, desiredHeight, (DateTimeOffset?)null);
 
@@ -365,13 +384,14 @@ public static class BitmapImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectManyThen(ThrowOnBadImageBuffer, x => BytesToImage(x, desiredWidth, desiredHeight));
+                .SelectManyThen(BitmapHelpers.ThrowOnBadImageBuffer, x => BitmapHelpers.BytesToImage(x, desiredWidth, desiredHeight));
         }
 
         /// <summary>Save an image to the blob cache.</summary>
         /// <param name="key">The key to associate with the image.</param>
         /// <param name="image">The bitmap image to save.</param>
         /// <returns>A Future result representing the completion of the save operation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> SaveImage(string key, IBitmap image) =>
             blobCache.SaveImage(key, image, (DateTimeOffset?)null);
 
@@ -389,49 +409,4 @@ public static class BitmapImageExtensions
                 .SelectMany(bytes => blobCache.Insert(key, bytes, absoluteExpiration));
         }
     }
-
-    /// <summary>
-    /// Emits <paramref name="compressedImage"/> through an observable, or signals an
-    /// <see cref="InvalidOperationException"/> when the buffer is corrupt — that is,
-    /// <see langword="null"/> or smaller than the 64-byte minimum.
-    /// </summary>
-    /// <param name="compressedImage">The compressed image buffer to check.</param>
-    /// <returns>An observable emitting the buffer, or signalling an error when invalid.</returns>
-    internal static IObservable<byte[]> ThrowOnBadImageBuffer(byte[]? compressedImage) =>
-        compressedImage is null || compressedImage.Length < 64
-            ? new ImmediateThrowSignal<byte[]>(new InvalidOperationException("Invalid Image"))
-            : Signal.Return(compressedImage);
-
-    /// <summary>
-    /// Routes a potentially null byte buffer from a blob cache through the
-    /// bad-image guard, emitting a descriptive <c>"Image data is null"</c> error
-    /// when the buffer itself is <see langword="null"/>.
-    /// </summary>
-    /// <param name="bytes">The bytes returned by the blob cache, possibly <see langword="null"/>.</param>
-    /// <returns>An observable emitting <paramref name="bytes"/>, or an error.</returns>
-    internal static IObservable<byte[]> ThrowOnNullOrBadImageBuffer(byte[]? bytes) =>
-        bytes is null
-            ? new ImmediateThrowSignal<byte[]>(new InvalidOperationException("Image data is null"))
-            : ThrowOnBadImageBuffer(bytes);
-
-    /// <summary>Converts a compressed image byte array into an <see cref="IBitmap"/> using Splat's ambient <see cref="BitmapLoader.Current"/>.</summary>
-    /// <remarks>
-    /// Throws <see cref="IOException"/> when the loader returns
-    /// <see langword="null"/>.
-    /// </remarks>
-    /// <param name="compressedImage">The compressed image bytes.</param>
-    /// <param name="desiredWidth">Optional desired width.</param>
-    /// <param name="desiredHeight">Optional desired height.</param>
-    /// <returns>An observable emitting the decoded bitmap.</returns>
-    internal static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
-        Signal.FromAsync(async () =>
-        {
-#if NETFRAMEWORK
-            using var ms = new MemoryStream(compressedImage, writable: false);
-#else
-            await using MemoryStream ms = new(compressedImage, writable: false);
-#endif
-            var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight).ConfigureAwait(false);
-            return bitmap ?? throw new IOException("Failed to load the bitmap!");
-        });
 }

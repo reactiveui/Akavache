@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Tests;
@@ -9,6 +11,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class Sqlite3SecureBlobCacheWrapperTests
 {
@@ -365,103 +368,135 @@ public class Sqlite3SecureBlobCacheWrapperTests
         public ISerializer Serializer => null!;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
             Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(string key, byte[] data) =>
             Insert(key, data, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
             Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
             Insert(key, data, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]?> Get(string key) => Signal.Return<byte[]?>(null);
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) => Signal.Empty<KeyValuePair<string, byte[]>>();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]?> Get(string key, Type type) => Signal.Return<byte[]?>(null);
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) => Signal.Empty<KeyValuePair<string, byte[]>>();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) => Signal.Empty<KeyValuePair<string, byte[]>>();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<string> GetAllKeys() => Signal.Empty<string>();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<string> GetAllKeys(Type type) => Signal.Empty<string>();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) => Signal.Empty<(string Key, DateTimeOffset? Time)>();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<DateTimeOffset?> GetCreatedAt(string key) => Signal.Return<DateTimeOffset?>(null);
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => Signal.Empty<(string Key, DateTimeOffset? Time)>();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => Signal.Return<DateTimeOffset?>(null);
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Flush() => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Flush(Type type) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Invalidate(string key) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Invalidate(string key, Type type) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Invalidate(IEnumerable<string> keys) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> InvalidateAll() => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> InvalidateAll(Type type) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Vacuum() => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>

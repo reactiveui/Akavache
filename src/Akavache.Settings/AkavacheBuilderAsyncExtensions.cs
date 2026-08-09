@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Settings;
@@ -23,6 +24,7 @@ public static class AkavacheBuilderAsyncExtensions
         /// <summary>Asynchronously deletes the settings store for the specified type.</summary>
         /// <typeparam name="T">The settings type whose store should be deleted.</typeparam>
         /// <returns>A task that completes when deletion is done.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -34,6 +36,7 @@ public static class AkavacheBuilderAsyncExtensions
         /// <typeparam name="T">The settings type whose store should be deleted.</typeparam>
         /// <param name="overrideDatabaseName">Optional override database name.</param>
         /// <returns>A task that completes when deletion is done.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -44,6 +47,7 @@ public static class AkavacheBuilderAsyncExtensions
         /// <summary>Asynchronously disposes of the settings store for the specified type.</summary>
         /// <typeparam name="T">The settings type whose store should be disposed.</typeparam>
         /// <returns>A task that completes when disposal is done.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -55,6 +59,7 @@ public static class AkavacheBuilderAsyncExtensions
         /// <typeparam name="T">The settings type whose store should be disposed.</typeparam>
         /// <param name="overrideDatabaseName">Optional override database name.</param>
         /// <returns>A task that completes when disposal is done.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",

@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -16,6 +16,7 @@ namespace Akavache.NewtonsoftJson;
 /// A unified serializer using Newtonsoft.Json with automatic format detection.
 /// Supports both JSON and BSON formats for maximum compatibility with Akavache.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{Options}")]
 public class NewtonsoftSerializer : ISerializer
 {
     /// <summary>Byte width of the length field every BSON document opens with.</summary>
@@ -345,7 +346,7 @@ public class NewtonsoftSerializer : ISerializer
             TypeNameAssemblyFormatHandling = settings.TypeNameAssemblyFormatHandling,
             ConstructorHandling = settings.ConstructorHandling,
             SerializationBinder = settings.SerializationBinder,
-            Error = settings.Error
+            Error = settings.Error,
         };
 
         // Set our contract resolver, preserving any existing one

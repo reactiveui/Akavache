@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Windows;
@@ -8,10 +8,12 @@ using AkavacheTodoWpf.Models;
 namespace AkavacheTodoWpf.Views;
 
 /// <summary>EditTodoDialog for comprehensive todo editing.</summary>
+[System.Diagnostics.DebuggerDisplay("{OriginalTodo}")]
 public partial class EditTodoDialog : Window
 {
     /// <summary>Initializes a new instance of the <see cref="EditTodoDialog"/> class.</summary>
     /// <param name="todoItem">The todo item to edit.</param>
+    /// <exception cref="ArgumentNullException"></exception>
     public EditTodoDialog(TodoItem todoItem)
     {
         _ = todoItem ?? throw new ArgumentNullException(nameof(todoItem));
@@ -61,7 +63,7 @@ public partial class EditTodoDialog : Window
             Priority = (TodoPriority)cmbPriority.SelectedItem,
             CreatedAt = OriginalTodo.CreatedAt,
             IsCompleted = OriginalTodo.IsCompleted,
-            Tags = OriginalTodo.Tags
+            Tags = OriginalTodo.Tags,
         };
 
         // Parse due date and time

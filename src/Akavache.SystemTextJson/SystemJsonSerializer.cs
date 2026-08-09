@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
@@ -13,6 +14,7 @@ namespace Akavache.SystemTextJson;
 #endif
 
 /// <summary>A serializer using System.Text.Json for JSON serialization.</summary>
+[System.Diagnostics.DebuggerDisplay("{Options}")]
 public class SystemJsonSerializer : ISerializer
 {
     /// <summary>
@@ -47,6 +49,7 @@ public class SystemJsonSerializer : ISerializer
     /// <param name="item">The item to serialize.</param>
     /// <param name="jsonTypeInfo">The JSON type information for AOT-safe serialization.</param>
     /// <returns>The serialized bytes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[] SerializeAot<T>(T item, JsonTypeInfo<T> jsonTypeInfo) =>
         JsonSerializer.SerializeToUtf8Bytes(item, jsonTypeInfo);
 
@@ -78,9 +81,7 @@ public class SystemJsonSerializer : ISerializer
     [SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification = "This is deliberately a method to allow for customization and extension.")]
     public JsonSerializerOptions GetEffectiveOptions()
     {
-        var options = Options ?? SerializerDefaults;
-
         // Clone options to avoid modifying the original
-        return new(options);
+        return new(Options ?? SerializerDefaults);
     }
 }

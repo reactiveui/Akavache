@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Tests;
@@ -9,6 +11,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for internal helper methods exposed for testability in the Sqlite3 package.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class InternalHelperTests
 {
@@ -84,6 +87,7 @@ public class InternalHelperTests
 
     // ── CheckRc ────────────────────────────────────────────────────────────
     /// <summary>SQLITE_OK does not throw.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public void CheckRc_SqliteOk_DoesNotThrow() => SqlitePclRawConnection.CheckRc(0, db: null, "test");
 

@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Media;
@@ -13,6 +14,7 @@ using ReactiveUI;
 namespace AkavacheTodoWpf.ViewModels;
 
 /// <summary>View model for individual todo items with reactive behaviors for WPF.</summary>
+[System.Diagnostics.DebuggerDisplay("{Activator}")]
 [SupportedOSPlatform("windows10.0.19041.0")]
 public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 {
@@ -184,10 +186,11 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// <summary>Creates a brush from a hexadecimal <c>#RRGGBB</c> color string.</summary>
     /// <param name="hex">The color in <c>#RRGGBB</c> form.</param>
     /// <returns>A brush painting the requested color.</returns>
-    private static SolidColorBrush HexBrush(string hex) => new((Color)ColorConverter.ConvertFromString(hex)!);
+    private static SolidColorBrush HexBrush(string hex) => new((Color)ColorConverter.ConvertFromString(hex));
 
     /// <summary>Toggles the todo's completion state and persists the change.</summary>
     /// <returns>An observable that signals when the toggle and save operation is complete.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IObservable<RxVoid> ExecuteToggleCompleted() =>
         Signal.FromAsync(async () =>
         {
@@ -213,6 +216,7 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     /// <summary>Deletes this todo from its parent collection and the cache.</summary>
     /// <returns>An observable that signals when the deletion operation is complete.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IObservable<RxVoid> ExecuteDelete() =>
         Signal.FromAsync(async () =>
         {
@@ -226,6 +230,7 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     /// <summary>Opens the edit dialog and applies the resulting changes.</summary>
     /// <returns>An observable that signals when the edit operation is complete.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IObservable<RxVoid> ExecuteEdit() =>
         Signal.FromAsync(async () =>
         {
@@ -267,6 +272,7 @@ _ = SaveTodoItem().Subscribe();
 
     /// <summary>Persists this todo back to the cached collection.</summary>
     /// <returns>An observable that signals when the save operation is complete.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IObservable<RxVoid> SaveTodoItem() =>
         TodoCacheService.GetAllTodos()
             .Take(1)
@@ -278,11 +284,13 @@ _ = SaveTodoItem().Subscribe();
                 var index = -1;
                 for (var i = 0; i < todos.Count; i++)
                 {
-                    if (todos[i].Id == TodoItem.Id)
+                    if (todos[i].Id != TodoItem.Id)
                     {
-                        index = i;
-                        break;
+                        continue;
                     }
+
+                    index = i;
+                    break;
                 }
 
                 if (index >= 0)

@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -9,6 +9,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for the UpdateExpiration functionality across all IBlobCache implementations.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public class UpdateExpirationTests : IDisposable
 {
     /// <summary>How far ahead a value's expiration is stamped when it is first inserted.</summary>
@@ -33,8 +34,9 @@ public class UpdateExpirationTests : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             // Arrange
             const string key = "test-key";
             const string originalData = "test-value";
@@ -66,8 +68,9 @@ public class UpdateExpirationTests : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             // Arrange
             const string key = "test-key";
             const string originalData = "test-value";
@@ -99,8 +102,9 @@ public class UpdateExpirationTests : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             // Arrange
             string[] keys = ["test-key-1", "test-key-2", "test-key-3"];
             string[] originalData = ["value-1", "value-2", "value-3"];
@@ -138,8 +142,9 @@ public class UpdateExpirationTests : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             // Arrange
             const string key = "test-key";
             const string originalData = "test-value";
@@ -171,8 +176,9 @@ public class UpdateExpirationTests : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             // Arrange
             const string nonExistentKey = "non-existent-key";
             var newExpiration = TimeProvider.System.GetLocalNow().AddHours(1);
@@ -199,8 +205,9 @@ public class UpdateExpirationTests : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             // Arrange
             const string key = "test-key";
             const string originalData = "test-value";
@@ -230,8 +237,9 @@ public class UpdateExpirationTests : IDisposable
         SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             const string key = "typed-null-exp-key";
             fixture.InsertObject(key, "value", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
 
@@ -250,8 +258,9 @@ public class UpdateExpirationTests : IDisposable
         SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             string[] keys = ["multi-null-1", "multi-null-2"];
             fixture.InsertObject(keys[0], "v1", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
             fixture.InsertObject(keys[1], "v2", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
@@ -273,8 +282,9 @@ public class UpdateExpirationTests : IDisposable
         SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             string[] keys = ["typed-multi-null-1", "typed-multi-null-2"];
             fixture.InsertObject(keys[0], "v1", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
             fixture.InsertObject(keys[1], "v2", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();

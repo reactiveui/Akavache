@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -23,7 +23,9 @@ internal static class ArgumentValidation
     /// <summary>Throws an <see cref="ArgumentNullException"/> if <paramref name="argument"/> is null.</summary>
     /// <param name="argument">The reference type argument to validate as non-null.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
+    /// <exception cref="ArgumentNullException"></exception>
 #if NET8_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIfNull(
         [NotNull] object? argument,
         [CallerArgumentExpression(nameof(argument))] string? paramName = null) =>
@@ -46,6 +48,7 @@ internal static class ArgumentValidation
     /// <param name="argument">The reference type argument to validate as non-null.</param>
     /// <param name="message">The exception message.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
+    /// <exception cref="ArgumentNullException"></exception>
     internal static void ThrowIfNullWithMessage(
         [NotNull] object? argument,
         string message,
@@ -65,6 +68,7 @@ internal static class ArgumentValidation
     /// <exception cref="ArgumentNullException"><paramref name="argument"/> is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="argument"/> is empty.</exception>
 #if NET8_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIfNullOrEmpty(
         [NotNull] string? argument,
         [CallerArgumentExpression(nameof(argument))] string? paramName = null) =>
@@ -94,6 +98,7 @@ internal static class ArgumentValidation
     /// <exception cref="ArgumentNullException"><paramref name="argument"/> is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="argument"/> is empty or consists only of white-space characters.</exception>
 #if NET8_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIfNullOrWhiteSpace(
         [NotNull] string? argument,
         [CallerArgumentExpression(nameof(argument))] string? paramName = null) =>
@@ -122,6 +127,7 @@ internal static class ArgumentValidation
     /// <summary>Throws an <see cref="ArgumentOutOfRangeException"/> if <paramref name="value"/> is negative.</summary>
     /// <param name="value">The argument to validate as non-negative.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static void ThrowIfNegative(int value, [CallerArgumentExpression(nameof(value))] string? paramName = null)
     {
         if (value >= 0)
@@ -136,6 +142,7 @@ internal static class ArgumentValidation
     /// <param name="condition">The condition to evaluate.</param>
     /// <param name="message">The exception message.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="condition"/> corresponds.</param>
+    /// <exception cref="ArgumentException"></exception>
     internal static void ThrowIf(
         [DoesNotReturnIf(true)] bool condition,
         string message,
@@ -152,6 +159,7 @@ internal static class ArgumentValidation
     /// <summary>Throws an <see cref="ArgumentOutOfRangeException"/> if <paramref name="value"/> is zero.</summary>
     /// <param name="value">The argument to validate.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static void ThrowIfZero(int value, [CallerArgumentExpression(nameof(value))] string? paramName = null)
     {
         if (value != 0)
@@ -165,6 +173,7 @@ internal static class ArgumentValidation
     /// <summary>Throws an <see cref="ArgumentOutOfRangeException"/> if <paramref name="value"/> is negative or zero.</summary>
     /// <param name="value">The argument to validate.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static void ThrowIfNegativeOrZero(
         int value,
         [CallerArgumentExpression(nameof(value))] string? paramName = null)
@@ -182,6 +191,7 @@ internal static class ArgumentValidation
     /// <param name="value">The argument to validate.</param>
     /// <param name="other">The value to compare with.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static void ThrowIfEqual<T>(
         T value,
         T other,
@@ -201,6 +211,7 @@ internal static class ArgumentValidation
     /// <param name="value">The argument to validate.</param>
     /// <param name="other">The value to compare with.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static void ThrowIfNotEqual<T>(
         T value,
         T other,
@@ -220,6 +231,7 @@ internal static class ArgumentValidation
     /// <param name="value">The argument to validate.</param>
     /// <param name="other">The value to compare with.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static void ThrowIfGreaterThan<T>(
         T value,
         T other,
@@ -239,6 +251,7 @@ internal static class ArgumentValidation
     /// <param name="value">The argument to validate.</param>
     /// <param name="other">The value to compare with.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static void ThrowIfGreaterThanOrEqual<T>(
         T value,
         T other,
@@ -258,6 +271,7 @@ internal static class ArgumentValidation
     /// <param name="value">The argument to validate.</param>
     /// <param name="other">The value to compare with.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static void ThrowIfLessThan<T>(
         T value,
         T other,
@@ -277,6 +291,7 @@ internal static class ArgumentValidation
     /// <param name="value">The argument to validate.</param>
     /// <param name="other">The value to compare with.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static void ThrowIfLessThanOrEqual<T>(
         T value,
         T other,
@@ -295,6 +310,7 @@ internal static class ArgumentValidation
     /// <param name="value">The argument to validate.</param>
     /// <param name="other">The value to compare with.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     internal static void ThrowIfLessThanOrEqual(
         int value,
         int other,
@@ -312,6 +328,7 @@ internal static class ArgumentValidation
     /// <typeparam name="T">The expected type.</typeparam>
     /// <param name="argument">The argument to validate.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
+    /// <exception cref="ArgumentException"></exception>
     internal static void ThrowIfNotOfType<T>(
         [NotNull] object? argument,
         [CallerArgumentExpression(nameof(argument))] string? paramName = null)
@@ -328,6 +345,7 @@ internal static class ArgumentValidation
     /// <typeparam name="T">The struct type.</typeparam>
     /// <param name="argument">The argument to validate.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
+    /// <exception cref="ArgumentNullException"></exception>
     internal static void ThrowIfDefault<T>(
         T argument,
         [CallerArgumentExpression(nameof(argument))] string? paramName = null)
@@ -349,6 +367,7 @@ internal static class ArgumentValidation
     /// <param name="argument">The argument to validate.</param>
     /// <param name="paramName">The name of the parameter.</param>
     /// <returns>The validated non-null argument.</returns>
+    /// <exception cref="ArgumentNullException"></exception>
     [return: NotNull]
     internal static T EnsureNotNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         where T : class =>
@@ -360,6 +379,7 @@ internal static class ArgumentValidation
     /// <param name="message">The error message.</param>
     /// <param name="paramName">The name of the parameter.</param>
     /// <returns>The validated non-null argument.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     [return: NotNull]
     internal static T EnsureNotNull<T>([NotNull] T? argument, string message, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         where T : class =>

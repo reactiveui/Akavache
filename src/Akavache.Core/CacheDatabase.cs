@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive;
@@ -126,6 +127,7 @@ public static class CacheDatabase
     /// <param name="applicationName">The application name for cache directories. Must not be null or whitespace.</param>
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     /// <exception cref="InvalidOperationException">Failed to create an AkavacheBuilder instance.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
         "Design",
         "SST2307:Type parameter appears in no parameter",
@@ -141,6 +143,7 @@ public static class CacheDatabase
     /// <param name="fileLocationOption">The file location option.</param>
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     /// <exception cref="InvalidOperationException">Failed to create an AkavacheBuilder instance.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
         "Design",
         "SST2307:Type parameter appears in no parameter",
@@ -157,6 +160,7 @@ public static class CacheDatabase
     /// <param name="configureSerializer">The Serializer configuration.</param>
     /// <param name="applicationName">The application name for cache directories. Must not be null or whitespace.</param>
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static void Initialize<T>(Func<T> configureSerializer, string applicationName)
         where T : class, ISerializer, new() =>
@@ -168,6 +172,7 @@ public static class CacheDatabase
     /// <param name="applicationName">The application name for cache directories. Must not be null or whitespace.</param>
     /// <param name="fileLocationOption">The file location option.</param>
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static void Initialize<T>(Func<T> configureSerializer, string applicationName, FileLocationOption fileLocationOption)
        where T : class, ISerializer, new() => SetBuilder(CreateBuilder(applicationName, fileLocationOption)
@@ -181,6 +186,7 @@ public static class CacheDatabase
     /// <param name="applicationName">The application name for cache directories. Must not be null or whitespace.</param>
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="configure"/> is null.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
         "Design",
         "SST2307:Type parameter appears in no parameter",
@@ -222,6 +228,7 @@ public static class CacheDatabase
     /// <param name="applicationName">The application name for cache directories. Must not be null or whitespace.</param>
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="configure"/> is null.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static void Initialize<T>(Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string applicationName)
         where T : class, ISerializer, new() =>
@@ -255,6 +262,7 @@ public static class CacheDatabase
     /// A new Akavache builder instance with the application name already applied.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IAkavacheBuilder CreateBuilder(string applicationName) =>
         CreateBuilder(applicationName, FileLocationOption.Default);
 
@@ -274,6 +282,7 @@ public static class CacheDatabase
     /// <returns>
     /// A new Akavache builder instance.
     /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Obsolete("Use CreateBuilder(string applicationName, ...) which requires an explicit application name.", false)]
     [SuppressMessage(
         "Design",
@@ -287,6 +296,7 @@ public static class CacheDatabase
     /// <returns>
     /// A new Akavache builder instance.
     /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Obsolete("Use CreateBuilder(string applicationName, ...) which requires an explicit application name.", false)]
     [SuppressMessage(
         "Design",
@@ -321,11 +331,13 @@ public static class CacheDatabase
 
     /// <summary>Internal method to set the instance.</summary>
     /// <param name="builder">The configured instance.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void SetBuilder(IAkavacheInstance builder) =>
         Volatile.Write(ref _instance, builder);
 
     /// <summary>Returns the configured <see cref="IAkavacheInstance"/>, throwing if not initialized.</summary>
     /// <returns>The configured Akavache instance.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     internal static IAkavacheInstance GetOrThrowIfNotInitialized() =>
         Volatile.Read(ref _instance)
             ?? throw new InvalidOperationException(

@@ -1,9 +1,10 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Core;
@@ -56,6 +57,7 @@ public static class UniversalSerializer
     /// <param name="data">The serialized data.</param>
     /// <param name="primarySerializer">The primary serializer to try first.</param>
     /// <returns>The deserialized object.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
         "Design",
         "SST2307:Type parameter appears in no parameter",
@@ -121,6 +123,7 @@ public static class UniversalSerializer
     /// <param name="value">The value to serialize.</param>
     /// <param name="targetSerializer">The target serializer.</param>
     /// <returns>The serialized data.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("Universal serialization requires types to be preserved.")]
     [RequiresDynamicCode("Universal serialization requires types to be preserved.")]
     public static byte[] Serialize<T>(T value, ISerializer targetSerializer) =>
@@ -132,6 +135,7 @@ public static class UniversalSerializer
     /// <param name="targetSerializer">The target serializer.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The serialized data.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     [RequiresUnreferencedCode("Universal serialization requires types to be preserved.")]
     [RequiresDynamicCode("Universal serialization requires types to be preserved.")]
     public static byte[] Serialize<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind)
@@ -186,6 +190,7 @@ public static class UniversalSerializer
     /// <param name="requestedKey">The original key that was requested.</param>
     /// <param name="primarySerializer">The primary serializer being used.</param>
     /// <returns>A one-shot observable that emits the resolved value, or <see langword="default"/> if no matching key was found.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
         "Design",
         "SST2307:Type parameter appears in no parameter",
@@ -417,6 +422,7 @@ public static class UniversalSerializer
     /// <param name="data">The data buffer to check.</param>
     /// <param name="index">The index at which to start the check.</param>
     /// <returns>True if the data starting at the index matches 'null'.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsJsonNull(byte[] data, int index) => StartsWithAsciiLiteral(data, index, JsonNullLiteral);
 
     /// <summary>Checks whether the bytes at <paramref name="index"/> spell out <paramref name="literal"/> in ASCII.</summary>
@@ -481,6 +487,7 @@ public static class UniversalSerializer
     /// <param name="targetSerializer">The target serializer that failed.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The serialized data.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     [RequiresUnreferencedCode("Calls ISerializer.Serialize<T>.")]
     [RequiresDynamicCode("Calls ISerializer.Serialize<T>.")]
     internal static byte[] TryFallbackSerialization<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind)
@@ -900,6 +907,7 @@ public static class UniversalSerializer
     /// <summary>Checks if the serializer is a BSON variant.</summary>
     /// <param name="serializer">The serializer instance to probe.</param>
     /// <returns><see langword="true"/> if the serializer is a BSON variant.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsBsonSerializer(ISerializer serializer) =>
         _isBsonSerializerByType.GetOrAdd(
             serializer.GetType(),
@@ -908,6 +916,7 @@ public static class UniversalSerializer
     /// <summary>Checks if the serializer is the plain Newtonsoft.Json serializer.</summary>
     /// <param name="serializer">The serializer instance to probe.</param>
     /// <returns><see langword="true"/> if the serializer is Newtonsoft.Json (not the BSON variant).</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsPlainNewtonsoftSerializer(ISerializer serializer) =>
         _isPlainNewtonsoftSerializerByType.GetOrAdd(
             serializer.GetType(),

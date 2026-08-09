@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -194,8 +194,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     public IAkavacheBuilder WithSerializer<T>()
         where T : class, ISerializer, new()
     {
-        var serializerType = typeof(T);
-        SerializerTypeName = serializerType.AssemblyQualifiedName;
+        SerializerTypeName = typeof(T).AssemblyQualifiedName;
         lock (_lock)
         {
             // Register the serializer if not already registered, we only want one instance of each serializer type
@@ -276,6 +275,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
 
     /// <summary>Creates a new <see cref="InMemoryBlobCache"/> using the registered serializer.</summary>
     /// <returns>The newly created in-memory cache instance.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     internal InMemoryBlobCache CreateInMemoryCache()
     {
         if (Serializer is null)

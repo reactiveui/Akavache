@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Tests;
@@ -9,6 +11,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for backward compatibility scenarios, especially for mobile platforms.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class BackwardCompatibilityTests
 {
@@ -78,6 +81,7 @@ public class BackwardCompatibilityTests
     private static class AkavacheBuilderTestExtensions
     {
         /// <summary>Reset the SQLite provider state for testing purposes.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ResetSqliteProvider() =>
             Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
     }

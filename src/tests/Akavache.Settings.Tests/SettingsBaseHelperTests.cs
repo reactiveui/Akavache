@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Splat;
@@ -15,6 +15,7 @@ namespace Akavache.Settings.Tests;
 /// <see cref="SettingsBase.GetBlobCacheForClass(string)"/> — each strategy can be
 /// exercised in isolation thanks to the internal helpers.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 [TestExecutor<AkavacheTestExecutor>]
 public class SettingsBaseHelperTests
@@ -374,6 +375,7 @@ public class SettingsBaseHelperTests
     /// unconfigured.
     /// </summary>
     /// <returns>Never returns; always throws.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     private static IBlobCache ThrowingResolver() =>
         throw new InvalidOperationException("cache kind not configured");
 

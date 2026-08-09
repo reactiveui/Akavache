@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.CompilerServices;
@@ -14,6 +14,7 @@ namespace Akavache.Integration.Tests;
 /// Tests for CacheDatabase functionality and global configuration, including
 /// uninitialized states, initialization overloads, and shutdown.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 [NotInParallel]
 [TestExecutor<AkavacheTestExecutor>]
@@ -253,11 +254,7 @@ public class CacheDatabaseTests
     /// <summary>Tests TaskpoolScheduler returns default when not overridden.</summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task TaskpoolSchedulerShouldReturnDefault()
-    {
-        var scheduler = CacheDatabase.TaskpoolScheduler;
-        await Assert.That(scheduler).IsNotNull();
-    }
+    public async Task TaskpoolSchedulerShouldReturnDefault() => await Assert.That(CacheDatabase.TaskpoolScheduler).IsNotNull();
 
     /// <summary>Tests TaskpoolScheduler can be overridden.</summary>
     /// <returns>A task.</returns>
@@ -505,6 +502,7 @@ public class CacheDatabaseTests
 
         /// <summary>Initializes the storage.</summary>
         /// <returns>A completed observable.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Initialize() => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
@@ -589,6 +587,7 @@ public class CacheDatabaseTests
         }
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
             Insert(keyValuePairs, (DateTimeOffset?)null);
 
@@ -598,6 +597,7 @@ public class CacheDatabaseTests
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(string key, byte[] data) =>
             Insert(key, data, (DateTimeOffset?)null);
 
@@ -606,6 +606,7 @@ public class CacheDatabaseTests
             throw new NotImplementedException();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
             Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
@@ -616,6 +617,7 @@ public class CacheDatabaseTests
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
             Insert(key, data, type, (DateTimeOffset?)null);
 
@@ -718,10 +720,12 @@ public class CacheDatabaseTests
         public DateTimeKind? ForcedDateTimeKind { get; set; }
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Flush() =>
             Signal.Throw<RxVoid>(new InvalidOperationException("Simulated observable flush failure."));
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Flush(Type type) =>
             Signal.Throw<RxVoid>(new InvalidOperationException("Simulated observable flush failure."));
 
@@ -731,6 +735,7 @@ public class CacheDatabaseTests
         }
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
             Insert(keyValuePairs, (DateTimeOffset?)null);
 
@@ -740,6 +745,7 @@ public class CacheDatabaseTests
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(string key, byte[] data) =>
             Insert(key, data, (DateTimeOffset?)null);
 
@@ -748,6 +754,7 @@ public class CacheDatabaseTests
             throw new NotImplementedException();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
             Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
@@ -758,6 +765,7 @@ public class CacheDatabaseTests
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
             Insert(key, data, type, (DateTimeOffset?)null);
 

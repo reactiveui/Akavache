@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -13,6 +13,7 @@ namespace Akavache.Integration.Tests;
 /// alternatives to the primary one, classifies them as BSON or plain JSON, and walks that list
 /// when the primary serializer cannot read a payload.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class UniversalSerializerAlternativesTests
 {
@@ -215,7 +216,7 @@ public class UniversalSerializerAlternativesTests
         ThrowingSerializer primary = new();
 
         // Small data without year pattern -> AttemptDateTimeRecovery returns MinValue.
-        byte[] data = "\0\0"u8.ToArray();
+        var data = "\0\0"u8.ToArray();
 
         var result = UniversalSerializer.TryAlternativeSerializers<DateTime>(data, primary, null);
         await Assert.That(result).IsEqualTo(DateTime.MinValue);

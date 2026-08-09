@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Settings.Core;
@@ -74,6 +75,7 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
     /// blob-cache reads the moment a derived settings class is instantiated, which
     /// interacted badly with the sqlite worker-thread dispatch and native-handle lifetime.
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IDisposable Subscribe(IObserver<T> observer) => _current.Subscribe(observer);
 
     /// <inheritdoc/>
@@ -105,6 +107,7 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Dispose() => _current.Dispose();
 
     /// <summary>

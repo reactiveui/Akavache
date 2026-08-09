@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using SQLitePCL;
 
 using static SQLitePCL.raw;
@@ -19,6 +20,7 @@ namespace Akavache.Tests;
 /// produced by v11. The connection's open path detects this case and re-opens with
 /// SQLite3MC's SQLCipher-4 compatibility shim, then rekeys forward to the modern cipher.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 [Category("Sqlite")]
 public class EncryptedSqlite3LegacyV11CompatibilityTests
@@ -101,6 +103,7 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
     /// <param name="password">The encryption key applied via <c>PRAGMA key</c>.</param>
     /// <param name="key">The CacheEntry row id.</param>
     /// <param name="value">The CacheEntry row payload.</param>
+    /// <exception cref="InvalidOperationException"></exception>
     private static void SeedSqlCipher4Database(string path, string password, string key, byte[] value)
     {
         Batteries_V2.Init();
@@ -179,6 +182,7 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
     /// <summary>Runs a non-result SQL statement and throws if the call fails.</summary>
     /// <param name="db">An open SQLite handle.</param>
     /// <param name="sql">The statement to execute.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void Exec(sqlite3 db, string sql) =>
         ThrowIfNotOk(sqlite3_exec(db, sql), db, $"exec: {sql}");
 
@@ -186,6 +190,7 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
     /// <param name="rc">The SQLite return code.</param>
     /// <param name="db">An open SQLite handle, used to extract a textual error message.</param>
     /// <param name="operation">A description of the operation, included in the exception message.</param>
+    /// <exception cref="InvalidOperationException"></exception>
     private static void ThrowIfNotOk(int rc, sqlite3 db, string operation)
     {
         if (rc is SQLITE_OK or SQLITE_DONE or SQLITE_ROW)

@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 
 #if REACTIVE_SHIM
@@ -11,6 +12,7 @@ namespace Akavache.Integration.Tests;
 #endif
 
 /// <summary>Tests for NewtonsoftJson.AkavacheBuilderExtensions.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class NewtonsoftJsonBuilderExtensionsTests
 {
@@ -224,6 +226,7 @@ public class NewtonsoftJsonBuilderExtensionsTests
     /// <summary>Creates a real <see cref="IAkavacheBuilder"/> with the given application name.</summary>
     /// <param name="applicationName">The application name to assign to the builder.</param>
     /// <returns>A configured <see cref="IAkavacheBuilder"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static IAkavacheBuilder CreateBuilder(string applicationName) =>
         CacheDatabase.CreateBuilder().WithApplicationName(applicationName);
 }

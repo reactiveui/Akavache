@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Settings.Tests;
@@ -68,6 +69,7 @@ internal static class TestHelper
     /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
     /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 500ms.</param>
     /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Task EventuallyAsync(
         Func<bool> condition,
         int timeoutMs = 10_000,
@@ -161,6 +163,7 @@ internal static class TestHelper
     /// <summary>Returns <see langword="true"/> if the supplied exception message looks like a "disposed" transient from Rx.</summary>
     /// <param name="ex">The exception to inspect.</param>
     /// <returns>True if the message indicates a disposed resource; otherwise, false.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsDisposedMessage(InvalidOperationException ex) =>
         ex.Message.Contains("disposed", StringComparison.OrdinalIgnoreCase);
 

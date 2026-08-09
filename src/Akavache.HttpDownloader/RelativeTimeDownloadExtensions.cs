@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if NET462_OR_GREATER
 using System.Net.Http;
@@ -30,6 +32,7 @@ public static class RelativeTimeDownloadExtensions
         /// <param name="httpMethod">The HTTP method to use for the request.</param>
         /// <param name="expiration">A time span that will be added to the current time to determine expiration.</param>
         /// <returns>An observable that emits the downloaded data when available.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string url, HttpMethod httpMethod, TimeSpan expiration) =>
             blobCache.DownloadUrl(url, httpMethod, expiration, (IEnumerable<KeyValuePair<string, string>>?)null, false);
 
@@ -39,6 +42,7 @@ public static class RelativeTimeDownloadExtensions
         /// <param name="expiration">A time span that will be added to the current time to determine expiration.</param>
         /// <param name="headers">Optional HTTP headers to include in the request.</param>
         /// <returns>An observable that emits the downloaded data when available.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string url, HttpMethod httpMethod, TimeSpan expiration, IEnumerable<KeyValuePair<string, string>>? headers) =>
             blobCache.DownloadUrl(url, httpMethod, expiration, headers, false);
 
@@ -60,6 +64,7 @@ public static class RelativeTimeDownloadExtensions
         /// <param name="httpMethod">The HTTP method to use for the request.</param>
         /// <param name="expiration">A time span that will be added to the current time to determine expiration.</param>
         /// <returns>An observable that emits the downloaded data when available.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(Uri url, HttpMethod httpMethod, TimeSpan expiration) =>
             blobCache.DownloadUrl(url, httpMethod, expiration, (IEnumerable<KeyValuePair<string, string>>?)null, false);
 
@@ -69,6 +74,7 @@ public static class RelativeTimeDownloadExtensions
         /// <param name="expiration">A time span that will be added to the current time to determine expiration.</param>
         /// <param name="headers">Optional HTTP headers to include in the request.</param>
         /// <returns>An observable that emits the downloaded data when available.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(Uri url, HttpMethod httpMethod, TimeSpan expiration, IEnumerable<KeyValuePair<string, string>>? headers) =>
             blobCache.DownloadUrl(url, httpMethod, expiration, headers, false);
 

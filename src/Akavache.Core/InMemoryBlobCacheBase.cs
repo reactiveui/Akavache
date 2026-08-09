@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 #if NET6_0_OR_GREATER
 using System.Runtime.InteropServices;
 #endif
@@ -23,6 +24,7 @@ namespace Akavache;
 /// </remarks>
 /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
 /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
+[System.Diagnostics.DebuggerDisplay("{Scheduler}")]
 public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer) : ISecureBlobCache
 {
     /// <summary>The in-memory key to cache entry mapping.</summary>
@@ -63,6 +65,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
     }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
         Insert(keyValuePairs, (DateTimeOffset?)null);
 
@@ -81,10 +84,9 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
             {
                 lock (_lock)
                 {
-                    var now = Scheduler.Now;
                     foreach (var pair in keyValuePairs)
                     {
-                        _cache[pair.Key] = new(pair.Key, TypeName: null, pair.Value, now, absoluteExpiration);
+                        _cache[pair.Key] = new(pair.Key, TypeName: null, pair.Value, Scheduler.Now, absoluteExpiration);
                     }
                 }
 
@@ -94,6 +96,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
     }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Insert(string key, byte[] data) =>
         Insert(key, data, (DateTimeOffset?)null);
 
@@ -114,6 +117,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                 Scheduler);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
         Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
@@ -165,6 +169,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
     }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
         Insert(key, data, type, (DateTimeOffset?)null);
 
@@ -247,9 +252,11 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                     .Catch<KeyValuePair<string, byte[]>, KeyNotFoundException>(static _ => ImmutableEmptySignal<KeyValuePair<string, byte[]>>.Instance));
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]?> Get(string key, Type type) => Get(key);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) => Get(keys);
 
     /// <inheritdoc />
@@ -270,7 +277,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                         List<KeyValuePair<string, byte[]>> result = new(keys.Count);
                         List<string> expiredKeys = new(keys.Count);
 
-                        foreach (var key in keys)
+                        foreach (var key in keys!)
                         {
                             if (_cache.TryGetValue(key, out var entry))
                             {
@@ -351,7 +358,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                         List<string> expiredKeys = new(keys.Count);
                         List<string> validKeys = new(keys.Count);
 
-                        foreach (var key in keys)
+                        foreach (var key in keys!)
                         {
                             if (_cache.TryGetValue(key, out var entry))
                             {
@@ -408,16 +415,20 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                 Scheduler);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) =>
         GetCreatedAt(keys);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => GetCreatedAt(key);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Flush() => ImmutableReturnRxVoidSignal.Instance;
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Flush(Type type) => ImmutableReturnRxVoidSignal.Instance;
 
     /// <inheritdoc />
@@ -441,6 +452,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                 Scheduler);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Invalidate(string key, Type type) => Invalidate(key);
 
     /// <inheritdoc />
@@ -479,6 +491,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
     }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Invalidate(IEnumerable<string> keys, Type type) => Invalidate(keys);
 
     /// <inheritdoc />
@@ -561,6 +574,10 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
         };
 
     /// <inheritdoc />
+    [SuppressMessage(
+        "Modernization",
+        "SST2209:A null-forgiving operator has no local effect",
+        Justification = "The switch arm above rejects a null type, but that guarantee does not flow into the deferred lambda, so dropping the operator produces CS8602.")]
     public IObservable<RxVoid> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
         (string.IsNullOrWhiteSpace(key), type is null, Volatile.Read(ref _disposed) != 0) switch
         {
@@ -584,6 +601,10 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
         };
 
     /// <inheritdoc />
+    [SuppressMessage(
+        "Modernization",
+        "SST2209:A null-forgiving operator has no local effect",
+        Justification = "The switch arm above rejects null keys, but that guarantee does not flow into the deferred lambda, so dropping the operator produces CS8602.")]
     public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
         (keys is null, Volatile.Read(ref _disposed) != 0) switch
         {
@@ -609,6 +630,10 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
         };
 
     /// <inheritdoc />
+    [SuppressMessage(
+        "Modernization",
+        "SST2209:A null-forgiving operator has no local effect",
+        Justification = "The switch arm above rejects a null type, but that guarantee does not flow into the deferred lambda, so dropping the operator produces CS8602.")]
     public IObservable<RxVoid> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) =>
         (keys is null, type is null, Volatile.Read(ref _disposed) != 0) switch
         {
@@ -662,6 +687,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
     /// <param name="key">The key to associate with the object.</param>
     /// <param name="value">The object to serialize.</param>
     /// <returns>A Future result representing the completion of the insert.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
     [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]
     public IObservable<RxVoid> InsertObject<T>(string key, T value) =>
@@ -717,6 +743,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
     /// <typeparam name="T">The type of object associated with the blob.</typeparam>
     /// <param name="key">The key to return the date for.</param>
     /// <returns>The date the key was created on.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
         "Design",
         "SST2307:Type parameter appears in no parameter",
@@ -727,6 +754,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
     /// <typeparam name="T">The type of object associated with the blob.</typeparam>
     /// <param name="key">The key to invalidate.</param>
     /// <returns>A Future result representing the completion of the invalidation.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
         "Design",
         "SST2307:Type parameter appears in no parameter",
@@ -736,6 +764,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
     /// <summary>Invalidates all objects of the specified type.</summary>
     /// <typeparam name="T">The type of object associated with the blob.</typeparam>
     /// <returns>A Future result representing the completion of the invalidation.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [SuppressMessage(
         "Design",
         "SST2307:Type parameter appears in no parameter",

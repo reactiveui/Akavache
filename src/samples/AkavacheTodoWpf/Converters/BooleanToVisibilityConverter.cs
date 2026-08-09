@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -9,6 +9,7 @@ using System.Windows.Data;
 namespace AkavacheTodoWpf.Converters;
 
 /// <summary>Converts boolean values to Visibility for WPF.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public class BooleanToVisibilityConverter : IValueConverter
 {
     /// <summary>Converts boolean to Visibility.</summary>

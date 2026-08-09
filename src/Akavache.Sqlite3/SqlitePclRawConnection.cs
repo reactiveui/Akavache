@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using SQLitePCL;
 using static SQLitePCL.raw;
 
@@ -399,6 +400,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     internal bool InTransaction { get; set; }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> CreateSchema() =>
         Queue.Enqueue(static conn =>
         {
@@ -407,6 +409,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<bool> TableExists(string tableName) =>
         Queue.Enqueue(conn =>
         {
@@ -424,6 +427,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<CacheEntry?> Get(string key, string? typeFullName, DateTimeOffset now) =>
         Queue.Enqueue(conn =>
         {
@@ -496,6 +500,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<CacheEntry> GetAll(string? typeFullName, DateTimeOffset now) =>
         Queue.EnqueueRowStream<CacheEntry>((conn, onNext, isCancelled) =>
         {
@@ -526,6 +531,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<string> GetAllKeys(string? typeFullName, DateTimeOffset now) =>
         Queue.EnqueueRowStream<string>((conn, onNext, isCancelled) =>
         {
@@ -650,6 +656,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> InvalidateAll(string? typeFullName) =>
         Queue.Enqueue(
             conn =>
@@ -679,6 +686,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             coalescable: true);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> SetExpiry(string key, string? typeFullName, DateTimeOffset? expiresAt) =>
         Queue.Enqueue(conn =>
         {
@@ -710,6 +718,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> VacuumExpired(DateTimeOffset now) =>
         Queue.Enqueue(conn =>
         {
@@ -728,6 +737,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Checkpoint(CheckpointMode mode) =>
         Queue.Enqueue(conn =>
         {
@@ -742,6 +752,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Compact() =>
         Queue.Enqueue(static conn =>
         {
@@ -753,9 +764,11 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Dispose() => CloseCore();
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]?> TryReadLegacyV10Value(string key, DateTimeOffset now, Type? type) =>
         Queue.Enqueue(conn =>
         {
@@ -806,6 +819,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     /// during the migration process from version 10 to version 11 and is not part of the standard connection interface.
     /// </summary>
     /// <returns>An observable sequence containing the data from each legacy row.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IObservable<V10LegacyRow> ReadAllLegacyV10Rows() =>
         Queue.EnqueueRowStream<V10LegacyRow>(static (conn, onNext, isCancelled) =>
         {
@@ -1143,6 +1157,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     /// <param name="resultCode">The SQLite result code.</param>
     /// <param name="db">The database handle for error message extraction, or null.</param>
     /// <param name="operation">A description of the operation for the error message.</param>
+    /// <exception cref="AkavacheSqliteException"></exception>
     internal static void CheckRc(int resultCode, sqlite3? db, string operation)
     {
         if (resultCode is SQLITE_OK or SQLITE_DONE or SQLITE_ROW)

@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive;
@@ -31,6 +32,7 @@ public static class LoginExtensions
         /// <param name="user">The username to save.</param>
         /// <param name="password">The password associated with the username.</param>
         /// <returns>An observable that signals when the login data is saved.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
         public IObservable<RxVoid> SaveLogin(string user, string password) =>
@@ -45,6 +47,7 @@ public static class LoginExtensions
         /// <param name="password">The password associated with the username.</param>
         /// <param name="host">The host identifier to associate with the login data.</param>
         /// <returns>An observable that signals when the login data is saved.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
         public IObservable<RxVoid> SaveLogin(string user, string password, string host) =>
@@ -60,6 +63,7 @@ public static class LoginExtensions
         /// <param name="host">The host identifier to associate with the login data.</param>
         /// <param name="absoluteExpiration">An optional expiration date for the cached login data.</param>
         /// <returns>An observable that signals when the login data is saved.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
         public IObservable<RxVoid> SaveLogin(string user, string password, string host, DateTimeOffset? absoluteExpiration) =>
@@ -71,6 +75,7 @@ public static class LoginExtensions
         /// that signals an error with <see cref="KeyNotFoundException"/>.
         /// </summary>
         /// <returns>An observable that emits the cached login information.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetLogin requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using GetLogin requires types to be preserved for serialization")]
         public IObservable<LoginInfo> GetLogin() =>
@@ -83,6 +88,7 @@ public static class LoginExtensions
         /// </summary>
         /// <param name="host">The host identifier associated with the login data.</param>
         /// <returns>An observable that emits the cached login information.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Using GetLogin requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using GetLogin requires types to be preserved for serialization")]
         public IObservable<LoginInfo> GetLogin(string host) =>
@@ -90,12 +96,14 @@ public static class LoginExtensions
 
         /// <summary>Erases the login associated with the specified host.</summary>
         /// <returns>A observable which signals when the erase is completed.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> EraseLogin() =>
             blobCache.EraseLogin(DefaultHost);
 
         /// <summary>Erases the login associated with the specified host.</summary>
         /// <param name="host">The host associated with the data.</param>
         /// <returns>A observable which signals when the erase is completed.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> EraseLogin(string host) =>
                 blobCache.InvalidateObject<LoginInfo>($"login:{host}");
     }

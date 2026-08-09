@@ -1,10 +1,11 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 #if NETFRAMEWORK
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace System;
 
@@ -42,6 +43,7 @@ internal struct HashCode : IEquatable<HashCode>
     /// <param name="value1">The first value.</param>
     /// <param name="value2">The second value.</param>
     /// <returns>The combined hash code.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Combine<T1, T2>(T1 value1, T2 value2) => (value1, value2).GetHashCode();
 
     /// <summary>Combines three values into a hash code.</summary>
@@ -52,6 +54,7 @@ internal struct HashCode : IEquatable<HashCode>
     /// <param name="value2">The second value.</param>
     /// <param name="value3">The third value.</param>
     /// <returns>The combined hash code.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Combine<T1, T2, T3>(T1 value1, T2 value2, T3 value3) =>
         (value1, value2, value3).GetHashCode();
 
@@ -65,18 +68,21 @@ internal struct HashCode : IEquatable<HashCode>
     /// <param name="value3">The third value.</param>
     /// <param name="value4">The fourth value.</param>
     /// <returns>The combined hash code.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Combine<T1, T2, T3, T4>(T1 value1, T2 value2, T3 value3, T4 value4) =>
         (value1, value2, value3, value4).GetHashCode();
 
     /// <summary>Adds a value to the running hash.</summary>
     /// <typeparam name="T">The type of the value.</typeparam>
     /// <param name="value">The value to add.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add<T>(T value) => AddHash(value?.GetHashCode() ?? 0);
 
     /// <summary>Adds a value to the running hash using a specific comparer.</summary>
     /// <typeparam name="T">The type of the value.</typeparam>
     /// <param name="value">The value to add.</param>
     /// <param name="comparer">The comparer used to obtain the value's hash code.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add<T>(T value, IEqualityComparer<T>? comparer) =>
         AddHash(value is null ? 0 : comparer?.GetHashCode(value) ?? value.GetHashCode());
 
@@ -92,6 +98,7 @@ internal struct HashCode : IEquatable<HashCode>
 
     /// <summary>Returns the accumulated hash code.</summary>
     /// <returns>The combined hash code of every added value.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly int ToHashCode() => _accumulator;
 
     /// <summary>Not supported; matches the BCL, which forbids hashing the accumulator itself.</summary>

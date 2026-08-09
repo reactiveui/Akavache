@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if NET462_OR_GREATER
@@ -44,6 +44,7 @@ public static class HttpExtensions
         /// <param name="fetchAlways">Whether to bypass the cache and always fetch.</param>
         /// <param name="absoluteExpiration">An optional expiration time for the cached response.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, string url, bool fetchAlways, DateTimeOffset? absoluteExpiration) =>
             blobCache.DownloadUrl(key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, absoluteExpiration);
 
@@ -52,6 +53,7 @@ public static class HttpExtensions
         /// <param name="fetchAlways">Whether to bypass the cache and always fetch.</param>
         /// <param name="absoluteExpiration">An optional expiration time for the cached response.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string url, bool fetchAlways, DateTimeOffset? absoluteExpiration) =>
             blobCache.DownloadUrl(url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, absoluteExpiration);
 
@@ -61,6 +63,7 @@ public static class HttpExtensions
         /// <param name="fetchAlways">Whether to bypass the cache and always fetch.</param>
         /// <param name="absoluteExpiration">An optional expiration time for the cached response.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, Uri url, bool fetchAlways, DateTimeOffset? absoluteExpiration) =>
             blobCache.DownloadUrl(key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, absoluteExpiration);
 
@@ -69,6 +72,7 @@ public static class HttpExtensions
         /// <param name="fetchAlways">Whether to bypass the cache and always fetch.</param>
         /// <param name="absoluteExpiration">An optional expiration time for the cached response.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(Uri url, bool fetchAlways, DateTimeOffset? absoluteExpiration) =>
             blobCache.DownloadUrl(url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, absoluteExpiration);
 
@@ -77,6 +81,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="absoluteExpiration">An optional expiration time for the cached response.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, string url, DateTimeOffset? absoluteExpiration) =>
             blobCache.DownloadUrl(key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, absoluteExpiration);
 
@@ -84,6 +89,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="absoluteExpiration">An optional expiration time for the cached response.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string url, DateTimeOffset? absoluteExpiration) =>
             blobCache.DownloadUrl(url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, absoluteExpiration);
 
@@ -92,6 +98,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="absoluteExpiration">An optional expiration time for the cached response.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, Uri url, DateTimeOffset? absoluteExpiration) =>
             blobCache.DownloadUrl(key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, absoluteExpiration);
 
@@ -99,6 +106,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="absoluteExpiration">An optional expiration time for the cached response.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(Uri url, DateTimeOffset? absoluteExpiration) =>
             blobCache.DownloadUrl(url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, absoluteExpiration);
 
@@ -109,6 +117,7 @@ public static class HttpExtensions
         /// </summary>
         /// <param name="url">The URL to download.</param>
         /// <returns>An observable that emits the data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string url) =>
             blobCache.DownloadUrl(url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
@@ -120,6 +129,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="method">The HTTP method to use for the request.</param>
         /// <returns>An observable that emits the data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string url, HttpMethod? method) =>
             blobCache.DownloadUrl(url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
@@ -132,6 +142,7 @@ public static class HttpExtensions
         /// <param name="method">The HTTP method to use for the request.</param>
         /// <param name="headers">An optional collection containing HTTP request headers.</param>
         /// <returns>An observable that emits the data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
             blobCache.DownloadUrl(url, method, headers, false, (DateTimeOffset?)null);
 
@@ -145,6 +156,7 @@ public static class HttpExtensions
         /// <param name="headers">An optional collection containing HTTP request headers.</param>
         /// <param name="fetchAlways">A value indicating whether to force a web request to always be issued, skipping the cache.</param>
         /// <returns>An observable that emits the data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
             blobCache.DownloadUrl(url, method, headers, fetchAlways, (DateTimeOffset?)null);
 
@@ -171,6 +183,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="fetchAlways">Whether to bypass the cache and always fetch.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string url, bool fetchAlways) =>
             blobCache.DownloadUrl(url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
 
@@ -181,6 +194,7 @@ public static class HttpExtensions
         /// </summary>
         /// <param name="url">The URL to download.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(Uri url) =>
             blobCache.DownloadUrl(url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
@@ -192,6 +206,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="method">The method.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(Uri url, HttpMethod? method) =>
             blobCache.DownloadUrl(url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
@@ -204,6 +219,7 @@ public static class HttpExtensions
         /// <param name="method">The method.</param>
         /// <param name="headers">An optional Dictionary containing the HTTP request headers.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
             blobCache.DownloadUrl(url, method, headers, false, (DateTimeOffset?)null);
 
@@ -217,6 +233,7 @@ public static class HttpExtensions
         /// <param name="headers">An optional Dictionary containing the HTTP request headers.</param>
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
             blobCache.DownloadUrl(url, method, headers, fetchAlways, (DateTimeOffset?)null);
 
@@ -243,6 +260,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="fetchAlways">Whether to bypass the cache and always fetch.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(Uri url, bool fetchAlways) =>
             blobCache.DownloadUrl(url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
 
@@ -254,6 +272,7 @@ public static class HttpExtensions
         /// <param name="key">The key to store with.</param>
         /// <param name="url">The URL to download.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, string url) =>
             blobCache.DownloadUrl(key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
@@ -266,6 +285,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="method">The method.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, string url, HttpMethod? method) =>
             blobCache.DownloadUrl(key, url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
@@ -279,6 +299,7 @@ public static class HttpExtensions
         /// <param name="method">The method.</param>
         /// <param name="headers">An optional Dictionary containing the HTTP request headers.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
             blobCache.DownloadUrl(key, url, method, headers, false, (DateTimeOffset?)null);
 
@@ -293,6 +314,7 @@ public static class HttpExtensions
         /// <param name="headers">An optional Dictionary containing the HTTP request headers.</param>
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
             blobCache.DownloadUrl(key, url, method, headers, fetchAlways, (DateTimeOffset?)null);
 
@@ -322,6 +344,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="fetchAlways">Whether to bypass the cache and always fetch.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, string url, bool fetchAlways) =>
             blobCache.DownloadUrl(key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
 
@@ -333,6 +356,7 @@ public static class HttpExtensions
         /// <param name="key">The key to store with.</param>
         /// <param name="url">The URL to download.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, Uri url) =>
             blobCache.DownloadUrl(key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
@@ -345,6 +369,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="method">The method.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, Uri url, HttpMethod? method) =>
             blobCache.DownloadUrl(key, url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
@@ -358,6 +383,7 @@ public static class HttpExtensions
         /// <param name="method">The method.</param>
         /// <param name="headers">An optional Dictionary containing the HTTP request headers.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
             blobCache.DownloadUrl(key, url, method, headers, false, (DateTimeOffset?)null);
 
@@ -372,6 +398,7 @@ public static class HttpExtensions
         /// <param name="headers">An optional Dictionary containing the HTTP request headers.</param>
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <returns>The data downloaded from the URL.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
             blobCache.DownloadUrl(key, url, method, headers, fetchAlways, (DateTimeOffset?)null);
 
@@ -401,6 +428,7 @@ public static class HttpExtensions
         /// <param name="url">The URL to download.</param>
         /// <param name="fetchAlways">Whether to bypass the cache and always fetch.</param>
         /// <returns>An observable that emits the downloaded bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]> DownloadUrl(string key, Uri url, bool fetchAlways) =>
             blobCache.DownloadUrl(key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
     }
@@ -453,6 +481,7 @@ public static class HttpExtensions
     /// <summary>Gets the HTTP service associated with a cache, creating a default one if none was set.</summary>
     /// <param name="blobCache">The cache to look up the service for.</param>
     /// <returns>The associated HTTP service.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static IHttpService GetHttpService(IBlobCache blobCache) =>
         HttpServices.GetValue(blobCache, static _ => new HttpService());
 }

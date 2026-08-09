@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -19,6 +19,7 @@ namespace Akavache.Integration.Tests;
 /// <see cref="UniversalSerializer"/>'s registered-factory cache, <see cref="CacheDatabase"/>,
 /// <see cref="AkavacheBuilder"/>'s static stores, and <c>Splat.AppLocator</c>.
 /// </remarks>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class UniversalSerializerTests
 {
@@ -220,7 +221,7 @@ public class UniversalSerializerTests
             User = new UserObject { Name = "Complex User", Bio = "Complex Bio", Blog = "Complex Blog" },
             Date = TimeProvider.System.GetUtcNow().UtcDateTime,
             Numbers = numberSequence,
-            Metadata = new Dictionary<string, object> { ["version"] = "1.0", ["enabled"] = true, ["count"] = MetadataItemCount }
+            Metadata = new Dictionary<string, object> { ["version"] = "1.0", ["enabled"] = true, ["count"] = MetadataItemCount },
         };
 
         // Act

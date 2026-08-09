@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
@@ -11,6 +11,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for core utility functionality.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class CoreUtilityTests
 {
@@ -143,12 +144,8 @@ public class CoreUtilityTests
             await Assert.That(ninetyMinutes.TotalMinutes).IsEqualTo(HourAndAHalfMinutes);
         }
 
-        // Test arithmetic
-        var combined = oneHour + thirtyMinutes;
-        await Assert.That(combined).IsEqualTo(ninetyMinutes);
-
-        var difference = ninetyMinutes - oneHour;
-        await Assert.That(difference).IsEqualTo(thirtyMinutes);
+        await Assert.That(oneHour + thirtyMinutes).IsEqualTo(ninetyMinutes);
+        await Assert.That(ninetyMinutes - oneHour).IsEqualTo(thirtyMinutes);
     }
 
     /// <summary>Tests that RequestCache functionality works correctly.</summary>

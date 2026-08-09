@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Akavache.EncryptedSqlite3;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
@@ -19,6 +20,7 @@ namespace Akavache.Benchmarks;
 /// <see cref="EncryptedSqliteBlobCache"/> in parallel so the before/after
 /// comparison captures both backends.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{BenchmarkSize}")]
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
@@ -50,7 +52,7 @@ public class SqliteBackendBenchmarks : IDisposable
     private Dictionary<string, byte[]> _bulkPayload = null!;
 
     /// <summary>Tracks whether <see cref="Dispose(bool)"/> has already run.</summary>
-    private bool _disposedValue;
+    private int _disposedValue;
 
     /// <summary> Gets or sets the number of entries each backend is populated with and the number of operations each measured benchmark issues. </summary>
     /// <value>
@@ -88,6 +90,7 @@ public class SqliteBackendBenchmarks : IDisposable
     }
 
     /// <summary> Closes both backends and removes the temp directory their databases live in. </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [GlobalCleanup]
     public void GlobalCleanup() => Dispose();
 
@@ -217,18 +220,20 @@ public class SqliteBackendBenchmarks : IDisposable
     /// <param name="disposing"><see langword="true"/> to release both managed and unmanaged resources; <see langword="false"/> to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposedValue)
+        // Claimed up front so a second caller returns immediately rather than racing the first
+        // through the disposal below.
+        if (Interlocked.Exchange(ref _disposedValue, 1) != 0)
         {
             return;
         }
 
-        if (disposing)
+        if (!disposing)
         {
-            _plain?.Dispose();
-            _encrypted?.Dispose();
-            _directoryCleanup?.Dispose();
+            return;
         }
 
-        _disposedValue = true;
+        _plain?.Dispose();
+        _encrypted?.Dispose();
+        _directoryCleanup?.Dispose();
     }
 }

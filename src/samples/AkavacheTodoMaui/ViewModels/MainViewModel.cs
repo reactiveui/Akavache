@@ -1,10 +1,11 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
 using ReactiveUI;
@@ -13,6 +14,7 @@ using ReactiveUI.SourceGenerators;
 namespace AkavacheTodoMaui.ViewModels;
 
 /// <summary>Main view model for the MAUI Todo application demonstrating ReactiveUI and Akavache integration.</summary>
+[System.Diagnostics.DebuggerDisplay("{IsLoading}")]
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public sealed partial class MainViewModel : ReactiveObject, IActivatableViewModel
@@ -199,6 +201,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
 
     /// <summary>Saves application state when shutting down.</summary>
     /// <returns>Observable unit.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> SaveApplicationState() => Signal.Merge(
             SaveCurrentTodos(),
             TodoCacheService.SaveSettings(Settings),
@@ -218,7 +221,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
                 Description = "Go through the comprehensive Akavache documentation and examples",
                 DueDate = now.AddHours(SampleReviewDueHours),
                 Priority = TodoPriority.High,
-                Tags = ["documentation", "akavache"]
+                Tags = ["documentation", "akavache"],
             },
             new()
             {
@@ -226,7 +229,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
                 Description = "Add proper cache expiration for temporary data",
                 DueDate = now.AddDays(1),
                 Priority = TodoPriority.Medium,
-                Tags = ["development", "caching"]
+                Tags = ["development", "caching"],
             },
             new()
             {
@@ -234,7 +237,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
                 Description = "Verify that notifications work correctly for due dates",
                 DueDate = now.AddMinutes(SampleNotificationTestDueMinutes),
                 Priority = TodoPriority.Critical,
-                Tags = ["testing", "notifications"]
+                Tags = ["testing", "notifications"],
             },
             new()
             {
@@ -242,7 +245,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
                 Description = "Create comprehensive unit tests for cache service",
                 DueDate = now.AddDays(SampleUnitTestDueDays),
                 Priority = TodoPriority.High,
-                Tags = ["testing", "development"]
+                Tags = ["testing", "development"],
             },
             new() { Title = "Optimize Performance", Description = "Profile and optimize cache performance for large datasets", Priority = TodoPriority.Low, Tags = ["performance", "optimization"] }
         ];
@@ -408,11 +411,13 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
                 var existingIndex = -1;
                 for (var i = 0; i < Notifications.Count; i++)
                 {
-                    if (Notifications[i].Contains(baseMessage))
+                    if (!Notifications[i].Contains(baseMessage))
                     {
-                        existingIndex = i;
-                        break;
+                        continue;
                     }
+
+                    existingIndex = i;
+                    break;
                 }
 
                 if (existingIndex >= 0)
@@ -451,6 +456,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
 
     /// <summary>Loads the list of todos from cache and populates the observable collection.</summary>
     /// <returns>An observable that completes when the load is done.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<RxVoid> LoadTodos() => TodoCacheService.GetAllTodos()
@@ -490,6 +496,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
 
     /// <summary>Loads the application settings from cache.</summary>
     /// <returns>An observable that completes when settings are loaded.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<RxVoid> LoadSettings() => TodoCacheService.GetSettings()
@@ -549,7 +556,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
             DueDate = dueDate,
             Priority = NewTodoPriority,
             CreatedAt = TimeProvider.System.GetUtcNow(),
-            Tags = ParseTags(NewTodoTags)
+            Tags = ParseTags(NewTodoTags),
         };
 
         // Debug the created todo
@@ -629,6 +636,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
 
     /// <summary>Command handler that removes all completed todos.</summary>
     /// <returns>An observable that completes when the clear operation is done.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IObservable<RxVoid> ExecuteClearCompleted() =>
         Signal.FromAsync(async () =>
         {
@@ -655,6 +663,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
 
     /// <summary>Command handler that saves settings and updates notification state.</summary>
     /// <returns>An observable that completes when settings have been saved.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IObservable<RxVoid> ExecuteSaveSettings() => TodoCacheService.SaveSettings(Settings)
             .SelectMany(_ => _notificationService.UpdateSettings(Settings))
             .Do(_ => StatusMessage = "Settings saved");
@@ -723,6 +732,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <param name="left">The todo that should come first when the result is negative.</param>
     /// <param name="right">The todo that should come first when the result is positive.</param>
     /// <returns>A negative number, zero, or a positive number describing the relative order.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int CompareBySortOrder(TodoItem left, TodoItem right) =>
         Comparer<object>.Default.Compare(GetSortKey(left), GetSortKey(right));
 

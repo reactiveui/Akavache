@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Tests;
@@ -11,6 +12,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for Akavache.Sqlite3.AkavacheBuilderExtensions (non-encrypted).</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class Sqlite3BuilderExtensionsTests
 {
@@ -134,7 +136,7 @@ public class Sqlite3BuilderExtensionsTests
             .WithApplicationName("CreateSqliteCacheEmptyName")
             .WithSerializer<SystemJsonSerializer>();
 
-        await Assert.That(() => Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache(string.Empty, builder))
+        await Assert.That(() => Sqlite3.SqliteCacheFactory.CreateSqliteCache(string.Empty, builder))
             .Throws<ArgumentException>();
     }
 
@@ -146,7 +148,7 @@ public class Sqlite3BuilderExtensionsTests
         var builder = CacheDatabase.CreateBuilder()
             .WithApplicationName("CreateSqliteCacheNoSerializer");
 
-        await Assert.That(() => Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache(UserAccountSlot, builder))
+        await Assert.That(() => Sqlite3.SqliteCacheFactory.CreateSqliteCache(UserAccountSlot, builder))
             .Throws<InvalidOperationException>();
     }
 
@@ -158,7 +160,7 @@ public class Sqlite3BuilderExtensionsTests
         SystemJsonSerializer serializer = new();
         FakeAkavacheBuilder builder = new() { ApplicationName = string.Empty, Serializer = serializer, SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName, };
 
-        await Assert.That(() => Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache(UserAccountSlot, builder))
+        await Assert.That(() => Sqlite3.SqliteCacheFactory.CreateSqliteCache(UserAccountSlot, builder))
             .Throws<ArgumentException>();
     }
 
@@ -176,7 +178,7 @@ public class Sqlite3BuilderExtensionsTests
 
         _ = builder.WithSqliteProvider();
 
-        var cache = Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache(UserAccountSlot, builder);
+        var cache = Sqlite3.SqliteCacheFactory.CreateSqliteCache(UserAccountSlot, builder);
         try
         {
             await Assert.That(cache).IsNotNull();
@@ -204,6 +206,7 @@ public class Sqlite3BuilderExtensionsTests
     /// <summary>Creates a new <see cref="IAkavacheBuilder"/> with the given application name.</summary>
     /// <param name="applicationName">The application name to configure on the builder.</param>
     /// <returns>A new <see cref="IAkavacheBuilder"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static IAkavacheBuilder CreateBuilder(string applicationName) =>
         CacheDatabase.CreateBuilder().WithApplicationName(applicationName);
 

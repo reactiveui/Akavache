@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -92,7 +92,7 @@ public partial class SerializerExtensionsTests
                 ["string"] = "test string",
                 ["int"] = MixedTypeIntValue,
                 ["user"] = new UserObject { Name = "Test User", Bio = "Test Bio", Blog = "Test Blog" },
-                ["date"] = testDate
+                ["date"] = testDate,
             };
 
             // Act
@@ -101,7 +101,7 @@ public partial class SerializerExtensionsTests
             // Assert
             string? stringValue = null;
             _ = cache.GetObject<string>("string").Subscribe(v => stringValue = v);
-            int intValue = 0;
+            var intValue = 0;
             _ = cache.GetObject<int>("int").Subscribe(v => intValue = v);
             UserObject? userValue = null;
             _ = cache.GetObject<UserObject>("user").Subscribe(v => userValue = v);
@@ -216,7 +216,7 @@ public partial class SerializerExtensionsTests
                 _ = cache.GetObject<string>("key1").Subscribe(v => value1 = v);
                 string? value2 = null;
                 _ = cache.GetObject<string>("key2").Subscribe(v => value2 = v);
-                int value3 = 0;
+                var value3 = 0;
                 _ = cache.GetObject<int>("key3").Subscribe(v => value3 = v);
                 UserObject? value4 = null;
                 _ = cache.GetObject<UserObject>("key4").Subscribe(v => value4 = v);
@@ -337,7 +337,7 @@ public partial class SerializerExtensionsTests
                     ["int_val"] = EdgeCaseIntValue,
                     ["null_val"] = null!,
                     [EmptyStringKey] = string.Empty,
-                    ["complex_obj"] = (Prop1: FirstEntryValue, Prop2: ComplexPropertyValue)
+                    ["complex_obj"] = (Prop1: FirstEntryValue, Prop2: ComplexPropertyValue),
                 };
                 _ = cache.InsertObjects(multiDict).Subscribe();
 
@@ -351,7 +351,7 @@ public partial class SerializerExtensionsTests
                 _ = cache.GetObject<string>("single").Subscribe(v => retrievedSingle = v);
                 string? retrievedString = null;
                 _ = cache.GetObject<string>("string_val").Subscribe(v => retrievedString = v);
-                int retrievedInt = 0;
+                var retrievedInt = 0;
                 _ = cache.GetObject<int>("int_val").Subscribe(v => retrievedInt = v);
                 string? retrievedLarge = null;
                 _ = cache.GetObject<string>("key_500").Subscribe(v => retrievedLarge = v);

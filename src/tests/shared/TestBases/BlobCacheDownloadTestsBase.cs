@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -14,6 +14,7 @@ namespace Akavache.Tests;
 /// TCP sockets. Each test spins up its own <see cref="TestHttpServer"/> on an
 /// ephemeral port.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
     "Usage",
     "CA2234:Pass System.Uri objects instead of strings",
@@ -44,8 +45,9 @@ public abstract class BlobCacheDownloadTestsBase : IDisposable
         server.SetupDefaultResponses();
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             var bytes = fixture.DownloadUrl($"{server.BaseUrl}html").WaitForValue();
             await Assert.That(bytes).IsNotEmpty();
         }
@@ -66,8 +68,9 @@ public abstract class BlobCacheDownloadTestsBase : IDisposable
         server.SetupDefaultResponses();
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             Uri uri = new($"{server.BaseUrl}html");
             var bytes = fixture.DownloadUrl(uri).WaitForValue();
             await Assert.That(bytes).IsNotEmpty();
@@ -89,8 +92,9 @@ public abstract class BlobCacheDownloadTestsBase : IDisposable
         server.SetupDefaultResponses();
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             var key = Guid.NewGuid().ToString();
             _ = fixture.DownloadUrl(key, $"{server.BaseUrl}html").WaitForValue();
 
@@ -114,8 +118,9 @@ public abstract class BlobCacheDownloadTestsBase : IDisposable
         server.SetupDefaultResponses();
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             var key = Guid.NewGuid().ToString();
             _ = fixture.DownloadUrl(key, new Uri($"{server.BaseUrl}html")).WaitForValue();
 
@@ -139,6 +144,7 @@ public abstract class BlobCacheDownloadTestsBase : IDisposable
     /// <summary>Sets up the serializer for the test.</summary>
     /// <param name="serializerType">The type of serializer to create.</param>
     /// <returns>The created serializer instance.</returns>
+    /// <exception cref="ArgumentNullException"></exception>
     private static ISerializer SetupTestSerializer(Type? serializerType) =>
         serializerType is null
             ? throw new ArgumentNullException(nameof(serializerType))

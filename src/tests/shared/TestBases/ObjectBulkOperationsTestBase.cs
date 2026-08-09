@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -9,6 +9,7 @@ namespace Akavache.Tests.TestBases;
 #endif
 
 /// <summary>Base class for tests associated with object based bulk operations.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public abstract class ObjectBulkOperationsTestBase : IDisposable
 {
     /// <summary>The integer component of the tuple payload these tests round-trip.</summary>
@@ -18,7 +19,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     private const int StoredTypesPerKey = 2;
 
     /// <summary>A backing field which indicates if the class has been disposed.</summary>
-    private bool _disposed;
+    private int _disposed;
 
     /// <summary>Tests to make sure that Get works with multiple key types.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
@@ -36,8 +37,9 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
 
         await Assert.That(serializer).IsNotNull();
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             var data = Tuple.Create("Foo", TuplePayloadValue);
             string[] keys = ["Foo", "Bar", "Baz"];
 
@@ -71,8 +73,9 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             var data = Tuple.Create("Foo", TuplePayloadValue);
             string[] keys = ["Foo", "Bar", "Baz"];
 
@@ -107,8 +110,9 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             var data = Tuple.Create("Foo", TuplePayloadValue);
             string[] keys = ["Foo", "Bar", "Baz"];
 
@@ -139,8 +143,9 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             var data = Tuple.Create("Foo", TuplePayloadValue);
             string[] keys = ["Foo", "Bar", "Baz"];
 
@@ -174,8 +179,9 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             var tupleData = Tuple.Create("Foo", TuplePayloadValue);
             const string stringData = "TestString";
             string[] keys = ["Key1", "Key2", "Key3"];
@@ -223,12 +229,12 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     /// <param name="disposing">True to dispose managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed)
+        // Claimed up front so a second caller returns immediately rather than racing the first
+        // through the disposal below.
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
         {
             return;
         }
-
-        _disposed = true;
     }
 
     /// <summary>Sets up the test with the specified serializer type.</summary>

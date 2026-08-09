@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 // Polyfill implementation adapted from Simon Cropp's Polyfill library
@@ -33,6 +33,7 @@ internal readonly struct Index : IEquatable<Index>
     /// <summary>Initializes a new instance of the <see cref="Index"/> struct.</summary>
     /// <param name="value">The index value; must be zero or positive.</param>
     /// <param name="fromEnd">Whether the index is counted from the end of the collection.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public Index(int value, bool fromEnd = false)
     {
         if (value < 0)

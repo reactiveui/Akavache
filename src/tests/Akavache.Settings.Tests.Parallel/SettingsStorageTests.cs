@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Settings.Tests;
@@ -16,6 +17,7 @@ namespace Akavache.Settings.Tests;
 /// the <c>OnPropertyChanged</c> event raise path, and the
 /// <c>Dispose</c> / <c>Dispose(bool)</c> code paths.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class SettingsStorageTests
 {
@@ -170,7 +172,7 @@ public class SettingsStorageTests
         using TestStorage storage = new(StorageKeyPrefix, new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         var raiseCount = 0;
-        string? observed = RaisedPropertyName;
+        var observed = RaisedPropertyName;
         storage.PropertyChanged += (_, args) =>
         {
             raiseCount++;
@@ -373,6 +375,7 @@ public class SettingsStorageTests
     /// </summary>
     /// <param name="keyPrefix">The prefix applied to every settings key.</param>
     /// <param name="cache">The blob cache the settings are persisted to.</param>
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     public class TestStorage(string keyPrefix, IBlobCache cache) : SettingsStorage(keyPrefix, cache)
     {
         /// <summary>
@@ -380,16 +383,19 @@ public class SettingsStorageTests
         /// the event raise path can be tested from outside the assembly.
         /// </summary>
         /// <param name="propertyName">The property name to raise the event for.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaisePropertyChanged(string propertyName) => OnPropertyChanged(propertyName);
 
         /// <summary>
         /// Public re-projection of the protected name-less <c>OnPropertyChanged</c> overload,
         /// which signals that every property on the instance may have changed.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaisePropertyChanged() => OnPropertyChanged();
 
         /// <summary>Public re-projection of the protected <c>Dispose(bool)</c> method so the <c>disposing</c>-false code path can be exercised directly.</summary>
         /// <param name="disposing">Whether managed resources should be released.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InvokeDispose(bool disposing) => Dispose(disposing);
     }
 
@@ -401,6 +407,7 @@ public class SettingsStorageTests
     /// </summary>
     /// <param name="keyPrefix">The key prefix supplied to the base.</param>
     /// <param name="cache">The backing cache supplied to the base.</param>
+    [System.Diagnostics.DebuggerDisplay("{AlphaCount}")]
     public class ProbeStorage(string keyPrefix, IBlobCache cache) : SettingsStorage(keyPrefix, cache)
     {
         /// <summary>Gets the number of times <see cref="Alpha"/> was read.</summary>
@@ -589,11 +596,13 @@ public class SettingsStorageTests
 
         /// <summary>Calls <c>GetOrCreateObservable</c> with a null key.</summary>
         /// <returns>The observable (never reached).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<string> GetWithNullKey() => GetOrCreateObservable("default", null!);
 
         /// <summary>Calls <c>SetObservable</c> with a null key.</summary>
         /// <param name="value">The value to set.</param>
         /// <returns>The observable (never reached).</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> SetWithNullKey(string value) => SetObservable(value, null!);
     }
 

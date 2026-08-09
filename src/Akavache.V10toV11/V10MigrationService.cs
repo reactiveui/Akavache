@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.V10toV11;
@@ -152,6 +154,7 @@ internal static class V10MigrationService
     /// </summary>
     /// <param name="v11Cache">The V11 cache to check.</param>
     /// <returns>A one-shot observable that emits the migration-complete flag.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IObservable<bool> IsMigrationComplete(SqliteBlobCache v11Cache) =>
         v11Cache.Connection
             .Get(MigrationSentinelKey, typeFullName: null, Clock.GetUtcNow())
@@ -184,6 +187,7 @@ internal static class V10MigrationService
     /// <param name="serializer">The current serializer used for re-serialization.</param>
     /// <param name="options">The migration options controlling conversion behavior.</param>
     /// <returns>A new <see cref="CacheEntry"/> ready for insertion into the V11 cache.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     internal static CacheEntry ConvertEntry(V10CacheElement v10Entry, ISerializer serializer, V10MigrationOptions options) =>
@@ -227,7 +231,7 @@ internal static class V10MigrationService
             }
 
             var deserializeMethod = typeof(UniversalSerializer)
-                .GetMethod(nameof(UniversalSerializer.Deserialize))!
+                .GetMethod(nameof(UniversalSerializer.Deserialize))
                 .MakeGenericMethod(type);
 
             var deserialized = deserializeMethod.Invoke(null, [value, serializer, null]);
@@ -237,7 +241,7 @@ internal static class V10MigrationService
             }
 
             var serializeMethod = typeof(UniversalSerializer)
-                .GetMethod(nameof(UniversalSerializer.Serialize))!
+                .GetMethod(nameof(UniversalSerializer.Serialize))
                 .MakeGenericMethod(type);
 
             return (byte[]?)serializeMethod.Invoke(null, [deserialized, serializer, null]);
@@ -347,6 +351,7 @@ internal static class V10MigrationService
     /// <param name="options">Migration options carrying the logger.</param>
     /// <param name="key">The key of the entry that failed.</param>
     /// <param name="ex">The exception raised during conversion.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogConvertEntryFailure(V10MigrationOptions options, string key, Exception ex) =>
         options.Logger?.Invoke($"Failed to convert entry '{key}': {ex.Message}");
 
@@ -354,6 +359,7 @@ internal static class V10MigrationService
     /// <param name="options">Migration options carrying the logger.</param>
     /// <param name="typeName">The type name involved in re-serialization.</param>
     /// <param name="ex">The exception raised during re-serialization.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogReserializationFailure(V10MigrationOptions options, string? typeName, Exception ex) =>
         options.Logger?.Invoke($"Re-serialization failed for type '{typeName}': {ex.Message}. Keeping original bytes.");
 

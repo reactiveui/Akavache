@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
 using AkavacheTodoMaui.Views;
@@ -11,6 +12,7 @@ using ReactiveUI;
 namespace AkavacheTodoMaui.ViewModels;
 
 /// <summary>View model for individual todo items with reactive behaviors.</summary>
+[System.Diagnostics.DebuggerDisplay("{Activator}")]
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
@@ -168,6 +170,7 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     /// <summary>Command handler that toggles the todo's completion status.</summary>
     /// <returns>An observable that completes when the toggle has been persisted.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<RxVoid> ExecuteToggleCompleted() =>
@@ -201,6 +204,7 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     /// <summary>Command handler that deletes the todo and invalidates its cache entry.</summary>
     /// <returns>An observable that completes when the delete is done.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IObservable<RxVoid> ExecuteDelete() =>
         Signal.FromAsync(async () =>
         {
@@ -267,6 +271,7 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     /// <summary>Persists the current todo item by merging it into the cached todo list.</summary>
     /// <returns>An observable that completes when the save is done.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IObservable<RxVoid> SaveTodoItem() =>
         TodoCacheService.GetAllTodos()
             .Take(1)
@@ -278,11 +283,13 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 var index = -1;
                 for (var i = 0; i < todos.Count; i++)
                 {
-                    if (todos[i].Id == TodoItem.Id)
+                    if (todos[i].Id != TodoItem.Id)
                     {
-                        index = i;
-                        break;
+                        continue;
                     }
+
+                    index = i;
+                    break;
                 }
 
                 if (index >= 0)

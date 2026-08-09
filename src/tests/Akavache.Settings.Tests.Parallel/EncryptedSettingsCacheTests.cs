@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Splat.Builder;
 
 #if REACTIVE_SHIM
@@ -14,6 +15,7 @@ namespace Akavache.EncryptedSettings.Tests;
 /// Tests for the encrypted settings cache, isolated per test to avoid static state leakage.
 /// Uses eventually-consistent polling and treats transient disposal as retryable.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class EncryptedSettingsCacheTests
 {
@@ -535,6 +537,7 @@ public class EncryptedSettingsCacheTests
     /// <param name="instance">The Akavache instance owning the store.</param>
     /// <param name="testName">The store name scoped to the running test.</param>
     /// <returns>A task that completes once the write is observed.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Task WriteModifiedSettingsAsync(IAkavacheInstance instance, string testName) =>
         TestHelper.EventuallyAsync(() => TestHelper.WithFreshStoreAsync(
             instance,
@@ -556,6 +559,7 @@ public class EncryptedSettingsCacheTests
     /// <param name="testName">The store name scoped to the running test.</param>
     /// <param name="round">The zero-based recreate round, which scales the written value.</param>
     /// <returns>A task that completes once the write is observed.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Task WriteRoundValueAsync(IAkavacheInstance instance, string testName, int round) =>
         TestHelper.EventuallyAsync(() => TestHelper.WithFreshStoreAsync(
             instance,
@@ -572,6 +576,7 @@ public class EncryptedSettingsCacheTests
     /// <param name="instance">The Akavache instance owning the store.</param>
     /// <param name="testName">The store name scoped to the running test.</param>
     /// <returns>A task that completes once a reopened store yields readable values.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Task ReopenAndVerifyAsync(IAkavacheInstance instance, string testName) =>
         TestHelper.EventuallyAsync(async () =>
         {
@@ -598,6 +603,7 @@ public class EncryptedSettingsCacheTests
     /// <param name="instance">The Akavache instance owning the store.</param>
     /// <param name="testName">The store name scoped to the running test.</param>
     /// <returns>A task that completes once the secret round-trips in the fresh store.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Task WriteSecretAsync(IAkavacheInstance instance, string testName) =>
         TestHelper.EventuallyAsync(() => TestHelper.WithFreshStoreAsync(
             instance,
