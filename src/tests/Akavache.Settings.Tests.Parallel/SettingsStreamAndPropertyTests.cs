@@ -433,18 +433,23 @@ public class SettingsStreamAndPropertyTests
         /// <para>
         /// The stream registry is a private field with no injection seam, so this
         /// deliberately couples to <c>SettingsStorage._streams</c>. It is the only
-        /// reflective reach in this fixture; if the field is ever renamed the null-forgiving
-        /// lookup below fails loudly rather than silently skipping the assertion.
+        /// reflective reach in this fixture; if the field is ever renamed or retyped the
+        /// lookup below throws rather than silently skipping the assertion.
         /// </para>
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when <c>SettingsStorage._streams</c> has been renamed or retyped.</exception>
         [SuppressMessage(
             "Usage",
             "CA2000:Dispose objects before losing scope",
             Justification = "Intentionally leaking for test.")]
         internal void InjectThrowingStream()
         {
-            var field = typeof(SettingsStorage).GetTypeInfo().GetDeclaredField("_streams");
-            var dict = (ConcurrentDictionary<string, ISettingsStream>)field.GetValue(this);
+            var field = typeof(SettingsStorage).GetTypeInfo().GetDeclaredField("_streams")
+                ?? throw new InvalidOperationException("SettingsStorage._streams was renamed; update this fixture.");
+
+            var dict = field.GetValue(this) as ConcurrentDictionary<string, ISettingsStream>
+                ?? throw new InvalidOperationException("SettingsStorage._streams is no longer a ConcurrentDictionary; update this fixture.");
+
             _ = dict.TryAdd("_throwOnDispose", new ThrowingStream());
         }
 

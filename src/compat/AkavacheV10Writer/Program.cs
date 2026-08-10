@@ -16,7 +16,9 @@ var dbPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "aka
 Console.WriteLine($"V10 Writer starting. DB path: {dbPath}");
 
 // Ensure parent directory exists
-var dbDir = Path.GetDirectoryName(dbPath);
+var dbDir = Path.GetDirectoryName(dbPath)
+    ?? throw new InvalidOperationException($"Database path '{dbPath}' has no parent directory.");
+
 _ = Directory.CreateDirectory(dbDir);
 
 // V10 initialization

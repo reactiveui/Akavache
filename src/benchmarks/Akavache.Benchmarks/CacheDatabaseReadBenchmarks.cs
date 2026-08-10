@@ -71,13 +71,20 @@ public class CacheDatabaseReadBenchmarks
 
     /// <summary> Gets the root folder for the integration tests. </summary>
     /// <returns>The root folder.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the stack frame carries no source path, which happens when the assembly is built without a portable PDB.</exception>
     public static string GetIntegrationTestRootDirectory()
     {
         // XXX: This is an evil hack, but it's okay for a unit test
         // We can't use Assembly.Location because unit test runners love
         // to move stuff to temp directories
         StackFrame st = new(true);
-        DirectoryInfo di = new(Path.Combine(Path.GetDirectoryName(st.GetFileName())));
+        var sourceFile = st.GetFileName()
+            ?? throw new InvalidOperationException("The benchmark assembly carries no source file information; build it with a portable PDB.");
+
+        var sourceDirectory = Path.GetDirectoryName(sourceFile)
+            ?? throw new InvalidOperationException($"Source path '{sourceFile}' has no parent directory.");
+
+        DirectoryInfo di = new(sourceDirectory);
 
         return di.FullName;
     }
@@ -91,7 +98,7 @@ public class CacheDatabaseReadBenchmarks
 
         // Generate database synchronously to avoid deadlocks
         BlobCache = GenerateAGiantDatabaseSync(_tempDirectory);
-        Keys = BlobCache.GetAllKeys().ToList().WaitForValue();
+        Keys = BlobCache.GetAllKeys().ToList().WaitForValue() ?? [];
         Size = BenchmarkSize;
     }
 
@@ -167,7 +174,7 @@ public class CacheDatabaseReadBenchmarks
             SqliteBlobCache cache = new(Path.Combine(path, "benchmarks-read.db"), new SystemJsonSerializer());
 
             var keys = cache.GetAllKeys().ToList().WaitForValue();
-            if (keys.Count >= giantDbSize)
+            if (keys?.Count >= giantDbSize)
             {
                 return cache;
             }

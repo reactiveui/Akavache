@@ -258,7 +258,7 @@ public class HttpService : IHttpService, IDisposable
     /// <returns>An observable that emits the response bytes.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, Uri url, DateTimeOffset? absoluteExpiration) =>
-        ProcessWebResponse(responseMessage, url?.OriginalString, absoluteExpiration);
+        ProcessWebResponse(responseMessage, url.OriginalString, absoluteExpiration);
 
     /// <summary>Makes a web request to the specified URI.</summary>
     /// <param name="uri">The URI to make the request to.</param>
