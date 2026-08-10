@@ -271,15 +271,33 @@ internal sealed class SqliteOperationQueue : IDisposable
     /// </param>
     internal void ShutdownAndWait(Action<SqlitePclRawConnection> lastWill)
     {
+        // Closing from inside an operation body puts the worker on both ends of the handshake:
+        // it cannot dequeue the shutdown operation, or signal that it exited, until the body
+        // returns — so waiting here would block the very thread the wait is waiting for. Post the
+        // shutdown and unwind instead; the drain loop runs it the moment the body returns.
+        // Reached whenever a sequence is torn down on the thread that produced its last value,
+        // which is the ordinary shape of Finally over a queue-backed observable.
+        var onWorkerThread = Thread.CurrentThread == _worker;
+
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
         {
-            _workerExited.Wait();
+            if (!onWorkerThread)
+            {
+                _workerExited.Wait();
+            }
+
             return;
         }
 
         _ = TryAddToInbox(new SqliteShutdownOperation(lastWill));
 
         _inbox.CompleteAdding();
+
+        if (onWorkerThread)
+        {
+            return;
+        }
+
         _workerExited.Wait();
         _inbox.Dispose();
     }

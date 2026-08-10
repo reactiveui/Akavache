@@ -135,6 +135,36 @@ public class V10MigrationPipelineTests
         await Assert.That(log[0]).Contains("Migration already completed");
     }
 
+    /// <summary>
+    /// A database without the legacy table is reported and left alone. This path short-circuits
+    /// while still on the V10 connection's worker thread, so it is also what pins that closing the
+    /// connection from there does not wedge the worker.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task MigrateShouldReportADatabaseWithNoLegacyTable()
+    {
+        using var tempDir = Utility.WithEmptyDirectory(out var path);
+
+        // Materialise a database carrying only the V11 schema, then close it so the migration
+        // opens the file itself.
+        using (var source = CreateCache(path, "no-legacy-table"))
+        {
+            _ = source.Connection.Get("warm", typeFullName: null, TimeProvider.System.GetUtcNow()).WaitForValue();
+        }
+
+        using var destination = CreateCache(path, "v11");
+        List<string> log = [];
+
+        _ = await V10MigrationService.Migrate(
+            Path.Combine(path, "no-legacy-table.db"),
+            destination,
+            new SystemJsonSerializer(),
+            new(Logger: log.Add)).FirstAsync();
+
+        await Assert.That(log).Contains(static x => x.Contains("No CacheElement table", StringComparison.Ordinal));
+    }
+
     /// <summary>An empty legacy table still writes the sentinel, so the migration does not re-run.</summary>
     /// <returns>A task.</returns>
     [Test]
