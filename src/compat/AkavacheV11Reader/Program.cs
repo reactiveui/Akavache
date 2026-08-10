@@ -4,8 +4,8 @@
 
 using System.Runtime.CompilerServices;
 using Akavache;
+using Akavache.NewtonsoftJson;
 using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
 
 namespace AkavacheV11Reader;
 
@@ -28,8 +28,11 @@ internal static class Program
         var dbPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), DatabaseFileName));
         Report($"V11 Reader starting. DB path: {dbPath}");
 
+        // The cache reads with the serializer it was built with, so it has to be the one that
+        // understands what version 10 wrote: BSON through Newtonsoft. A System.Text.Json cache
+        // reads the raw byte entries and nothing else.
         var instance = CacheDatabase.CreateBuilder(ApplicationName)
-            .WithSerializer<SystemJsonSerializer>()
+            .WithSerializer<NewtonsoftBsonSerializer>()
             .WithSqliteProvider()
             .WithSqliteDefaults()
             .Build();
