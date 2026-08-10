@@ -1,0 +1,8 @@
+# Scoped to the compatibility verification tools. These are console executables run by hand: the
+# lines they print are the product, read by whoever runs them to see whether an Akavache 10
+# database still round-trips through Akavache 11. Every other analyzer rule applies here as it does
+# everywhere else — only the rule that asks console output to go through a logging abstraction is
+# turned off, which is what its own documentation prescribes for this case.
+
+[*.cs]
+dotnet_diagnostic.SST1449.severity = none # Console output is the product in these tools

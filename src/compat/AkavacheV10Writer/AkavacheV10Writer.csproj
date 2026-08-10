@@ -4,8 +4,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RunAnalyzers>false</RunAnalyzers>
-    <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <IsPackable>false</IsPackable>
     <!-- Builds against a published Akavache, not this source tree, so the lean/.Reactive seam does not apply. -->
     <UsesAkavacheSeam>false</UsesAkavacheSeam>
