@@ -34,5 +34,5 @@ public class BooleanToVisibilityConverter : IValueConverter
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
     /// <returns>True if Visible, false otherwise.</returns>
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not Visibility visibility ? false : visibility == Visibility.Visible;
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value is Visibility visibility && visibility == Visibility.Visible;
 }

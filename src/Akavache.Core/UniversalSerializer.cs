@@ -135,7 +135,7 @@ public static class UniversalSerializer
     /// <param name="targetSerializer">The target serializer.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The serialized data.</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">Every serializer, including the fallbacks, failed to serialize the value.</exception>
     [RequiresUnreferencedCode("Universal serialization requires types to be preserved.")]
     [RequiresDynamicCode("Universal serialization requires types to be preserved.")]
     public static byte[] Serialize<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind)
@@ -350,7 +350,7 @@ public static class UniversalSerializer
     /// <summary>Checks if data might be BSON.</summary>
     /// <param name="data">The data to check.</param>
     /// <returns>True if data might be BSON.</returns>
-    internal static bool IsPotentialBsonData(byte[] data) => data.Length < 5 ? false : BsonDataHelper.IsPotentialBsonData(data);
+    internal static bool IsPotentialBsonData(byte[] data) => data.Length >= 5 && BsonDataHelper.IsPotentialBsonData(data);
 
     /// <summary>Checks if data might be JSON.</summary>
     /// <param name="data">The data to check.</param>
@@ -487,7 +487,7 @@ public static class UniversalSerializer
     /// <param name="targetSerializer">The target serializer that failed.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The serialized data.</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">No fallback serializer could serialize the value either.</exception>
     [RequiresUnreferencedCode("Calls ISerializer.Serialize<T>.")]
     [RequiresDynamicCode("Calls ISerializer.Serialize<T>.")]
     internal static byte[] TryFallbackSerialization<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind)

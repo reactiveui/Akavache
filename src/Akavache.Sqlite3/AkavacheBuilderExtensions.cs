@@ -49,7 +49,7 @@ public static class AkavacheBuilderExtensions
 
         /// <summary>Configures default SQLite-based caches for all cache types.</summary>
         /// <returns>The builder instance for fluent configuration.</returns>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="InvalidOperationException">No serializer has been registered, or no application name has been set.</exception>
         public IAkavacheBuilder WithSqliteDefaults()
         {
             ArgumentExceptionHelper.ThrowIfNull(builder);

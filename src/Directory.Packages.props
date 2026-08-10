@@ -15,7 +15,7 @@
     <TUnitVersion>1.63.0</TUnitVersion>
     <!-- StyleSharp.Analyzers, PerformanceSharp.Analyzers and SecuritySharp.Analyzers ship from the
          same release pipeline and always share a version. -->
-    <RoslynCommonAnalyzersVersion>3.41.7</RoslynCommonAnalyzersVersion>
+    <RoslynCommonAnalyzersVersion>3.43.0</RoslynCommonAnalyzersVersion>
   </PropertyGroup>
   <!-- All projects -->
   <ItemGroup>

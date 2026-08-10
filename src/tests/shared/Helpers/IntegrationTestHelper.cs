@@ -49,7 +49,7 @@ public static class IntegrationTestHelper
     /// <summary>Gets a response from a web service.</summary>
     /// <param name="paths">The paths for the web service.</param>
     /// <returns>The response from the server.</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">The fixture file contains no header terminator, so the body cannot be located.</exception>
     public static HttpResponseMessage GetResponse(params string[] paths)
     {
         var bytes = File.ReadAllBytes(GetPath(paths));

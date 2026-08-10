@@ -14,10 +14,10 @@ namespace Akavache.NewtonsoftJson;
 /// JSON converter for DateTime that preserves ticks and handles DateTimeKind appropriately.
 /// This converter matches the behavior of the NewtonsoftBson serializer for consistent DateTime handling.
 /// </summary>
+/// <param name="forceDateTimeKindOverride">Optional DateTime kind override.</param>
 /// <remarks>
 /// Initializes a new instance of the <see cref="NewtonsoftDateTimeTickConverter"/> class.
 /// </remarks>
-/// <param name="forceDateTimeKindOverride">Optional DateTime kind override.</param>
 internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null) : JsonConverter
 {
     /// <summary>Gets a instance of the DateTimeConverter that handles the DateTime in UTC mode.</summary>

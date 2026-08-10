@@ -13,7 +13,7 @@ public partial class EditTodoDialog : Window
 {
     /// <summary>Initializes a new instance of the <see cref="EditTodoDialog"/> class.</summary>
     /// <param name="todoItem">The todo item to edit.</param>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="todoItem"/> is <see langword="null"/>.</exception>
     public EditTodoDialog(TodoItem todoItem)
     {
         _ = todoItem ?? throw new ArgumentNullException(nameof(todoItem));

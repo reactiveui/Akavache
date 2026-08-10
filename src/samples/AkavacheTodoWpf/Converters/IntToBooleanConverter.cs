@@ -18,7 +18,7 @@ public class IntToBooleanConverter : IValueConverter
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
     /// <returns>True if greater than 0.</returns>
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not int intValue ? false : intValue > 0;
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is int intValue && intValue > 0;
 
     /// <summary>One-way converter — returns <see cref="Binding.DoNothing"/> so the binding engine skips the source update.</summary>
     /// <param name="value">The value.</param>

@@ -17,7 +17,7 @@ public class InverseBooleanConverter : IValueConverter
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
     /// <returns>Inverted boolean.</returns>
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not bool boolValue ? true : !boolValue;
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not bool boolValue || !boolValue;
 
     /// <summary>Inverts boolean value back.</summary>
     /// <param name="value">The boolean value.</param>
@@ -25,5 +25,5 @@ public class InverseBooleanConverter : IValueConverter
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
     /// <returns>Inverted boolean.</returns>
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not bool boolValue ? false : !boolValue;
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value is bool boolValue && !boolValue;
 }

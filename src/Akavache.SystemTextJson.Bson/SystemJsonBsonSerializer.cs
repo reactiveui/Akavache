@@ -67,7 +67,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
         }
 
         var firstChar = data[BsonLengthPrefixSize];
-        return firstChar is (byte)'{' or (byte)'[' or (byte)'"' ? false : !BinaryHelpers.StartsWithJsonOpener(data);
+        return firstChar is not ((byte)'{' or (byte)'[' or (byte)'"') && !BinaryHelpers.StartsWithJsonOpener(data);
     }
 
     /// <summary>

@@ -21,6 +21,7 @@ namespace Akavache.Settings.Core;
 /// <typeparamref name="T"/> (so comparisons and assignments read naturally without
 /// <c>.Value</c>).
 /// </summary>
+/// <typeparam name="T">The property value type.</typeparam>
 /// <remarks>
 /// <para>
 /// Deliberately simpler than ReactiveUI's <c>ObservableAsPropertyHelper&lt;T&gt;</c> — no
@@ -50,7 +51,6 @@ namespace Akavache.Settings.Core;
 /// </code>
 /// </para>
 /// </remarks>
-/// <typeparam name="T">The property value type.</typeparam>
 [System.Diagnostics.DebuggerDisplay("{Value}")]
 public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyChanged, IDisposable
 {
@@ -97,6 +97,7 @@ public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyC
     /// The conversion is equivalent to <see cref="Value"/> — same latest-cached value,
     /// same synchronous read.
     /// </summary>
+    /// <param name="helper">The helper to unwrap.</param>
     /// <remarks>
     /// <para>
     /// The conversion does not fire in every context — in particular, generic
@@ -106,7 +107,6 @@ public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyC
     /// assignments into a typed variable all flow through naturally.
     /// </para>
     /// </remarks>
-    /// <param name="helper">The helper to unwrap.</param>
     public static implicit operator T(SettingsPropertyHelper<T> helper)
     {
         ArgumentExceptionHelper.ThrowIfNull(helper);

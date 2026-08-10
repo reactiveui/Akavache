@@ -9,10 +9,10 @@ namespace Akavache.Tests.Mocks;
 #endif
 
 /// <summary>A mock for the user models.</summary>
+/// <param name="user">The user to abstract.</param>
 /// <remarks>
 /// Initializes a new instance of the <see cref="UserModel"/> class.
 /// </remarks>
-/// <param name="user">The user to abstract.</param>
 [System.Diagnostics.DebuggerDisplay("{Name}")]
 public class UserModel(UserObject user)
 {

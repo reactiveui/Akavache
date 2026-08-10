@@ -14,12 +14,12 @@ namespace Akavache;
 /// This class is an IBlobCache backed by a simple in-memory Dictionary with Newtonsoft.Json serialization.
 /// Use it for testing / mocking purposes.
 /// </summary>
+/// <param name="scheduler">The scheduler to use for Observable based operations.</param>
+/// <param name="serializer">The serializer to use for serializing and deserializing data.</param>
 /// <remarks>
 /// Initializes a new instance of the <see cref="InMemoryBlobCache" /> class.
 /// </remarks>
 /// <seealso cref="InMemoryBlobCacheBase" />
-/// <param name="scheduler">The scheduler to use for Observable based operations.</param>
-/// <param name="serializer">The serializer to use for serializing and deserializing data.</param>
 [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public sealed class InMemoryBlobCache(ISequencer scheduler, ISerializer? serializer) : InMemoryBlobCacheBase(scheduler, serializer)
 {

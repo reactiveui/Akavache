@@ -26,12 +26,6 @@ internal static class V10MigrationHelpers
     /// of which branch fired — so callers can <c>Concat</c> multiple kinds into one
     /// pipeline without tracking each one individually.
     /// </summary>
-    /// <remarks>
-    /// Marked <c>internal</c> so tests can drive each branch in isolation without
-    /// spinning up the full <c>MigrateFromV10</c> entry point. Every
-    /// observable branch returns one item then completes, which makes it trivial to
-    /// assert on the result sequence in a unit test.
-    /// </remarks>
     /// <param name="builder">The Akavache builder supplying path resolution and serializer context.</param>
     /// <param name="cacheName">Logical cache-kind name (<c>UserAccount</c> / <c>LocalMachine</c> / <c>Secure</c>).</param>
     /// <param name="enabled">Whether the migration is enabled for this kind in the options.</param>
@@ -39,6 +33,12 @@ internal static class V10MigrationHelpers
     /// <param name="serializer">The current serializer (used by the row-conversion path).</param>
     /// <param name="options">Migration options.</param>
     /// <returns>A one-shot observable that completes when migration for this kind finishes (or is skipped).</returns>
+    /// <remarks>
+    /// Marked <c>internal</c> so tests can drive each branch in isolation without
+    /// spinning up the full <c>MigrateFromV10</c> entry point. Every
+    /// observable branch returns one item then completes, which makes it trivial to
+    /// assert on the result sequence in a unit test.
+    /// </remarks>
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     internal static IObservable<RxVoid> BuildMigration(

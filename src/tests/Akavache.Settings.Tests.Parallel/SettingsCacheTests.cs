@@ -694,7 +694,7 @@ public class SettingsCacheTests
     /// <param name="bodyAsync">Async test body. Also receives the shared CT.</param>
     /// <param name="timeout">Optional hard timeout. Defaults to 30 seconds.</param>
     /// <returns>A task that completes when both the configure and body lambdas complete.</returns>
-    /// <exception cref="TimeoutException"></exception>
+    /// <exception cref="TimeoutException">The configure or body lambda did not complete within <paramref name="timeout"/>.</exception>
     private async Task RunWithAkavacheAsync<TSerializer>(
         string? applicationName,
         Func<IAkavacheBuilder, CancellationToken, Task> configureAsync,

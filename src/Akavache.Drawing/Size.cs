@@ -12,11 +12,11 @@ namespace Akavache.Drawing;
 #endif
 
 /// <summary>Represents the size dimensions of an image with width and height values.</summary>
+/// <param name="width">The width dimension in pixels.</param>
+/// <param name="height">The height dimension in pixels.</param>
 /// <remarks>
 /// Initializes a new instance of the <see cref="Size"/> struct with the specified dimensions.
 /// </remarks>
-/// <param name="width">The width dimension in pixels.</param>
-/// <param name="height">The height dimension in pixels.</param>
 [DebuggerDisplay("Width: {Width}, Height: {Height}")]
 public readonly struct Size(float width, float height) : IEquatable<Size>
 {

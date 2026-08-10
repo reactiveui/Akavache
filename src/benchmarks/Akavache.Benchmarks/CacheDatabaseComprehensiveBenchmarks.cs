@@ -211,8 +211,8 @@ public class CacheDatabaseComprehensiveBenchmarks
     }
 
     /// <summary> Measures a write-then-read round trip through the built-in UserAccount cache, verifying the value survives the trip. </summary>
-    /// <exception cref="InvalidOperationException">A value read back did not match the value written.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">A value read back did not match the value written.</exception>
     [Benchmark]
     [BenchmarkCategory("UserAccount")]
     public async Task UserAccountOperations()
@@ -236,8 +236,8 @@ public class CacheDatabaseComprehensiveBenchmarks
     }
 
     /// <summary> Measures a write-then-read round trip through the built-in LocalMachine cache, verifying the value survives the trip. </summary>
-    /// <exception cref="InvalidOperationException">A value read back did not match the value written.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">A value read back did not match the value written.</exception>
     [Benchmark]
     [BenchmarkCategory("LocalMachine")]
     public async Task LocalMachineOperations()
@@ -261,8 +261,8 @@ public class CacheDatabaseComprehensiveBenchmarks
     }
 
     /// <summary> Measures a write-then-read round trip through the built-in Secure cache, so the encryption layer's cost shows up next to the plain caches. </summary>
-    /// <exception cref="InvalidOperationException">A value read back did not match the value written.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">A value read back did not match the value written.</exception>
     [Benchmark]
     [BenchmarkCategory("Secure")]
     public async Task SecureOperations()
@@ -286,8 +286,8 @@ public class CacheDatabaseComprehensiveBenchmarks
     }
 
     /// <summary> Measures a write-then-read round trip through the built-in InMemory cache, giving a storage-free baseline for the serializer cost. </summary>
-    /// <exception cref="InvalidOperationException">A value read back did not match the value written.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">A value read back did not match the value written.</exception>
     [Benchmark]
     [BenchmarkCategory("InMemory")]
     public async Task InMemoryOperations()
@@ -311,8 +311,8 @@ public class CacheDatabaseComprehensiveBenchmarks
     }
 
     /// <summary> Measures an insert/read/update/read cycle spread across three different caches, so cross-cache contention shows up alongside the single-cache numbers. </summary>
-    /// <exception cref="InvalidOperationException">An updated value did not read back with the update applied.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">An updated value did not read back with the update applied.</exception>
     [Benchmark]
     [BenchmarkCategory("Mixed")]
     public async Task MixedOperations()
@@ -352,8 +352,8 @@ public class CacheDatabaseComprehensiveBenchmarks
     }
 
     /// <summary> Measures the serializer alone on the SQLite-backed cache: every iteration writes and reads back a full object and checks both a value and a string field survived. </summary>
-    /// <exception cref="InvalidOperationException">A value read back did not match the value written.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">A value read back did not match the value written.</exception>
     [Benchmark]
     [BenchmarkCategory("Serializer")]
     public async Task SerializerPerformance()
@@ -376,8 +376,8 @@ public class CacheDatabaseComprehensiveBenchmarks
     }
 
     /// <summary> Measures the bulk object API: <see cref="BenchmarkSize"/> objects written in one call and read back in one call, so per-key overhead is amortized. </summary>
-    /// <exception cref="InvalidOperationException">The bulk read returned a different number of entries than were written.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">The bulk read returned a different number of entries than were written.</exception>
     [Benchmark]
     [BenchmarkCategory("BulkOperations")]
     public async Task BulkOperations()

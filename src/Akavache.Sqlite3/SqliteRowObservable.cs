@@ -22,6 +22,7 @@ namespace Akavache.Sqlite3;
 /// item per SQLite row. Complements <see cref="SqliteReplyObservable{T}"/> (which is
 /// one-shot) for the streaming case.
 /// </summary>
+/// <typeparam name="T">The row type emitted.</typeparam>
 /// <remarks>
 /// <para>
 /// The worker thread pushes rows by calling <see cref="OnNext"/> directly — no boxed
@@ -65,7 +66,6 @@ namespace Akavache.Sqlite3;
 /// row ordering.
 /// </para>
 /// </remarks>
-/// <typeparam name="T">The row type emitted.</typeparam>
 internal sealed class SqliteRowObservable<T> : IObservable<T>
 {
     /// <summary>Guard message for the single-subscriber contract, held as a constant so the throw site stays within the line limit.</summary>

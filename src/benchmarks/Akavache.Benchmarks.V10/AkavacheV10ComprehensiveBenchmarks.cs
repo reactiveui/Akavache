@@ -193,8 +193,8 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Users the account operations. </summary>
-    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     [Benchmark]
     [BenchmarkCategory("UserAccount")]
     public async Task UserAccountOperations()
@@ -218,8 +218,8 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Locals the machine operations. </summary>
-    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     [Benchmark]
     [BenchmarkCategory("LocalMachine")]
     public async Task LocalMachineOperations()
@@ -243,8 +243,8 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Secures the operations. </summary>
-    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     [Benchmark]
     [BenchmarkCategory("Secure")]
     public async Task SecureOperations()
@@ -268,8 +268,8 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Ins the memory operations. </summary>
-    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     [Benchmark]
     [BenchmarkCategory("InMemory")]
     public async Task InMemoryOperations()
@@ -293,8 +293,8 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Mixeds the operations. </summary>
-    /// <exception cref="InvalidOperationException">Update verification failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Update verification failed.</exception>
     [Benchmark]
     [BenchmarkCategory("Mixed")]
     public async Task MixedOperations()

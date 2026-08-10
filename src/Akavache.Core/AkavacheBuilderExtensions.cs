@@ -368,13 +368,13 @@ public static class AkavacheBuilderExtensions
         /// <param name="configureAsync">Configures the CacheDatabase builder before it is built.</param>
         /// <param name="instanceAsync">Runs against the built instance.</param>
         /// <returns>A task producing the configured builder.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/>, <paramref name="configureAsync"/>, or <paramref name="instanceAsync"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
         /// <remarks>
         /// The <see cref="Action{T}"/> overloads give a caller doing asynchronous work no await
         /// point, leaving it to block inside the callback and park the calling thread. This form
         /// awaits both callbacks instead, so the work stays asynchronous end to end.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/>, <paramref name="configureAsync"/>, or <paramref name="instanceAsync"/> is null.</exception>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",

@@ -72,7 +72,7 @@ public class NewtonsoftSerializer : ISerializer
 
         // Check if this looks like JSON instead.
         var firstChar = data[4];
-        return firstChar is (byte)'{' or (byte)'[' or (byte)'"' ? false : !BinaryHelpers.StartsWithJsonOpener(data);
+        return firstChar is not ((byte)'{' or (byte)'[' or (byte)'"') && !BinaryHelpers.StartsWithJsonOpener(data);
     }
 
     /// <inheritdoc/>

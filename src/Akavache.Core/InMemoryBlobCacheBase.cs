@@ -19,11 +19,11 @@ namespace Akavache;
 /// Base class for in-memory blob cache implementations that provides common functionality
 /// for all serialization-specific InMemoryBlobCache implementations.
 /// </summary>
+/// <param name="scheduler">The scheduler to use for Observable based operations.</param>
+/// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
 /// <remarks>
 /// Initializes a new instance of the <see cref="InMemoryBlobCacheBase"/> class.
 /// </remarks>
-/// <param name="scheduler">The scheduler to use for Observable based operations.</param>
-/// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
 [System.Diagnostics.DebuggerDisplay("{Scheduler}")]
 public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer) : ISecureBlobCache
 {

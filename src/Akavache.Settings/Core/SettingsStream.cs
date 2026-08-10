@@ -18,6 +18,7 @@ namespace Akavache.Settings.Core;
 /// <see cref="EnsureLoaded"/>), and re-emits whenever <see cref="Set"/> is called so
 /// every live subscriber observes the change.
 /// </summary>
+/// <typeparam name="T">The property value type.</typeparam>
 /// <remarks>
 /// <para>
 /// Exactly one instance exists per property per <see cref="SettingsStorage"/>. The
@@ -32,7 +33,6 @@ namespace Akavache.Settings.Core;
 /// bookkeeping we don't need (cold-load failures are swallowed upstream).
 /// </para>
 /// </remarks>
-/// <typeparam name="T">The property value type.</typeparam>
 [RequiresUnreferencedCode("Settings streams serialize via the blob cache which requires types to be preserved.")]
 [RequiresDynamicCode("Settings streams serialize via the blob cache which requires types to be preserved.")]
 internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>

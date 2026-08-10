@@ -103,7 +103,7 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
     /// <param name="password">The encryption key applied via <c>PRAGMA key</c>.</param>
     /// <param name="key">The CacheEntry row id.</param>
     /// <param name="value">The CacheEntry row payload.</param>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">The seed database could not be created or written.</exception>
     private static void SeedSqlCipher4Database(string path, string password, string key, byte[] value)
     {
         Batteries_V2.Init();
@@ -190,7 +190,7 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
     /// <param name="rc">The SQLite return code.</param>
     /// <param name="db">An open SQLite handle, used to extract a textual error message.</param>
     /// <param name="operation">A description of the operation, included in the exception message.</param>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException"><paramref name="rc"/> is not a SQLite success code.</exception>
     private static void ThrowIfNotOk(int rc, sqlite3 db, string operation)
     {
         if (rc is SQLITE_OK or SQLITE_DONE or SQLITE_ROW)

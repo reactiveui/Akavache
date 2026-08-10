@@ -157,13 +157,13 @@ internal static class SecurityUtilities
     }
 
     /// <summary>Whether <paramref name="value"/> contains <paramref name="candidate"/>.</summary>
+    /// <param name="value">The string to search.</param>
+    /// <param name="candidate">The character to look for.</param>
+    /// <returns><see langword="true"/> when the character is present.</returns>
     /// <remarks>
     /// net4x has no string.Contains(char), so the call there would bind to Enumerable.Contains
     /// and walk the string through an enumerator. Modern targets use the intrinsic directly.
     /// </remarks>
-    /// <param name="value">The string to search.</param>
-    /// <param name="candidate">The character to look for.</param>
-    /// <returns><see langword="true"/> when the character is present.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool ContainsChar(string value, char candidate) =>
 #if NET

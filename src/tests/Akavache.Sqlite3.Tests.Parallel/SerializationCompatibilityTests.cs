@@ -92,7 +92,7 @@ public class SerializationCompatibilityTests
     /// <param name="writeSerializerFactory">Factory for the writer serializer.</param>
     /// <param name="readSerializerFactory">Factory for the reader serializer.</param>
     /// <returns>A task representing the asynchronous test operation.</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">A value written by one serializer could not be read back by the other.</exception>
     [Test]
     [MethodDataSource(nameof(GetSerializerCombinations))]
     public async Task CrossSerializerCompatibilityShouldWork(
@@ -312,7 +312,7 @@ public class SerializationCompatibilityTests
     /// <param name="writeSerializerType">The serializer to use for writing.</param>
     /// <param name="readSerializerType">The serializer to use for reading.</param>
     /// <returns>A task representing the test operation.</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">A value written by one serializer could not be read back by the other.</exception>
     [Arguments(typeof(SystemJsonSerializer), typeof(SystemJsonSerializer))]
     [Arguments(typeof(SystemJsonBsonSerializer), typeof(SystemJsonBsonSerializer))]
     [Arguments(typeof(NewtonsoftSerializer), typeof(NewtonsoftSerializer))]

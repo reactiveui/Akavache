@@ -16,6 +16,14 @@ namespace Akavache.Core.Observables;
 /// skipped and the next one is tried). If no candidate matches, completes with a single
 /// emission of <paramref name="fallback"/>.
 /// </summary>
+/// <typeparam name="TKey">The type of candidate keys.</typeparam>
+/// <typeparam name="TRaw">The element type emitted by the projected observable (e.g. <c>byte[]?</c>).</typeparam>
+/// <typeparam name="TResult">The final result type emitted to downstream after transformation.</typeparam>
+/// <param name="candidates">The ordered list of candidate keys to walk.</param>
+/// <param name="project">Projects a candidate key into a one-shot observable of raw values.</param>
+/// <param name="transform">Synchronous transform applied to each raw value to produce the result.</param>
+/// <param name="predicate">Returns <see langword="true"/> when a transformed value is a match.</param>
+/// <param name="fallback">Value emitted when no candidate matches (typically <see langword="default"/>).</param>
 /// <remarks>
 /// <para>
 /// <c>Subscribe</c> attempts a synchronous fast-path first: each candidate's projection
@@ -29,14 +37,6 @@ namespace Akavache.Core.Observables;
 /// then <c>OnCompleted</c>).
 /// </para>
 /// </remarks>
-/// <typeparam name="TKey">The type of candidate keys.</typeparam>
-/// <typeparam name="TRaw">The element type emitted by the projected observable (e.g. <c>byte[]?</c>).</typeparam>
-/// <typeparam name="TResult">The final result type emitted to downstream after transformation.</typeparam>
-/// <param name="candidates">The ordered list of candidate keys to walk.</param>
-/// <param name="project">Projects a candidate key into a one-shot observable of raw values.</param>
-/// <param name="transform">Synchronous transform applied to each raw value to produce the result.</param>
-/// <param name="predicate">Returns <see langword="true"/> when a transformed value is a match.</param>
-/// <param name="fallback">Value emitted when no candidate matches (typically <see langword="default"/>).</param>
 internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
     IReadOnlyList<TKey> candidates,
     Func<TKey, IObservable<TRaw>> project,

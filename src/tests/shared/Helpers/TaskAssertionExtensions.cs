@@ -30,7 +30,7 @@ internal static class TaskAssertionExtensions
         /// <summary>Awaits the task and asserts that it faults with an exception of type <typeparamref name="TException"/> (or a derived type).</summary>
         /// <typeparam name="TException">The expected exception type.</typeparam>
         /// <returns>A task representing the asynchronous assertion.</returns>
-        /// <exception cref="AssertionException"></exception>
+        /// <exception cref="AssertionException">The task completed without faulting, or faulted with a different exception type.</exception>
         internal async Task ShouldThrowAsync<TException>()
             where TException : Exception
         {

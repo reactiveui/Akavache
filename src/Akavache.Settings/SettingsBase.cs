@@ -134,13 +134,13 @@ public class SettingsBase : SettingsStorage
     /// fallback path in <see cref="GetBlobCacheForClass(string, Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
     /// handles that case).
     /// </summary>
+    /// <param name="className">The class name to look up.</param>
+    /// <returns>The matching cache, or <see langword="null"/> when nothing is registered.</returns>
     /// <remarks>
     /// Falls back to the first registered entry when the exact class name is missing —
     /// this keeps consumers that rename their settings store database working without
     /// a custom registration step.
     /// </remarks>
-    /// <param name="className">The class name to look up.</param>
-    /// <returns>The matching cache, or <see langword="null"/> when nothing is registered.</returns>
     internal static IBlobCache? TryGetFromBlobCacheRegistry(string className)
     {
         var registry = CacheDatabase.CurrentInstance?.BlobCaches;

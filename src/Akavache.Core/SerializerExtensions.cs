@@ -117,7 +117,7 @@ public static class SerializerExtensions
         /// <param name="value">The object to serialize and cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date for the cached data.</param>
         /// <returns>An observable that signals when the insertion is complete.</returns>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="InvalidOperationException">No serializer has been registered for the cache.</exception>
         [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization.")]
         public IObservable<RxVoid> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration)
@@ -317,6 +317,7 @@ public static class SerializerExtensions
         /// call to fetch static data (i.e. images) from the network.
         /// </para>
         /// </summary>
+        /// <typeparam name="T">The type of item to get.</typeparam>
         /// <param name="key">The key to associate with the object.</param>
         /// <param name="fetchFunc">
         /// <para>A Func which will asynchronously return the latest value for the object
@@ -324,7 +325,6 @@ public static class SerializerExtensions
         /// <para>Observable.Start is the most straightforward way (though not the
         /// most efficient!) to implement this Func.</para>
         /// </param>
-        /// <typeparam name="T">The type of item to get.</typeparam>
         /// <returns>A Future result representing the deserialized object from
         /// the cache.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -344,6 +344,7 @@ public static class SerializerExtensions
         /// call to fetch static data (i.e. images) from the network.
         /// </para>
         /// </summary>
+        /// <typeparam name="T">The type of item to get.</typeparam>
         /// <param name="key">The key to associate with the object.</param>
         /// <param name="fetchFunc">
         /// <para>A Func which will asynchronously return the latest value for the object
@@ -352,7 +353,6 @@ public static class SerializerExtensions
         /// most efficient!) to implement this Func.</para>
         /// </param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
-        /// <typeparam name="T">The type of item to get.</typeparam>
         /// <returns>A Future result representing the deserialized object from
         /// the cache.</returns>
         [RequiresUnreferencedCode("Using GetOrFetchObject requires types to be preserved for serialization.")]

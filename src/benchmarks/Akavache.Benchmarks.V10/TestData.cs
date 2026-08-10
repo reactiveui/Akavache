@@ -41,18 +41,13 @@ public sealed class TestData : IEquatable<TestData>
     public override bool Equals(object? obj) => Equals(obj as TestData);
 
     /// <inheritdoc />
-    public bool Equals(TestData? other)
-    {
-        if (other is null)
-        {
-            return false;
-        }
-
-        return ReferenceEquals(this, other) ? true : Id.Equals(other.Id)
-               && string.Equals(Name, other.Name, StringComparison.Ordinal)
-               && Value == other.Value
-               && Created.Equals(other.Created);
-    }
+    public bool Equals(TestData? other) =>
+        other is not null
+        && (ReferenceEquals(this, other)
+            || (Id.Equals(other.Id)
+                && string.Equals(Name, other.Name, StringComparison.Ordinal)
+                && Value == other.Value
+                && Created.Equals(other.Created)));
 
     /// <inheritdoc />
     public override int GetHashCode()

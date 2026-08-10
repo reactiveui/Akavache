@@ -11,11 +11,11 @@ namespace Akavache;
 #endif
 
 /// <summary>Stored login information for a user.</summary>
+/// <param name="username">The username for the entry.</param>
+/// <param name="password">The password for the user.</param>
 /// <remarks>
 /// Initializes a new instance of the <see cref="LoginInfo"/> class.
 /// </remarks>
-/// <param name="username">The username for the entry.</param>
-/// <param name="password">The password for the user.</param>
 [DebuggerDisplay("UserName: {UserName}")]
 public sealed class LoginInfo(string username, string password) : IEquatable<LoginInfo>
 {

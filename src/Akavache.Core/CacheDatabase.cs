@@ -337,7 +337,7 @@ public static class CacheDatabase
 
     /// <summary>Returns the configured <see cref="IAkavacheInstance"/>, throwing if not initialized.</summary>
     /// <returns>The configured Akavache instance.</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">The cache database has not been initialized.</exception>
     internal static IAkavacheInstance GetOrThrowIfNotInitialized() =>
         Volatile.Read(ref _instance)
             ?? throw new InvalidOperationException(

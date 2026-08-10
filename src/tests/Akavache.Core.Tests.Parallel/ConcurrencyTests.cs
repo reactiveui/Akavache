@@ -44,7 +44,7 @@ public sealed class ConcurrencyTests
 
     /// <summary>Tests that concurrent InsertObject operations do not cause IndexOutOfRangeException.</summary>
     /// <returns>A task representing the test.</returns>
-    /// <exception cref="AggregateException"></exception>
+    /// <exception cref="AggregateException">One or more of the concurrent operations faulted.</exception>
     [Test]
     public async Task InMemoryBlobCache_ConcurrentInsertObject_ShouldNotThrowIndexOutOfRangeException()
     {
@@ -110,7 +110,7 @@ public sealed class ConcurrencyTests
 
     /// <summary>Tests that high volume stress operations do not cause IndexOutOfRangeException.</summary>
     /// <returns>A task representing the test.</returns>
-    /// <exception cref="AggregateException"></exception>
+    /// <exception cref="AggregateException">One or more of the concurrent operations faulted.</exception>
     [Test]
     public async Task InMemoryBlobCache_HighVolumeStressTest_ShouldNotThrowIndexOutOfRangeException()
     {

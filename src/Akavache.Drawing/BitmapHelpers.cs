@@ -44,14 +44,14 @@ internal static class BitmapHelpers
             : ThrowOnBadImageBuffer(bytes);
 
     /// <summary>Converts a compressed image byte array into an <see cref="IBitmap"/> using Splat's ambient <see cref="BitmapLoader.Current"/>.</summary>
-    /// <remarks>
-    /// Throws <see cref="IOException"/> when the loader returns
-    /// <see langword="null"/>.
-    /// </remarks>
     /// <param name="compressedImage">The compressed image bytes.</param>
     /// <param name="desiredWidth">Optional desired width.</param>
     /// <param name="desiredHeight">Optional desired height.</param>
     /// <returns>An observable emitting the decoded bitmap.</returns>
+    /// <remarks>
+    /// Throws <see cref="IOException"/> when the loader returns
+    /// <see langword="null"/>.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
         Signal.FromAsync(async () =>

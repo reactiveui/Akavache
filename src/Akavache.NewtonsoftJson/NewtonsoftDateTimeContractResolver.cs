@@ -15,11 +15,11 @@ namespace Akavache.NewtonsoftJson;
 /// It will also be able to use, if set, a external provider that a user has set.
 /// This provides consistent DateTime handling across all serializers.
 /// </summary>
+/// <param name="contractResolver">A inherited contract resolver.</param>
+/// <param name="forceDateTimeKind">If we should override the <see cref="DateTimeKind"/>.</param>
 /// <remarks>
 /// Initializes a new instance of the <see cref="NewtonsoftDateTimeContractResolver"/> class.
 /// </remarks>
-/// <param name="contractResolver">A inherited contract resolver.</param>
-/// <param name="forceDateTimeKind">If we should override the <see cref="DateTimeKind"/>.</param>
 internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKind) : DefaultContractResolver
 {
     /// <summary>Initializes a new instance of the <see cref="NewtonsoftDateTimeContractResolver"/> class.</summary>

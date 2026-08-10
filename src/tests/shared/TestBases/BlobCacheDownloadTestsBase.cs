@@ -144,7 +144,7 @@ public abstract class BlobCacheDownloadTestsBase : IDisposable
     /// <summary>Sets up the serializer for the test.</summary>
     /// <param name="serializerType">The type of serializer to create.</param>
     /// <returns>The created serializer instance.</returns>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="serializerType"/> is <see langword="null"/>.</exception>
     private static ISerializer SetupTestSerializer(Type? serializerType) =>
         serializerType is null
             ? throw new ArgumentNullException(nameof(serializerType))

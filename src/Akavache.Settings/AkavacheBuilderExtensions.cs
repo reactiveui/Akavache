@@ -326,7 +326,7 @@ public static class AkavacheBuilderExtensions
         /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
         /// <param name="scheduler">Scheduler to use for the underlying blob cache, or <see langword="null"/> for the default task-pool scheduler.</param>
         /// <returns>The settings store instance configured for secure storage.</returns>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="InvalidOperationException">No serializer has been registered on the builder.</exception>
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -400,7 +400,7 @@ public static class AkavacheBuilderExtensions
         /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
         /// <param name="scheduler">Scheduler to use for the underlying blob cache, or <see langword="null"/> for the default task-pool scheduler.</param>
         /// <returns>The settings store instance configured for standard storage.</returns>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="InvalidOperationException">No serializer has been registered on the builder.</exception>
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",

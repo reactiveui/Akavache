@@ -27,15 +27,8 @@ internal static class SerializerHelpers
     /// <param name="fetchPredicate">Optional predicate that decides whether the cached value is stale.</param>
     /// <param name="createdAt">The cache entry's creation timestamp, or <c>null</c> if missing.</param>
     /// <returns><c>true</c> if the cache should be bypassed and the value refetched.</returns>
-    internal static bool ShouldRefetchCachedValue(Func<DateTimeOffset, bool>? fetchPredicate, DateTimeOffset? createdAt)
-    {
-        if (fetchPredicate is null)
-        {
-            return true;
-        }
-
-        return createdAt is null ? true : fetchPredicate(createdAt.Value);
-    }
+    internal static bool ShouldRefetchCachedValue(Func<DateTimeOffset, bool>? fetchPredicate, DateTimeOffset? createdAt) =>
+        fetchPredicate is null || createdAt is null || fetchPredicate(createdAt.Value);
 
     /// <summary>Determines whether <paramref name="type"/> is <see cref="DateTime"/> or its nullable form.</summary>
     /// <param name="type">The type to test.</param>

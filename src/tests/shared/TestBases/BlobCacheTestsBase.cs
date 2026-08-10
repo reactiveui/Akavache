@@ -209,7 +209,7 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <param name="serializerType">The serializer type to check.</param>
     /// <param name="cacheType">The cache type to check against.</param>
     /// <returns>True if the serializer is compatible with the cache type.</returns>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="serializerType"/> or <paramref name="cacheType"/> is <see langword="null"/>.</exception>
     protected virtual bool IsSerializerCompatibleWithCache(Type serializerType, Type cacheType)
     {
         // With the universal shim, most combinations should now work

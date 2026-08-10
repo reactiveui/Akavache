@@ -324,7 +324,7 @@ public class SettingsBaseHelperTests
 
     /// <summary>Resolver stub that always throws, mirroring unconfigured cache behavior.</summary>
     /// <returns>Never returns; always throws.</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">Always, since the stub exists to model an unconfigured cache kind.</exception>
     private static IBlobCache ThrowingResolver() =>
         throw new InvalidOperationException("cache kind not configured");
 
