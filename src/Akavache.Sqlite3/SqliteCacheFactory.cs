@@ -25,35 +25,10 @@ internal static class SqliteCacheFactory
     /// <exception cref="InvalidOperationException">No serializer has been registered on the builder.</exception>
     internal static SqliteBlobCache CreateSqliteCache(string name, IAkavacheBuilder builder)
     {
-        var serializer = builder.Serializer
-            ?? throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using SQLite caches.");
+        var (filePath, serializer) = SqliteCacheTarget.Resolve(name, builder);
 
-        ArgumentValidation.ThrowIfNullOrWhiteSpace(name);
-        ArgumentValidation.ThrowIfNullOrWhiteSpace(builder.ApplicationName);
-
-        // Validate cache name to prevent path traversal attacks
-        var validatedName = SecurityUtilities.ValidateCacheName(name, nameof(name));
-
-        // Determine the cache directory.
-        var directory = builder.FileLocationOption switch
-        {
-            FileLocationOption.Legacy => builder.GetLegacyCacheDirectory(validatedName),
-            _ => builder.GetIsolatedCacheDirectory(validatedName),
-        };
-
-        // Ensure the cache directory exists (legacy paths may not be pre-created).
-        if (!Directory.Exists(directory))
-        {
-            _ = Directory.CreateDirectory(directory!);
-        }
-
-        var filePath = Path.Combine(directory!, $"{validatedName}.db");
         var cache = new SqliteBlobCache(filePath, serializer);
-
-        if (builder.ForcedDateTimeKind.HasValue)
-        {
-            cache.ForcedDateTimeKind = builder.ForcedDateTimeKind.Value;
-        }
+        SqliteCacheTarget.ApplyBuilderOptions(cache, builder);
 
         return cache;
     }

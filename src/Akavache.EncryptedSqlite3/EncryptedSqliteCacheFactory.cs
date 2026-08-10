@@ -23,31 +23,10 @@ internal static class EncryptedSqliteCacheFactory
     /// <exception cref="InvalidOperationException">No serializer has been registered on the builder.</exception>
     internal static EncryptedSqliteBlobCache CreateEncryptedSqliteCache(string name, IAkavacheBuilder builder, string password)
     {
-        var serializer = builder.Serializer
-            ?? throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using SQLite caches.");
+        var (filePath, serializer) = SqliteCacheTarget.Resolve(name, builder);
 
-        ArgumentValidation.ThrowIfNullOrWhiteSpace(name);
-        ArgumentValidation.ThrowIfNullOrWhiteSpace(builder.ApplicationName);
-
-        var validatedName = SecurityUtilities.ValidateCacheName(name, nameof(name));
-
-        var directory = builder.FileLocationOption switch
-        {
-            FileLocationOption.Legacy => builder.GetLegacyCacheDirectory(validatedName),
-            _ => builder.GetIsolatedCacheDirectory(validatedName),
-        };
-
-        if (!Directory.Exists(directory))
-        {
-            _ = Directory.CreateDirectory(directory!);
-        }
-
-        var filePath = Path.Combine(directory!, $"{validatedName}.db");
         var cache = new EncryptedSqliteBlobCache(filePath, password, serializer);
-        if (builder.ForcedDateTimeKind.HasValue)
-        {
-            cache.ForcedDateTimeKind = builder.ForcedDateTimeKind.Value;
-        }
+        SqliteCacheTarget.ApplyBuilderOptions(cache, builder);
 
         return cache;
     }
