@@ -23,7 +23,7 @@ public static class AkavacheBuilderExtensions
         public Akavache.IAkavacheBuilder MigrateFromV10() { }
         [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
         [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
-        public Akavache.IAkavacheBuilder MigrateFromV10(System.Action<Akavache.V10toV11.V10MigrationOptions>? configure) { }
+        public Akavache.IAkavacheBuilder MigrateFromV10(Akavache.V10toV11.V10MigrationOptions options) { }
         public Akavache.IAkavacheBuilder WithV10FileNames() { }
     }
 }

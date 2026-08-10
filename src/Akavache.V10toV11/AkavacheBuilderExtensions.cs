@@ -77,7 +77,7 @@ public static class AkavacheBuilderExtensions
         [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
         [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
         public IAkavacheBuilder MigrateFromV10() =>
-            builder.MigrateFromV10((Action<V10MigrationOptions>?)null);
+            builder.MigrateFromV10(new());
 
         /// <summary>
         /// Performs a one-time migration of data from V10 database files into the current V11 databases.
@@ -85,23 +85,24 @@ public static class AkavacheBuilderExtensions
         /// The migration reads all entries from the V10 CacheElement table, converts them to V11 CacheEntry format,
         /// and inserts them into the V11 databases. A sentinel key prevents re-migration on subsequent runs.
         /// </summary>
-        /// <param name="configure">Optional configuration for migration behavior.</param>
+        /// <param name="options">
+        /// The migration behaviour to use. Build it with the values you want — the options are
+        /// immutable, so they are supplied rather than mutated in place.
+        /// </param>
         /// <returns>The builder instance for fluent configuration.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="options"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown when V11 caches have not been configured yet.</exception>
         [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
         [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
-        public IAkavacheBuilder MigrateFromV10(Action<V10MigrationOptions>? configure)
+        public IAkavacheBuilder MigrateFromV10(V10MigrationOptions options)
         {
             ArgumentExceptionHelper.ThrowIfNull(builder);
+            ArgumentExceptionHelper.ThrowIfNull(options);
 
             if (builder.Serializer is null)
             {
                 throw new InvalidOperationException("No serializer has been registered.");
             }
-
-            V10MigrationOptions options = new();
-            configure?.Invoke(options);
 
             var serializer = builder.Serializer;
 

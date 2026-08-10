@@ -8,7 +8,7 @@ public static class AkavacheBuilderExtensions
     {
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public Akavache.Reactive.IAkavacheBuilder MigrateFromV10() { }
-        public Akavache.Reactive.IAkavacheBuilder MigrateFromV10(System.Action<Akavache.Reactive.V10toV11.V10MigrationOptions>? configure) { }
+        public Akavache.Reactive.IAkavacheBuilder MigrateFromV10(Akavache.Reactive.V10toV11.V10MigrationOptions options) { }
         public Akavache.Reactive.IAkavacheBuilder WithV10FileNames() { }
     }
 }

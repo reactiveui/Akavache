@@ -130,6 +130,12 @@ internal static class V10MigrationService
             .Finally(v10Connection.Dispose)
             .SelectMany(_ =>
             {
+                // Close before deleting. The Finally above only runs once this projection has
+                // returned, and Windows refuses to delete a file whose handle is still open, so
+                // waiting for it would leave the source database behind. Dispose is idempotent,
+                // so the Finally stays as the guarantee for the error path.
+                v10Connection.Dispose();
+
                 if (options.DeleteOldFiles)
                 {
                     TryDeleteV10Database(v10DbPath, options);

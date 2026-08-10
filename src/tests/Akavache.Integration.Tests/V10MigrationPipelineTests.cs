@@ -42,6 +42,9 @@ public class V10MigrationPipelineTests
     /// <summary>The number of rows seeded by the two-row migration cases.</summary>
     private const int SeededRowCount = 2;
 
+    /// <summary>The value the re-serialization cases round-trip from V10's BSON.</summary>
+    private const string ReserializedValue = "a value written by V10";
+
     /// <summary>A tick count safely inside the range the converter accepts.</summary>
     private static readonly long ValidTicks = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc).Ticks;
 
@@ -203,6 +206,51 @@ public class V10MigrationPipelineTests
         }
     }
 
+    /// <summary>
+    /// With re-serialization on, a V10 BSON payload lands in the V11 cache rewritten into the
+    /// current serializer's format rather than as the bytes V10 stored.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task MigrateShouldRewritePayloadsWhenReserializationIsOn()
+    {
+        SerializerRegistryFixture.RegisterAll();
+        using var tempDir = Utility.WithEmptyDirectory(out var path);
+        var v10Payload = new NewtonsoftBsonSerializer().Serialize(ReserializedValue);
+        var v10Path = SeedLegacyDatabaseWithBson(path, v10Payload);
+        using var destination = CreateCache(path, "v11");
+
+        _ = await V10MigrationService.Migrate(
+            v10Path,
+            destination,
+            new SystemJsonSerializer(),
+            new(ReserializeToCurrentFormat: true)).FirstAsync();
+
+        var migrated = destination.Connection.Get("bson", typeFullName: null, TimeProvider.System.GetUtcNow()).WaitForValue();
+        await Assert.That(migrated?.Value).IsNotEquivalentTo(v10Payload);
+    }
+
+    /// <summary>With re-serialization off, the bytes V10 stored are migrated across untouched.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task MigrateShouldKeepOriginalPayloadsWhenReserializationIsOff()
+    {
+        SerializerRegistryFixture.RegisterAll();
+        using var tempDir = Utility.WithEmptyDirectory(out var path);
+        var v10Payload = new NewtonsoftBsonSerializer().Serialize(ReserializedValue);
+        var v10Path = SeedLegacyDatabaseWithBson(path, v10Payload);
+        using var destination = CreateCache(path, "v11");
+
+        _ = await V10MigrationService.Migrate(
+            v10Path,
+            destination,
+            new SystemJsonSerializer(),
+            new(ReserializeToCurrentFormat: false)).FirstAsync();
+
+        var migrated = destination.Connection.Get("bson", typeFullName: null, TimeProvider.System.GetUtcNow()).WaitForValue();
+        await Assert.That(migrated?.Value).IsEquivalentTo(v10Payload);
+    }
+
     /// <summary>A cache with no sentinel row has not been migrated.</summary>
     /// <returns>A task.</returns>
     [Test]
@@ -271,6 +319,19 @@ public class V10MigrationPipelineTests
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static SqliteBlobCache CreateCache(string path, string name) =>
         new(Path.Combine(path, $"{name}.db"), new SystemJsonSerializer(), ImmediateSequencer.Instance);
+
+    /// <summary>Creates a legacy V10 database holding a single BSON row under a resolvable type.</summary>
+    /// <param name="path">The directory for the database file.</param>
+    /// <param name="payload">The BSON payload to store.</param>
+    /// <returns>The path to the seeded database.</returns>
+    private static string SeedLegacyDatabaseWithBson(string path, byte[] payload)
+    {
+        var dbPath = Path.Combine(path, "v10-bson.db");
+        CreateLegacyV10Table(dbPath);
+        InsertLegacyV10Row(dbPath, "bson", typeof(string).AssemblyQualifiedName, payload, NeverExpires, ValidTicks);
+
+        return dbPath;
+    }
 
     /// <summary>Creates a legacy V10 database, optionally seeded with two rows.</summary>
     /// <param name="path">The directory for the database file.</param>
