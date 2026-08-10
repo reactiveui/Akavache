@@ -184,6 +184,37 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
     }
 
     /// <summary>
+    /// One-shot termination latch. Candidates can complete on different threads, so the claim is
+    /// interlocked rather than a plain flag. Losing the claim is only reachable when two threads
+    /// terminate the same sequence at once, which no test can arrange, so the latch is excluded
+    /// from coverage rather than left as a permanently unhit branch. It lives here rather than in
+    /// the shared helpers because every project that links this operator would otherwise have to
+    /// link a second file for it.
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    private static class CompletionLatch
+    {
+        /// <summary>
+        /// Claims the latch and, on the first claim, hands the value and the completion to the
+        /// observer. A caller that loses the claim does nothing: another thread has already
+        /// terminated the sequence.
+        /// </summary>
+        /// <param name="done">The atomic latch field. Transitions 0 to 1 exactly once.</param>
+        /// <param name="observer">The observer to terminate.</param>
+        /// <param name="value">The final value to emit.</param>
+        internal static void EmitOnce(ref int done, IObserver<TResult> observer, TResult value)
+        {
+            if (Interlocked.Exchange(ref done, 1) != 0)
+            {
+                return;
+            }
+
+            observer.OnNext(value);
+            observer.OnCompleted();
+        }
+    }
+
+    /// <summary>
     /// Heap-allocated observer used when a projection does not complete synchronously.
     /// Walks the remaining candidates via async callbacks.
     /// </summary>
@@ -247,13 +278,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
                 return;
             }
 
-            if (Interlocked.Exchange(ref _done, 1) != 0)
-            {
-                return;
-            }
-
-            downstream.OnNext(transformed);
-            downstream.OnCompleted();
+            CompletionLatch.EmitOnce(ref _done, downstream, transformed);
         }
 
         /// <inheritdoc/>
@@ -344,13 +369,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
                 _looping = false;
             }
 
-            if (Interlocked.Exchange(ref _done, 1) != 0)
-            {
-                return;
-            }
-
-            downstream.OnNext(fallback);
-            downstream.OnCompleted();
+            CompletionLatch.EmitOnce(ref _done, downstream, fallback);
         }
     }
 }

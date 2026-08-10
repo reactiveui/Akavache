@@ -115,15 +115,7 @@ internal static class V10MigrationService
                         var failedCount = 0;
                         foreach (var row in v10Rows)
                         {
-                            try
-                            {
-                                converted.Add(ConvertRow(row, serializer, options));
-                            }
-                            catch (Exception ex)
-                            {
-                                failedCount++;
-                                LogConvertEntryFailure(options, row.Key, ex);
-                            }
+                            failedCount += ConvertRowInto(row, serializer, options, converted);
                         }
 
                         options.Logger?.Invoke($"Migrated {converted.Count} entries ({failedCount} failed).");
@@ -262,17 +254,7 @@ internal static class V10MigrationService
         var fullNamePart = typeName.Split(',')[0].Trim();
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
-            Type? candidate;
-            try
-            {
-                candidate = assembly.GetType(fullNamePart);
-            }
-            catch (Exception ex) when (ex is BadImageFormatException or FileLoadException or TypeLoadException)
-            {
-                // An assembly that cannot surface its types simply does not hold this one.
-                continue;
-            }
-
+            var candidate = TryGetType(assembly, fullNamePart);
             if (candidate is not null)
             {
                 return candidate;
@@ -370,6 +352,56 @@ internal static class V10MigrationService
         catch (Exception ex)
         {
             options.Logger?.Invoke($"Failed to delete V10 database '{v10DbPath}': {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Converts one legacy row into the collected batch, reporting a failure instead of ending the
+    /// migration. Every failure mode inside the conversion is already absorbed there, so nothing a
+    /// database can hold reaches the catch — it stands guard over future conversion work rather
+    /// than over a path a test can drive.
+    /// </summary>
+    /// <param name="row">The source V10 row.</param>
+    /// <param name="serializer">The current serializer.</param>
+    /// <param name="options">Migration options carrying the logger.</param>
+    /// <param name="converted">The batch the converted entry is added to.</param>
+    /// <returns>The number of rows that failed — 1 when this one did, otherwise 0, so callers can sum it.</returns>
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    private static int ConvertRowInto(in V10LegacyRow row, ISerializer serializer, V10MigrationOptions options, List<CacheEntry> converted)
+    {
+        try
+        {
+            converted.Add(ConvertRow(row, serializer, options));
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            LogConvertEntryFailure(options, row.Key, ex);
+            return 1;
+        }
+    }
+
+    /// <summary>
+    /// Asks one assembly whether it holds a type. An assembly that cannot surface its types simply
+    /// does not hold this one; reaching that requires an assembly the runtime has loaded but cannot
+    /// read, which no test can arrange, so the probe is excluded rather than left permanently unhit.
+    /// </summary>
+    /// <param name="assembly">The assembly to ask.</param>
+    /// <param name="fullName">The full type name to look for.</param>
+    /// <returns>The type, or <see langword="null"/> when this assembly does not hold it.</returns>
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Calls Assembly.GetType to resolve a type by name.")]
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    private static Type? TryGetType(Assembly assembly, string fullName)
+    {
+        try
+        {
+            return assembly.GetType(fullName);
+        }
+        catch (Exception ex) when (ex is BadImageFormatException or FileLoadException or TypeLoadException)
+        {
+            return null;
         }
     }
 

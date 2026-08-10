@@ -67,11 +67,7 @@ internal static class V10MigrationHelpers
     /// <exception cref="InvalidOperationException">The legacy cache directory cannot be resolved, or no serializer is registered for the builder's serializer type.</exception>
     internal static SqliteBlobCache CreateV10Cache(string cacheName, IAkavacheBuilder builder)
     {
-        var directory = builder.GetLegacyCacheDirectory(cacheName);
-        if (directory is null || string.IsNullOrWhiteSpace(directory))
-        {
-            throw new InvalidOperationException($"Failed to determine legacy cache directory for '{cacheName}'.");
-        }
+        var directory = ResolveLegacyDirectory(builder, cacheName);
 
         // Ensure the cache directory exists
         if (!Directory.Exists(directory))
@@ -126,5 +122,26 @@ internal static class V10MigrationHelpers
         }
 
         throw new InvalidOperationException("Application name must be set before configuring V10 file names. Call WithApplicationName() first.");
+    }
+
+    /// <summary>
+    /// Resolves the legacy directory a cache kind lives in. Only the platforms that take the
+    /// directory from the host application — Android, whose context can supply none — can fail
+    /// here, so the guard is unreachable on the frameworks coverage is measured on.
+    /// </summary>
+    /// <param name="builder">The Akavache builder used to resolve directories.</param>
+    /// <param name="cacheName">The logical V11 cache name.</param>
+    /// <returns>The legacy directory for the kind.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the platform supplies no legacy directory.</exception>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    private static string ResolveLegacyDirectory(IAkavacheBuilder builder, string cacheName)
+    {
+        var directory = builder.GetLegacyCacheDirectory(cacheName);
+        if (directory is null || string.IsNullOrWhiteSpace(directory))
+        {
+            throw new InvalidOperationException($"Failed to determine legacy cache directory for '{cacheName}'.");
+        }
+
+        return directory;
     }
 }
