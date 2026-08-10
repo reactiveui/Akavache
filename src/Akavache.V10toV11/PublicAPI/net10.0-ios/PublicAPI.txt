@@ -1,0 +1,41 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.MemberNotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.NotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.HashCode))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("iOS26.0")]
+namespace Akavache.V10toV11;
+
+public static class AkavacheBuilderExtensions
+{
+    extension(Akavache.IAkavacheBuilder builder)
+    {
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public Akavache.IAkavacheBuilder MigrateFromV10() { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+        public Akavache.IAkavacheBuilder MigrateFromV10(Akavache.V10toV11.V10MigrationOptions options) { }
+        public Akavache.IAkavacheBuilder WithV10FileNames() { }
+    }
+}
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+public record V10MigrationOptions : System.IEquatable<Akavache.V10toV11.V10MigrationOptions>
+{
+    public V10MigrationOptions(bool DeleteOldFiles = false, bool ReserializeToCurrentFormat = true, bool MigrateLocalMachine = true, bool MigrateUserAccount = true, bool MigrateSecure = true, System.Action<string>? Logger = null) { }
+    public bool DeleteOldFiles { get; init; }
+    public System.Action<string>? Logger { get; init; }
+    public bool MigrateLocalMachine { get; init; }
+    public bool MigrateSecure { get; init; }
+    public bool MigrateUserAccount { get; init; }
+    public bool ReserializeToCurrentFormat { get; init; }
+}

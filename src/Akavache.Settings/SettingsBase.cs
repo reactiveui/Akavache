@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Splat; // AppLocator
 
 #if REACTIVE_SHIM
@@ -14,6 +15,7 @@ namespace Akavache.Settings;
 /// Provides a base class for implementing application settings storage using Akavache.
 /// This class automatically manages settings persistence and provides a foundation for typed settings classes.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public class SettingsBase : SettingsStorage
 {
     /// <summary>
@@ -96,6 +98,7 @@ public class SettingsBase : SettingsStorage
     /// <summary>Default-resolver overload of <see cref="GetBlobCacheForClass(string, Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>.</summary>
     /// <param name="className">The settings class name.</param>
     /// <returns>The resolved <see cref="IBlobCache"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IBlobCache GetBlobCacheForClass(string className) =>
         GetBlobCacheForClass(
             className,
@@ -110,14 +113,17 @@ public class SettingsBase : SettingsStorage
     /// invocation in <see cref="TryReadAmbientCache"/> to swallow that exception.
     /// </summary>
     /// <returns>The ambient UserAccount cache.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IBlobCache ReadAmbientUserAccount() => CacheDatabase.UserAccount;
 
     /// <summary>Default LocalMachine resolver used by the parameterless <see cref="SettingsBase"/> constructor. Delegates straight to <see cref="CacheDatabase.LocalMachine"/>.</summary>
     /// <returns>The ambient LocalMachine cache.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IBlobCache ReadAmbientLocalMachine() => CacheDatabase.LocalMachine;
 
     /// <summary>Default InMemory resolver used by the parameterless <see cref="SettingsBase"/> constructor. Delegates straight to <see cref="CacheDatabase.InMemory"/>.</summary>
     /// <returns>The ambient InMemory cache.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IBlobCache ReadAmbientInMemory() => CacheDatabase.InMemory;
 
     /// <summary>
@@ -128,13 +134,13 @@ public class SettingsBase : SettingsStorage
     /// fallback path in <see cref="GetBlobCacheForClass(string, Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
     /// handles that case).
     /// </summary>
+    /// <param name="className">The class name to look up.</param>
+    /// <returns>The matching cache, or <see langword="null"/> when nothing is registered.</returns>
     /// <remarks>
     /// Falls back to the first registered entry when the exact class name is missing —
     /// this keeps consumers that rename their settings store database working without
     /// a custom registration step.
     /// </remarks>
-    /// <param name="className">The class name to look up.</param>
-    /// <returns>The matching cache, or <see langword="null"/> when nothing is registered.</returns>
     internal static IBlobCache? TryGetFromBlobCacheRegistry(string className)
     {
         var registry = CacheDatabase.CurrentInstance?.BlobCaches;
@@ -172,6 +178,7 @@ public class SettingsBase : SettingsStorage
 
     /// <summary>Ambient <see cref="CacheDatabase"/> overload of <see cref="TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>.</summary>
     /// <returns>The first available ambient cache, or <see langword="null"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IBlobCache? TryGetFromCacheDatabase() =>
         TryGetFromCacheDatabase(
             static () => CacheDatabase.UserAccount,

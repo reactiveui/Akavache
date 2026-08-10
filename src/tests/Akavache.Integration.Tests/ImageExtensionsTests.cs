@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Integration.Tests;
@@ -9,6 +11,7 @@ namespace Akavache.Integration.Tests;
 #endif
 
 /// <summary>Tests for image extension methods.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class ImageExtensionsTests
 {
@@ -120,7 +123,7 @@ public class ImageExtensionsTests
     public async Task IsWebPShouldIdentifyWebPCorrectly()
     {
         // Act - WebP header: 52 49 46 46 ... 57 45 42 50
-        var isWebP = ImageExtensions.IsWebP(WebPRiffHeader);
+        var isWebP = ImageBufferHelpers.IsWebP(WebPRiffHeader);
 
         // Assert
         await Assert.That(isWebP).IsTrue();
@@ -135,7 +138,7 @@ public class ImageExtensionsTests
         byte[] pngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 
         // Act
-        var isWebP = ImageExtensions.IsWebP(pngHeader);
+        var isWebP = ImageBufferHelpers.IsWebP(pngHeader);
 
         // Assert
         await Assert.That(isWebP).IsFalse();
@@ -191,11 +194,8 @@ public class ImageExtensionsTests
     [Test]
     public async Task ThrowOnBadImageBufferShouldThrowForNullData()
     {
-        // Arrange
-        byte[]? nullData = null;
-
         // Act & Assert
-        var error = ImageExtensions.ThrowOnBadImageBuffer(nullData).SubscribeGetError();
+        var error = ImageBufferHelpers.ThrowOnBadImageBuffer(null).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
@@ -208,7 +208,7 @@ public class ImageExtensionsTests
         var tooSmallData = new byte[32]; // Less than 64 bytes
 
         // Act & Assert
-        var error = ImageExtensions.ThrowOnBadImageBuffer(tooSmallData).SubscribeGetError();
+        var error = ImageBufferHelpers.ThrowOnBadImageBuffer(tooSmallData).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
@@ -225,7 +225,7 @@ public class ImageExtensionsTests
         }
 
         // Act
-        var result = ImageExtensions.ThrowOnBadImageBuffer(validImageData).SubscribeGetValue();
+        var result = ImageBufferHelpers.ThrowOnBadImageBuffer(validImageData).SubscribeGetValue();
 
         // Assert
         await Assert.That(result).IsEqualTo(validImageData);
@@ -544,9 +544,7 @@ public class ImageExtensionsTests
             }
         }
 
-        // Require at least 80% of tests to pass for real-world compatibility
-        var successRate = (double)passedTests / totalTests;
-        await Assert.That(successRate).IsGreaterThanOrEqualTo(MinimumDetectionSuccessRate);
+        await Assert.That((double)passedTests / totalTests).IsGreaterThanOrEqualTo(MinimumDetectionSuccessRate);
     }
 
     /// <summary>Tests that image buffer validation works with various edge cases.</summary>
@@ -572,7 +570,7 @@ public class ImageExtensionsTests
         if (shouldSucceed)
         {
             // Act
-            var result = ImageExtensions.ThrowOnBadImageBuffer(buffer).SubscribeGetValue();
+            var result = ImageBufferHelpers.ThrowOnBadImageBuffer(buffer).SubscribeGetValue();
 
             // Assert
             await Assert.That(result).IsEqualTo(buffer);
@@ -580,7 +578,7 @@ public class ImageExtensionsTests
         else
         {
             // Act & Assert
-            var error = ImageExtensions.ThrowOnBadImageBuffer(buffer).SubscribeGetError();
+            var error = ImageBufferHelpers.ThrowOnBadImageBuffer(buffer).SubscribeGetError();
             await Assert.That(error).IsTypeOf<InvalidOperationException>();
         }
     }
@@ -760,13 +758,13 @@ public class ImageExtensionsTests
     {
         var buffer = CreateImageData(MinimumValidImageByteCount);
 
-        var result = ImageExtensions.ThrowOnBadImageBuffer(buffer).SubscribeGetValue();
+        var result = ImageBufferHelpers.ThrowOnBadImageBuffer(buffer).SubscribeGetValue();
 
         await Assert.That(result).IsEqualTo(buffer);
     }
 
     /// <summary>
-    /// Tests <see cref="ImageExtensions.ThrowOnNullOrBadImageBuffer"/> throws an
+    /// Tests <see cref="ImageBufferHelpers.ThrowOnNullOrBadImageBuffer"/> throws an
     /// "Image data is null" error when handed a <see langword="null"/> buffer. The
     /// in-line ternary that used to live inside <c>LoadImageBytes</c>' <c>SelectMany</c>
     /// could not reach this branch because no real <see cref="IBlobCache"/> emits
@@ -776,28 +774,28 @@ public class ImageExtensionsTests
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldThrowForNullInput()
     {
-        var error = ImageExtensions.ThrowOnNullOrBadImageBuffer(null).SubscribeGetError();
+        var error = ImageBufferHelpers.ThrowOnNullOrBadImageBuffer(null).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
-    /// <summary>Tests <see cref="ImageExtensions.ThrowOnNullOrBadImageBuffer"/> routes a valid buffer through the bad-image guard and returns it.</summary>
+    /// <summary>Tests <see cref="ImageBufferHelpers.ThrowOnNullOrBadImageBuffer"/> routes a valid buffer through the bad-image guard and returns it.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldReturnValidBuffer()
     {
         var buffer = new byte[128];
 
-        var result = ImageExtensions.ThrowOnNullOrBadImageBuffer(buffer).SubscribeGetValue();
+        var result = ImageBufferHelpers.ThrowOnNullOrBadImageBuffer(buffer).SubscribeGetValue();
 
         await Assert.That(result).IsSameReferenceAs(buffer);
     }
 
-    /// <summary>Tests <see cref="ImageExtensions.ThrowOnNullOrBadImageBuffer"/> forwards the short-buffer error from <see cref="ImageExtensions.ThrowOnBadImageBuffer"/>.</summary>
+    /// <summary>Tests <see cref="ImageBufferHelpers.ThrowOnNullOrBadImageBuffer"/> forwards the short-buffer error from <see cref="ImageBufferHelpers.ThrowOnBadImageBuffer"/>.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldThrowForShortBuffer()
     {
-        var error = ImageExtensions.ThrowOnNullOrBadImageBuffer(UndersizedImageBuffer).SubscribeGetError();
+        var error = ImageBufferHelpers.ThrowOnNullOrBadImageBuffer(UndersizedImageBuffer).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
@@ -819,7 +817,7 @@ public class ImageExtensionsTests
     public async Task IsValidImageFormatShouldReturnFalseForRiffWithoutWebpMarker()
     {
         // RIFF header but AVI (not WEBP).
-        byte[] avi = "RIFF\0\0\0\0AVI "u8.ToArray();
+        var avi = "RIFF\0\0\0\0AVI "u8.ToArray();
 
         var result = avi.IsValidImageFormat();
 
@@ -1012,12 +1010,15 @@ public class ImageExtensionsTests
         }
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Flush() => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Flush(Type type) => Signal.Return(RxVoid.Default);
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
             Insert(keyValuePairs, (DateTimeOffset?)null);
 
@@ -1027,6 +1028,7 @@ public class ImageExtensionsTests
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(string key, byte[] data) =>
             Insert(key, data, (DateTimeOffset?)null);
 
@@ -1035,6 +1037,7 @@ public class ImageExtensionsTests
             throw new NotImplementedException();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
             Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
@@ -1045,6 +1048,7 @@ public class ImageExtensionsTests
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<RxVoid> Insert(string key, byte[] data, Type type) =>
             Insert(key, data, type, (DateTimeOffset?)null);
 
@@ -1054,6 +1058,7 @@ public class ImageExtensionsTests
             throw new NotImplementedException();
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IObservable<byte[]?> Get(string key) => Signal.Return<byte[]?>(null);
 
         /// <inheritdoc/>

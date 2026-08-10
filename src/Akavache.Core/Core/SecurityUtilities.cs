@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Core;
@@ -155,13 +157,14 @@ internal static class SecurityUtilities
     }
 
     /// <summary>Whether <paramref name="value"/> contains <paramref name="candidate"/>.</summary>
+    /// <param name="value">The string to search.</param>
+    /// <param name="candidate">The character to look for.</param>
+    /// <returns><see langword="true"/> when the character is present.</returns>
     /// <remarks>
     /// net4x has no string.Contains(char), so the call there would bind to Enumerable.Contains
     /// and walk the string through an enumerator. Modern targets use the intrinsic directly.
     /// </remarks>
-    /// <param name="value">The string to search.</param>
-    /// <param name="candidate">The character to look for.</param>
-    /// <returns><see langword="true"/> when the character is present.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool ContainsChar(string value, char candidate) =>
 #if NET
         value.Contains(candidate);

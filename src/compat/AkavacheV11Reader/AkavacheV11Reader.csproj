@@ -4,10 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RunAnalyzers>false</RunAnalyzers>
     <IsPackable>false</IsPackable>
-    <EnableNETAnalyzers>false</EnableNETAnalyzers>
-
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />

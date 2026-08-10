@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -15,6 +15,7 @@ namespace Akavache.Tests;
 /// Tests for the V10 compatibility reads on <see cref="SqlitePclRawConnection"/> — the paths that
 /// look for an Akavache 10 <c>CacheElement</c> table alongside the V11 schema.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class SqlitePclRawConnectionLegacyV10Tests
 {

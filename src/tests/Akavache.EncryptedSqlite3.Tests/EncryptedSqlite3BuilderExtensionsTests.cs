@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Tests;
@@ -11,6 +12,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for EncryptedSqlite3.AkavacheBuilderExtensions.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class EncryptedSqlite3BuilderExtensionsTests
 {
@@ -117,7 +119,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithApplicationName("CreateEncryptedSqliteCacheEmptyName")
             .WithSerializer<SystemJsonSerializer>();
 
-        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(string.Empty, builder, PlaceholderPassword))
+        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(string.Empty, builder, PlaceholderPassword))
             .Throws<ArgumentException>();
     }
 
@@ -129,7 +131,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
         var builder = CacheDatabase.CreateBuilder()
             .WithApplicationName("CreateEncryptedSqliteCacheNoSerializer");
 
-        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, PlaceholderPassword))
+        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccountCacheName, builder, PlaceholderPassword))
             .Throws<InvalidOperationException>();
     }
 
@@ -143,7 +145,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithApplicationName("CreateEncryptedSqliteCacheWhitespaceName")
             .WithSerializer<SystemJsonSerializer>();
 
-        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache("   ", builder, PlaceholderPassword))
+        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache("   ", builder, PlaceholderPassword))
             .Throws<ArgumentException>();
     }
 
@@ -158,7 +160,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithSerializer<SystemJsonSerializer>()
             .WithEncryptedSqliteProvider();
 
-        var cache = EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
+        var cache = EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
 
         try
         {
@@ -183,7 +185,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithEncryptedSqliteProvider()
             .UseForcedDateTimeKind(DateTimeKind.Utc);
 
-        var cache = EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
+        var cache = EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
 
         try
         {
@@ -207,7 +209,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithEncryptedSqliteProvider()
             .WithLegacyFileLocation();
 
-        var cache = EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
+        var cache = EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
 
         try
         {
@@ -284,13 +286,14 @@ public class EncryptedSqlite3BuilderExtensionsTests
         SystemJsonSerializer serializer = new();
         FakeBuilder builder = new() { ApplicationName = string.Empty, Serializer = serializer, SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName, };
 
-        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, "test123"))
+        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccountCacheName, builder, "test123"))
             .Throws<ArgumentException>();
     }
 
     /// <summary>Creates a real <see cref="IAkavacheBuilder"/> with the given application name.</summary>
     /// <param name="applicationName">The application name to assign to the builder.</param>
     /// <returns>A configured <see cref="IAkavacheBuilder"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static IAkavacheBuilder CreateBuilder(string applicationName) =>
         CacheDatabase.CreateBuilder().WithApplicationName(applicationName);
 

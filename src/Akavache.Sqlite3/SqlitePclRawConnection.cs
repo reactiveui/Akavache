@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using SQLitePCL;
 using static SQLitePCL.raw;
 
@@ -399,6 +400,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     internal bool InTransaction { get; set; }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> CreateSchema() =>
         Queue.Enqueue(static conn =>
         {
@@ -407,6 +409,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<bool> TableExists(string tableName) =>
         Queue.Enqueue(conn =>
         {
@@ -424,6 +427,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<CacheEntry?> Get(string key, string? typeFullName, DateTimeOffset now) =>
         Queue.Enqueue(conn =>
         {
@@ -496,6 +500,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<CacheEntry> GetAll(string? typeFullName, DateTimeOffset now) =>
         Queue.EnqueueRowStream<CacheEntry>((conn, onNext, isCancelled) =>
         {
@@ -526,6 +531,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<string> GetAllKeys(string? typeFullName, DateTimeOffset now) =>
         Queue.EnqueueRowStream<string>((conn, onNext, isCancelled) =>
         {
@@ -650,6 +656,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> InvalidateAll(string? typeFullName) =>
         Queue.Enqueue(
             conn =>
@@ -679,6 +686,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             coalescable: true);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> SetExpiry(string key, string? typeFullName, DateTimeOffset? expiresAt) =>
         Queue.Enqueue(conn =>
         {
@@ -710,6 +718,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> VacuumExpired(DateTimeOffset now) =>
         Queue.Enqueue(conn =>
         {
@@ -728,6 +737,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Checkpoint(CheckpointMode mode) =>
         Queue.Enqueue(conn =>
         {
@@ -742,6 +752,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Compact() =>
         Queue.Enqueue(static conn =>
         {
@@ -753,9 +764,11 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Dispose() => CloseCore();
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]?> TryReadLegacyV10Value(string key, DateTimeOffset now, Type? type) =>
         Queue.Enqueue(conn =>
         {
@@ -781,6 +794,10 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         });
 
     /// <summary>Opens a connection and attaches its worker queue.</summary>
+    /// <param name="databasePath">The full file system path to the SQLite database.</param>
+    /// <param name="password">An optional password for database encryption.</param>
+    /// <param name="readOnly">Whether to open the database in read-only mode.</param>
+    /// <returns>A fully constructed connection with its worker queue running.</returns>
     /// <remarks>
     /// The queue's constructor starts a background thread that holds the connection, so it is
     /// attached here rather than from the constructor: publishing <c>this</c> to another thread
@@ -788,10 +805,6 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     /// it after the constructor returns makes that impossible by construction, rather than
     /// relying on the queue happening to be created by the last statement.
     /// </remarks>
-    /// <param name="databasePath">The full file system path to the SQLite database.</param>
-    /// <param name="password">An optional password for database encryption.</param>
-    /// <param name="readOnly">Whether to open the database in read-only mode.</param>
-    /// <returns>A fully constructed connection with its worker queue running.</returns>
     internal static SqlitePclRawConnection Create(string databasePath, string? password, bool readOnly)
     {
         var connection = new SqlitePclRawConnection(databasePath, password, readOnly);
@@ -806,6 +819,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     /// during the migration process from version 10 to version 11 and is not part of the standard connection interface.
     /// </summary>
     /// <returns>An observable sequence containing the data from each legacy row.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IObservable<V10LegacyRow> ReadAllLegacyV10Rows() =>
         Queue.EnqueueRowStream<V10LegacyRow>(static (conn, onNext, isCancelled) =>
         {
@@ -943,60 +957,60 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             switch (character)
             {
                 case '"':
-                    {
-                        _ = jsonBuilder.Append("\\\"");
-                        break;
-                    }
+                {
+                    _ = jsonBuilder.Append("\\\"");
+                    break;
+                }
 
                 case '\\':
-                    {
-                        _ = jsonBuilder.Append("\\\\");
-                        break;
-                    }
+                {
+                    _ = jsonBuilder.Append("\\\\");
+                    break;
+                }
 
                 case '\b':
-                    {
-                        _ = jsonBuilder.Append("\\b");
-                        break;
-                    }
+                {
+                    _ = jsonBuilder.Append("\\b");
+                    break;
+                }
 
                 case '\f':
-                    {
-                        _ = jsonBuilder.Append("\\f");
-                        break;
-                    }
+                {
+                    _ = jsonBuilder.Append("\\f");
+                    break;
+                }
 
                 case '\n':
-                    {
-                        _ = jsonBuilder.Append("\\n");
-                        break;
-                    }
+                {
+                    _ = jsonBuilder.Append("\\n");
+                    break;
+                }
 
                 case '\r':
-                    {
-                        _ = jsonBuilder.Append("\\r");
-                        break;
-                    }
+                {
+                    _ = jsonBuilder.Append("\\r");
+                    break;
+                }
 
                 case '\t':
-                    {
-                        _ = jsonBuilder.Append("\\t");
-                        break;
-                    }
+                {
+                    _ = jsonBuilder.Append("\\t");
+                    break;
+                }
 
                 default:
+                {
+                    if (character < FirstPrintableChar)
                     {
-                        if (character < FirstPrintableChar)
-                        {
-                            _ = jsonBuilder.Append("\\u").Append(((int)character).ToString("X4"));
-                        }
-                        else
-                        {
-                            _ = jsonBuilder.Append(character);
-                        }
-
-                        break;
+                        _ = jsonBuilder.Append("\\u").Append(((int)character).ToString("X4"));
                     }
+                    else
+                    {
+                        _ = jsonBuilder.Append(character);
+                    }
+
+                    break;
+                }
             }
         }
 
@@ -1143,6 +1157,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     /// <param name="resultCode">The SQLite result code.</param>
     /// <param name="db">The database handle for error message extraction, or null.</param>
     /// <param name="operation">A description of the operation for the error message.</param>
+    /// <exception cref="AkavacheSqliteException"><paramref name="resultCode"/> is not a SQLite success code.</exception>
     internal static void CheckRc(int resultCode, sqlite3? db, string operation)
     {
         if (resultCode is SQLITE_OK or SQLITE_DONE or SQLITE_ROW)
@@ -1169,15 +1184,15 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     /// If the statement is already cached in the provided slot, it is returned immediately.
     /// Otherwise, the SQL is prepared and stored in the slot for future use.
     /// </summary>
+    /// <param name="slot">The memory location where the prepared statement is cached.</param>
+    /// <param name="sql">The SQL text to prepare.</param>
+    /// <returns>The prepared statement ready for use.</returns>
     /// <remarks>
     /// To ensure stability, the preparation result is first stored in a local variable.
     /// This prevents a failed preparation from leaving a partially initialized or invalid
     /// statement in the cache slot, which could lead to segmentation faults during cleanup.
     /// If preparation fails, the slot remains empty, allowing for a clean retry later.
     /// </remarks>
-    /// <param name="slot">The memory location where the prepared statement is cached.</param>
-    /// <param name="sql">The SQL text to prepare.</param>
-    /// <returns>The prepared statement ready for use.</returns>
     internal sqlite3_stmt EnsurePrepared(ref sqlite3_stmt? slot, string sql)
     {
         if (slot is not null)

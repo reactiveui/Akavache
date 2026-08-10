@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 #if REACTIVE_SHIM
@@ -11,6 +12,7 @@ namespace Akavache.Integration.Tests;
 #endif
 
 /// <summary>Tests for Akavache.SystemTextJson.AkavacheBuilderExtensions.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class SystemTextJsonBuilderExtensionsTests
 {
@@ -135,6 +137,7 @@ public class SystemTextJsonBuilderExtensionsTests
     /// <summary>Creates a fresh <see cref="IAkavacheBuilder"/> with a unique application name.</summary>
     /// <param name="applicationName">The application name used for builder isolation.</param>
     /// <returns>A new builder instance.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static IAkavacheBuilder CreateBuilder(string applicationName) =>
         CacheDatabase.CreateBuilder().WithApplicationName(applicationName);
 }

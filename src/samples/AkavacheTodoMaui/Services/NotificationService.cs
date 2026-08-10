@@ -1,13 +1,15 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using AkavacheTodoMaui.Models;
 
 namespace AkavacheTodoMaui.Services;
 
 /// <summary>Service for handling todo notifications and reminders.</summary>
+[System.Diagnostics.DebuggerDisplay("{ReminderNotifications}")]
 public class NotificationService : IDisposable
 {
     /// <summary>Subject used to publish reminder notifications.</summary>
@@ -94,6 +96,7 @@ public class NotificationService : IDisposable
 
     /// <summary>Gets all todos that are due soon and need reminders.</summary>
     /// <returns>Observable list of todos needing reminders.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public IObservable<List<TodoItem>> GetTodosNeedingReminders() =>
@@ -107,6 +110,7 @@ public class NotificationService : IDisposable
     /// A real app would raise a platform-specific notification here. This sample only pushes the todo
     /// through <see cref="ReminderNotifications"/> so the UI can react to it.
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> SendNotification(TodoItem todo, string message) =>
         Signal.FromAsync(async () =>
         {
@@ -120,6 +124,7 @@ public class NotificationService : IDisposable
 
     /// <summary>Checks for todos that need immediate reminders.</summary>
     /// <returns>Observable unit.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public IObservable<RxVoid> CheckImmediateReminders() => GetTodosNeedingReminders()

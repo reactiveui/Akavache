@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -29,10 +29,10 @@ public static class RelativeTimeExtensions
         }
 
         /// <summary>Inserts an object into the cache with expiration based on a relative time span.</summary>
+        /// <typeparam name="T">The type of object to insert.</typeparam>
         /// <param name="key">The key to associate with the cache entry.</param>
         /// <param name="value">The object to serialize and store in the cache.</param>
         /// <param name="expiration">A time span that will be added to the current time to determine expiration.</param>
-        /// <typeparam name="T">The type of object to insert.</typeparam>
         /// <returns>An observable that signals when the item is added to the cache.</returns>
         [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
         [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]

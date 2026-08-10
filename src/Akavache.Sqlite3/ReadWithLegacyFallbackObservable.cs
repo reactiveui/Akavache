@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if ENCRYPTED
 #if REACTIVE_SHIM
@@ -23,6 +25,10 @@ namespace Akavache.Sqlite3;
 /// fallback read, and the not-found error without allocating any Rx <c>SelectMany</c>
 /// operator wrappers per subscription.
 /// </summary>
+/// <param name="connection">The underlying sqlite connection used for both the V11 primary read and the V10 legacy fallback.</param>
+/// <param name="key">The cache key to look up.</param>
+/// <param name="type">Optional type filter; <see langword="null"/> for untyped reads.</param>
+/// <param name="clock">Clock supplying the expiry cut-off for both the primary and legacy reads.</param>
 /// <remarks>
 /// <para>
 /// The primary read against the V11 <c>CacheEntry</c> table is the hot path — the
@@ -37,10 +43,6 @@ namespace Akavache.Sqlite3;
 /// exception message continue to work unchanged.
 /// </para>
 /// </remarks>
-/// <param name="connection">The underlying sqlite connection used for both the V11 primary read and the V10 legacy fallback.</param>
-/// <param name="key">The cache key to look up.</param>
-/// <param name="type">Optional type filter; <see langword="null"/> for untyped reads.</param>
-/// <param name="clock">Clock supplying the expiry cut-off for both the primary and legacy reads.</param>
 internal sealed class ReadWithLegacyFallbackObservable(IAkavacheConnection connection, string key, Type? type, TimeProvider clock) : IObservable<byte[]>
 {
     /// <inheritdoc/>
@@ -107,6 +109,7 @@ internal sealed class ReadWithLegacyFallbackObservable(IAkavacheConnection conne
         }
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnError(Exception error) => downstream.OnError(error);
 
         /// <inheritdoc/>
@@ -151,6 +154,7 @@ internal sealed class ReadWithLegacyFallbackObservable(IAkavacheConnection conne
         }
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnError(Exception error) => downstream.OnError(error);
 
         /// <inheritdoc/>

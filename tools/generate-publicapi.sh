@@ -3,16 +3,14 @@
 # generate-publicapi.sh — (re)generate PublicAPI baseline files for every shipped
 # Akavache library, across each target framework that builds on this machine.
 #
-# The Microsoft.CodeAnalysis.PublicApiAnalyzers (RS0016 / RS0017 / RS0037) require a
-# per-TFM pair of tracking files:
+# PublicApiSharp.Analyzers (PAS0001-PAS0005) tracks one baseline per target framework:
 #
-#     <Project>/PublicAPI/<tfm>/PublicAPI.Shipped.txt
-#     <Project>/PublicAPI/<tfm>/PublicAPI.Unshipped.txt
+#     <Project>/PublicAPI/<tfm>/PublicAPI.txt
 #
-# This script seeds those files and uses `dotnet format analyzers` to capture the
-# project's current public surface (RS0016), drop stale entries (RS0017), and record
-# nullability (RS0037), then folds the surface into Shipped (this repo keeps the full
-# surface in Shipped with Unshipped empty).
+# The file is nested C# describing the assembly's current surface — there is no
+# shipped/unshipped split and nothing to promote. This script seeds an empty baseline so
+# the analyzer reports the whole surface as PAS0001, then lets `dotnet format analyzers`
+# apply the baseline fix, which writes the file.
 #
 # Both sides of the lean/.Reactive seam are tracked, so the same source change shows up
 # as a diff against Akavache.X and Akavache.X.Reactive alike.
@@ -21,8 +19,8 @@
 # benchmarks, samples and compat opt out centrally in src/Directory.Build.props.
 #
 # Each (project, TFM) pair is independent — `dotnet format` builds an in-memory
-# MSBuildWorkspace and only writes its own PublicAPI/<tfm>/ files — so the pairs run
-# in parallel through a bounded pool (override the width with JOBS=<n>).
+# MSBuildWorkspace and only writes its own PublicAPI/<tfm>/PublicAPI.txt — so the pairs
+# run in parallel through a bounded pool (override the width with JOBS=<n>).
 #
 # Usage:
 #   tools/generate-publicapi.sh [project-name-filter]
@@ -37,9 +35,9 @@
 #     (net*-ios / -macos / -maccatalyst) build only on macOS or Windows; Windows-desktop
 #     TFMs build cross-platform here via EnableWindowsTargeting. Use the PowerShell
 #     sibling (generate-publicapi.ps1) on Windows.
-#   * A TFM whose workload/SDK is missing is reported as failed (its seed files are
-#     left in place) rather than aborting the whole run; the exit code is non-zero so
-#     CI can detect an incomplete run.
+#   * A TFM whose workload/SDK is missing is reported as failed (its previous baseline is
+#     restored) rather than aborting the whole run; the exit code is non-zero so CI can
+#     detect an incomplete run.
 #
 set -uo pipefail
 
@@ -53,7 +51,9 @@ export CheckEolTargetFramework=false
 export MinVerVersionOverride="${MinVerVersionOverride:-255.255.255-dev}"
 
 FILTER="${1:-}"
-export DIAGS="RS0016 RS0017 RS0037"
+# PAS0001 (surface missing from the baseline) and PAS0003 (surface differs) are the two
+# fixable rules; both resolve to the same "write the baseline" fix.
+export DIAGS="PAS0001 PAS0003"
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
 [ "$JOBS" -gt 8 ] && JOBS=8
 
@@ -74,7 +74,7 @@ while IFS= read -r p; do projects+=("$p"); done < <(
     | sort
 )
 
-# Collect (project|tfm) work items; the worker seeds, generates, and folds each pair.
+# Collect (project|tfm) work items; the worker seeds and generates each one.
 items=()
 restore_set=()
 skipped=0
@@ -124,40 +124,34 @@ for proj in "${restore_set[@]}"; do
 done
 echo
 
-# Worker: regenerate one (project, TFM) pair and fold the surface into Shipped.
+# Worker: regenerate one (project, TFM) baseline.
 generate_one() {
   local item="$1"
   local proj="${item%%|*}"
   local tfm="${item##*|}"
-  local projdir apidir shipped unshipped tag
+  local projdir apidir baseline tag
   projdir="$(dirname "$proj")"
   apidir="$projdir/PublicAPI/$tfm"
-  shipped="$apidir/PublicAPI.Shipped.txt"
-  unshipped="$apidir/PublicAPI.Unshipped.txt"
+  baseline="$apidir/PublicAPI.txt"
   tag="$(printf '%s' "$item" | tr '/|.' '___')"
-  local bsh="$RESULTS_DIR/$tag.shipped.bak"
-  local bun="$RESULTS_DIR/$tag.unshipped.bak"
+  local backup="$RESULTS_DIR/$tag.bak"
   # Back up any existing baseline so a build failure (e.g. a TFM that needs a workload
   # this platform lacks) restores it instead of wiping it.
-  [ -f "$shipped" ] && cp "$shipped" "$bsh"
-  [ -f "$unshipped" ] && cp "$unshipped" "$bun"
-  # Empty both to the bare header so the analyzer reports the entire current surface.
-  printf '#nullable enable\n' >"$shipped"
-  printf '#nullable enable\n' >"$unshipped"
+  [ -f "$baseline" ] && cp "$baseline" "$backup"
+  # An empty baseline makes the analyzer report the entire current surface as PAS0001,
+  # which the fix then writes back in full. The file has to exist: with no baseline at
+  # all the analyzer reports PAS0004, which has no fix.
+  : >"$baseline"
   if dotnet format analyzers "$proj" -f "$tfm" --diagnostics $DIAGS --severity info -v quiet; then
-    # `dotnet format` records the surface in Unshipped; fold it into Shipped (ordinally
-    # sorted+deduped, as the analyzer emits) and reset Unshipped to the bare header default.
-    {
-      printf '#nullable enable\n'
-      grep -vxF '#nullable enable' "$unshipped" | grep -v '^[[:space:]]*$' | LC_ALL=C sort -u
-    } >"$shipped"
-    printf '#nullable enable\n' >"$unshipped"
     printf 'OK   [%s] %s\n' "$tfm" "$proj"
     : >"$RESULTS_DIR/$tag.ok"
   else
     # Restore the prior baseline (if any) so nothing is wiped for a TFM we can't build here.
-    [ -f "$bsh" ] && cp "$bsh" "$shipped"
-    [ -f "$bun" ] && cp "$bun" "$unshipped"
+    if [ -f "$backup" ]; then
+      cp "$backup" "$baseline"
+    else
+      rm -f "$baseline"
+    fi
     printf 'FAIL [%s] %s (missing workload/SDK for this platform?)\n' "$tfm" "$proj"
     : >"$RESULTS_DIR/$tag.fail"
   fi

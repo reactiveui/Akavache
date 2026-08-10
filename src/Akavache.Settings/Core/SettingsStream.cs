@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Settings.Core;
@@ -17,6 +18,7 @@ namespace Akavache.Settings.Core;
 /// <see cref="EnsureLoaded"/>), and re-emits whenever <see cref="Set"/> is called so
 /// every live subscriber observes the change.
 /// </summary>
+/// <typeparam name="T">The property value type.</typeparam>
 /// <remarks>
 /// <para>
 /// Exactly one instance exists per property per <see cref="SettingsStorage"/>. The
@@ -31,7 +33,6 @@ namespace Akavache.Settings.Core;
 /// bookkeeping we don't need (cold-load failures are swallowed upstream).
 /// </para>
 /// </remarks>
-/// <typeparam name="T">The property value type.</typeparam>
 [RequiresUnreferencedCode("Settings streams serialize via the blob cache which requires types to be preserved.")]
 [RequiresDynamicCode("Settings streams serialize via the blob cache which requires types to be preserved.")]
 internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
@@ -74,6 +75,7 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
     /// blob-cache reads the moment a derived settings class is instantiated, which
     /// interacted badly with the sqlite worker-thread dispatch and native-handle lifetime.
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IDisposable Subscribe(IObserver<T> observer) => _current.Subscribe(observer);
 
     /// <inheritdoc/>
@@ -105,6 +107,7 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Dispose() => _current.Dispose();
 
     /// <summary>

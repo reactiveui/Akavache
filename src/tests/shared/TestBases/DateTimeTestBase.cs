@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Tests.TestBases;
@@ -11,6 +12,7 @@ namespace Akavache.Tests.TestBases;
 #endif
 
 /// <summary>Tests associated with the DateTime and DateTimeOffset.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public abstract class DateTimeTestBase : IDisposable
 {
     /// <summary>Type-name fragment identifying an encrypted cache implementation.</summary>
@@ -86,7 +88,7 @@ public abstract class DateTimeTestBase : IDisposable
     private const double StandardOffsetToleranceHours = 24.0;
 
     /// <summary>A backing field which indicates if the class has been disposed.</summary>
-    private bool _disposed;
+    private int _disposed;
 
     /// <summary>Gets the date time offsets used in theory tests.</summary>
     public static IEnumerable<object[]> DateTimeOffsetData =>
@@ -142,8 +144,9 @@ public abstract class DateTimeTestBase : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             fixture.ForcedDateTimeKind = DateTimeKind.Utc;
 
             var value = TimeProvider.System.GetUtcNow().UtcDateTime;
@@ -169,8 +172,9 @@ public abstract class DateTimeTestBase : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var blobCache = CreateBlobCache(path, serializer))
         {
+            using var blobCache = CreateBlobCache(path, serializer);
+
             DateTime[] edgeCases =
             [
                 DateTime.MinValue,
@@ -229,8 +233,9 @@ public abstract class DateTimeTestBase : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var blobCache = CreateBlobCache(path, serializer))
         {
+            using var blobCache = CreateBlobCache(path, serializer);
+
             var edgeCases = GetMobileDesktopDateTimeOffsetTestCases(serializer);
 
             var successCount = 0;
@@ -276,24 +281,12 @@ public abstract class DateTimeTestBase : IDisposable
 
     /// <summary>Disposes resources.</summary>
     /// <param name="disposing">True to dispose managed resources.</param>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        if (disposing)
-        {
-            // No managed resources to dispose in this base class.
-        }
-
-        _disposed = true;
-    }
+    protected virtual void Dispose(bool disposing) => _ = Interlocked.Exchange(ref _disposed, 1);
 
     /// <summary>Determines whether the cache under test is an encrypted implementation.</summary>
     /// <param name="blobCache">The cache under test.</param>
     /// <returns>True if the cache is an encrypted implementation.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsEncryptedCache(IBlobCache blobCache) =>
         blobCache.GetType().Name.Contains(EncryptedCacheNameFragment);
 

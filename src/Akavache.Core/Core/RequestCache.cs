@@ -1,8 +1,10 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Core;
@@ -28,6 +30,10 @@ internal static class RequestCache
     /// <param name="key">The cache key.</param>
     /// <param name="fetchFunc">The function to fetch the value if not already in flight.</param>
     /// <returns>An observable that represents the shared fetch operation.</returns>
+    [SuppressMessage(
+        "Modernization",
+        "SST2209:A null-forgiving operator has no local effect",
+        Justification = "T is unconstrained, so the cast to object yields object? without the operator and the cache's IObservable<object> value type no longer matches (CS8619).")]
     internal static IObservable<T> GetOrCreateRequest<T>(string key, Func<IObservable<T>> fetchFunc)
     {
         ArgumentExceptionHelper.ThrowIfNull(fetchFunc);
@@ -69,6 +75,7 @@ internal static class RequestCache
     }
 
     /// <summary>Clears all in-flight requests. This is primarily for testing purposes.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void Clear() => _inflightRequests.Clear();
 
     /// <summary>Removes a specific request from the cache.</summary>
@@ -128,5 +135,6 @@ internal static class RequestCache
 
     /// <summary>Removes the entry identified by <paramref name="requestKey"/> from the in-flight cache.</summary>
     /// <param name="requestKey">The fully-qualified request key.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void RemoveRequestInternal(string requestKey) => _inflightRequests.TryRemove(requestKey, out _);
 }

@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if ENCRYPTED
@@ -24,6 +24,7 @@ namespace Akavache.Sqlite3;
 /// the broadcast iteration, and the dispose-tracking that <c>Subject</c>/<c>AsyncSubject</c>
 /// carry for the multi-subscriber contract we don't need.
 /// </summary>
+/// <typeparam name="T">The type of value produced by the reply.</typeparam>
 /// <remarks>
 /// <para>
 /// Single-subscriber contract: only one call to <see cref="Subscribe"/> is supported per
@@ -38,7 +39,6 @@ namespace Akavache.Sqlite3;
 /// exactly one notification pair (OnNext+OnCompleted, or OnError).
 /// </para>
 /// </remarks>
-/// <typeparam name="T">The type of value produced by the reply.</typeparam>
 internal sealed class SqliteReplyObservable<T> : IObservable<T>
 {
     /// <summary>State machine value: no result posted, no subscriber attached.</summary>
@@ -169,6 +169,7 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
     /// <param name="observerSlot">The observer field.</param>
     /// <param name="observer">The subscribing observer.</param>
     /// <returns>The captured state, value, and error at the time of subscription.</returns>
+    /// <exception cref="InvalidOperationException">The observable has already been subscribed to.</exception>
     internal static (int State, T? Value, Exception? Error) CaptureAndSubscribe(
         ref bool subscribed,
         ref int state,

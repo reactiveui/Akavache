@@ -27,20 +27,10 @@ dotnet_diagnostic.PSH1102.severity = error # In tests, simplify LINQ type filter
 # Akavache test-suite specifics
 ###################
 
-# Test types are internal to the test runner and don't need DebuggerDisplay
-# attributes; suppress here so the rule still applies to public production
-# types.
 dotnet_diagnostic.RCS1223.severity = none # Mark publicly visible type with DebuggerDisplay attribute — not useful for test fixtures
-
-# Test fakes/mocks deliberately throw NotImplementedException from members the test doesn't exercise; this is intentional.
 dotnet_diagnostic.RCS1079.severity = none # Implement the functionality instead of throwing new NotImplementedException — deliberate in test fakes
 dotnet_diagnostic.SST2485.severity = none # 'throw new NotImplementedException' marks unfinished code — the same deliberate test-fake shape RCS1079 is disabled for
-
-# The encryption tests must pass a password to open an encrypted cache, so the literal is the
-# subject of the test rather than a leaked secret.
 dotnet_diagnostic.SES1202.severity = none # A string literal is passed where a credential is expected — test fixtures supply their own throwaway passwords
+dotnet_diagnostic.IDE0200.severity = none # Lambda expression can be removed — the method-group overload of Assert.That never invokes the delegate, so throw-matchers silently pass
 
-# IDE0200 (lambda can be removed) is unsafe for TUnit Assert.That(...).Throws<T>() / .ThrowsNothing() patterns.
-# Method-group conversion binds to a different Assert.That overload that does NOT invoke the delegate,
-# so the throw assertion silently misses (or the no-throw assertion silently passes). Keep the explicit lambda.
-dotnet_diagnostic.IDE0200.severity = none # Lambda expression can be removed — required for TUnit Assert.That throw-matchers
+dotnet_diagnostic.SST2209.severity = none # A null-forgiving operator has no local effect — test fixtures are deliberately nullable, so they are load-bearing

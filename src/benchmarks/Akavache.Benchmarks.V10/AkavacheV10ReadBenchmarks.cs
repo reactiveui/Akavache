@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
 using Akavache.Sqlite3;
 using BenchmarkDotNet.Attributes;
@@ -13,6 +14,7 @@ using BenchmarkDotNet.Loggers;
 namespace Akavache.Benchmarks.V10;
 
 /// <summary> Measures how fast Akavache V10 reads blobs and objects back out of a pre-seeded SQLite-backed cache, sequentially and concurrently. </summary>
+[System.Diagnostics.DebuggerDisplay("{BenchmarkSize}")]
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
@@ -79,6 +81,10 @@ public class AkavacheV10ReadBenchmarks
 
     /// <summary> Gets the root folder for the integration tests. </summary>
     /// <returns>The root folder.</returns>
+    [SuppressMessage(
+        "Modernization",
+        "SST2209:A null-forgiving operator has no local effect",
+        Justification = "StackFrame.GetFileName and Path.GetDirectoryName are both nullable, so dropping the operator produces CS8604 on Path.Combine.")]
     public static string GetIntegrationTestRootDirectory()
     {
         // XXX: This is an evil hack, but it's okay for a unit test
@@ -220,7 +226,7 @@ public class AkavacheV10ReadBenchmarks
                         Id = Guid.NewGuid(),
                         Name = $"Test Item {i}",
                         Value = PerfHelper.Rng.Next(1, MaxTestDataValue),
-                        Created = TimeProvider.System.GetLocalNow().AddDays(-PerfHelper.Rng.Next(0, MaxTestDataAgeDays))
+                        Created = TimeProvider.System.GetLocalNow().AddDays(-PerfHelper.Rng.Next(0, MaxTestDataAgeDays)),
                     };
 
                     var objectKey = $"object_{i}_{TimeProvider.System.GetLocalNow().DateTime.Ticks}";

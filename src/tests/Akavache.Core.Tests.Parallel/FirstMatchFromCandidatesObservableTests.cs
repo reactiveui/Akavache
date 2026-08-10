@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -9,6 +9,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for <see cref="FirstMatchFromCandidatesObservable{TKey, TRaw, TResult}"/>.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class FirstMatchFromCandidatesObservableTests
 {
@@ -422,6 +423,250 @@ public class FirstMatchFromCandidatesObservableTests
         {
             await Assert.That(received).IsNull();
             await Assert.That(completed).IsFalse();
+        }
+    }
+
+    /// <summary>A candidate that completes inline without producing a value is skipped.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SyncCandidateCompletesWithoutValue_AdvancesToNextCandidate()
+    {
+        List<string> keys = [PendingCandidateKey, InlineCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            static k => k == PendingCandidateKey ? Signal.Empty<string>() : Signal.Return(InlineCandidateValue),
+            static x => x,
+            static v => v == InlineCandidateValue,
+            FallbackText);
+
+        var result = await sut.FirstAsync();
+        await Assert.That(result).IsEqualTo(InlineCandidateValue);
+    }
+
+    /// <summary>A second value from an already-matched candidate is ignored rather than re-emitted.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncCandidateEmitsAfterTheMatch_IsIgnored()
+    {
+        using Signal<string> pending = new();
+        List<string> keys = [PendingCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            _ => pending,
+            static x => x,
+            static v => v == InlineCandidateValue,
+            FallbackText);
+
+        var received = new List<string>();
+        var completions = 0;
+        _ = sut.Subscribe(
+            received.Add,
+            static _ => { },
+            () => completions++);
+
+        pending.OnNext(InlineCandidateValue);
+        pending.OnNext("second value");
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(received).IsEquivalentTo([InlineCandidateValue]);
+            await Assert.That(completions).IsEqualTo(1);
+        }
+    }
+
+    /// <summary>An error arriving after the match is ignored rather than forwarded downstream.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncCandidateErrorsAfterTheMatch_IsIgnored()
+    {
+        using Signal<string> pending = new();
+        List<string> keys = [PendingCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            _ => pending,
+            static x => x,
+            static v => v == InlineCandidateValue,
+            FallbackText);
+
+        string? received = null;
+        Exception? error = null;
+        _ = sut.Subscribe(
+            v => received = v,
+            ex => error = ex,
+            static () => { });
+
+        pending.OnNext(InlineCandidateValue);
+        pending.OnError(new InvalidOperationException("after the match"));
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(received).IsEqualTo(InlineCandidateValue);
+            await Assert.That(error).IsNull();
+        }
+    }
+
+    /// <summary>A transform that throws on an async candidate's value leaves it a non-match.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncCandidateTransformThrows_AdvancesToNextCandidate()
+    {
+        using Signal<string> pending = new();
+        List<string> keys = [PendingCandidateKey, InlineCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            k => k == PendingCandidateKey ? pending : Signal.Return(InlineCandidateValue),
+            static x => x == PendingCandidateRawValue ? throw new InvalidOperationException("transform boom") : x,
+            static v => v == InlineCandidateValue,
+            FallbackText);
+
+        string? received = null;
+        _ = sut.Subscribe(
+            v => received = v,
+            static _ => { },
+            static () => { });
+
+        pending.OnNext(PendingCandidateRawValue);
+        await Assert.That(received).IsNull();
+
+        pending.OnCompleted();
+        await Assert.That(received).IsEqualTo(InlineCandidateValue);
+    }
+
+    /// <summary>An async candidate whose value the predicate rejects is not emitted.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncCandidateValueRejected_AdvancesToNextCandidate()
+    {
+        using Signal<string> pending = new();
+        List<string> keys = [PendingCandidateKey, InlineCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            k => k == PendingCandidateKey ? pending : Signal.Return(InlineCandidateValue),
+            static x => x,
+            static v => v == InlineCandidateValue,
+            FallbackText);
+
+        string? received = null;
+        _ = sut.Subscribe(
+            v => received = v,
+            static _ => { },
+            static () => { });
+
+        pending.OnNext(PendingCandidateRawValue);
+        await Assert.That(received).IsNull();
+
+        pending.OnCompleted();
+        await Assert.That(received).IsEqualTo(InlineCandidateValue);
+    }
+
+    /// <summary>
+    /// The async walker keeps going when the next candidate errors inline as it subscribes,
+    /// which is the re-entrant case its sync-completion flag exists for.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncWalkerHandlesACandidateThatErrorsInline()
+    {
+        using Signal<string> pending = new();
+        List<string> keys = [PendingCandidateKey, "inline-error", InlineCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            k => k switch
+            {
+                PendingCandidateKey => pending,
+                "inline-error" => Signal.Throw<string>(new InvalidOperationException("inline boom")),
+                _ => Signal.Return(InlineCandidateValue),
+            },
+            static x => x,
+            static v => v == InlineCandidateValue,
+            FallbackText);
+
+        string? received = null;
+        Exception? error = null;
+        _ = sut.Subscribe(
+            v => received = v,
+            ex => error = ex,
+            static () => { });
+
+        pending.OnCompleted();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(error).IsNull();
+            await Assert.That(received).IsEqualTo(InlineCandidateValue);
+        }
+    }
+
+    /// <summary>The async walker keeps going when the next candidate completes inline with no value.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncWalkerHandlesACandidateThatCompletesInline()
+    {
+        using Signal<string> pending = new();
+        List<string> keys = [PendingCandidateKey, "inline-empty", InlineCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            k => k switch
+            {
+                PendingCandidateKey => pending,
+                "inline-empty" => Signal.Empty<string>(),
+                _ => Signal.Return(InlineCandidateValue),
+            },
+            static x => x,
+            static v => v == InlineCandidateValue,
+            FallbackText);
+
+        string? received = null;
+        _ = sut.Subscribe(
+            v => received = v,
+            static _ => { },
+            static () => { });
+
+        pending.OnCompleted();
+
+        await Assert.That(received).IsEqualTo(InlineCandidateValue);
+    }
+
+    /// <summary>The async walker skips a candidate whose projection factory throws.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncWalkerSkipsACandidateWhoseProjectionThrows()
+    {
+        using Signal<string> pending = new();
+        List<string> keys = [PendingCandidateKey, "factory-throws", InlineCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            k => k switch
+            {
+                PendingCandidateKey => pending,
+                "factory-throws" => throw new InvalidOperationException("factory boom"),
+                _ => Signal.Return(InlineCandidateValue),
+            },
+            static x => x,
+            static v => v == InlineCandidateValue,
+            FallbackText);
+
+        string? received = null;
+        Exception? error = null;
+        _ = sut.Subscribe(
+            v => received = v,
+            ex => error = ex,
+            static () => { });
+
+        pending.OnCompleted();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(error).IsNull();
+            await Assert.That(received).IsEqualTo(InlineCandidateValue);
         }
     }
 

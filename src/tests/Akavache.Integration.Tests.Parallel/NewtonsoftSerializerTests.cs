@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Newtonsoft.Json;
@@ -12,6 +12,7 @@ namespace Akavache.Integration.Tests;
 #endif
 
 /// <summary>Tests for NewtonsoftSerializer covering BSON detection, format detection, and edge cases.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class NewtonsoftSerializerTests
 {
@@ -452,8 +453,7 @@ public class NewtonsoftSerializerTests
         // Prepend a fake BSON header that makes IsPotentialBsonData return true:
         // documentLength matches data size, first content byte is non-JSON.
         var data = new byte[jsonBytes.Length + BsonHeaderByteCount];
-        var docLen = data.Length;
-        BitConverter.GetBytes(docLen).CopyTo(data, 0);
+        BitConverter.GetBytes(data.Length).CopyTo(data, 0);
         data[4] = 0x10; // Non-JSON byte at index 4 — BSON element type marker
         Array.Copy(jsonBytes, 0, data, BsonHeaderByteCount, jsonBytes.Length);
 

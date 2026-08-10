@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 #if ENCRYPTED
 #if REACTIVE_SHIM
@@ -74,6 +75,7 @@ internal sealed class SqliteOperationQueue : IDisposable
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Dispose() => ShutdownAndWait(static _ => { });
 
     /// <summary>
@@ -102,6 +104,7 @@ internal sealed class SqliteOperationQueue : IDisposable
     /// </summary>
     /// <param name="connection">The SQLite connection.</param>
     /// <param name="batch">The batch of operations to execute.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ExecuteBatchInTransaction(
         SqlitePclRawConnection connection,
         List<ISqliteOperation> batch) =>
@@ -268,15 +271,33 @@ internal sealed class SqliteOperationQueue : IDisposable
     /// </param>
     internal void ShutdownAndWait(Action<SqlitePclRawConnection> lastWill)
     {
+        // Closing from inside an operation body puts the worker on both ends of the handshake:
+        // it cannot dequeue the shutdown operation, or signal that it exited, until the body
+        // returns — so waiting here would block the very thread the wait is waiting for. Post the
+        // shutdown and unwind instead; the drain loop runs it the moment the body returns.
+        // Reached whenever a sequence is torn down on the thread that produced its last value,
+        // which is the ordinary shape of Finally over a queue-backed observable.
+        var onWorkerThread = Thread.CurrentThread == _worker;
+
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
         {
-            _workerExited.Wait();
+            if (!onWorkerThread)
+            {
+                _workerExited.Wait();
+            }
+
             return;
         }
 
         _ = TryAddToInbox(new SqliteShutdownOperation(lastWill));
 
         _inbox.CompleteAdding();
+
+        if (onWorkerThread)
+        {
+            return;
+        }
+
         _workerExited.Wait();
         _inbox.Dispose();
     }

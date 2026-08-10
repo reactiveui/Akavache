@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Newtonsoft.Json;
@@ -14,10 +14,10 @@ namespace Akavache.NewtonsoftJson;
 /// JSON converter for DateTime that preserves ticks and handles DateTimeKind appropriately.
 /// This converter matches the behavior of the NewtonsoftBson serializer for consistent DateTime handling.
 /// </summary>
+/// <param name="forceDateTimeKindOverride">Optional DateTime kind override.</param>
 /// <remarks>
 /// Initializes a new instance of the <see cref="NewtonsoftDateTimeTickConverter"/> class.
 /// </remarks>
-/// <param name="forceDateTimeKindOverride">Optional DateTime kind override.</param>
 internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null) : JsonConverter
 {
     /// <summary>Gets a instance of the DateTimeConverter that handles the DateTime in UTC mode.</summary>
@@ -41,24 +41,10 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
 
         if (reader is { TokenType: JsonToken.Date, Value: not null })
         {
-            var dateTime = (DateTime)reader.Value;
-
-            // Apply the DateTimeKind override even for direct DateTime values
-            var targetKind = forceDateTimeKindOverride ?? DateTimeKind.Utc;
-
-            return ConvertDateTimeKind(dateTime, targetKind);
+            return ConvertDateTimeKind((DateTime)reader.Value, forceDateTimeKindOverride ?? DateTimeKind.Utc);
         }
 
-        if ((objectType == typeof(DateTime) || objectType == typeof(DateTime?)) && reader.Value is not null)
-        {
-            var ticks = (long)reader.Value;
-            var targetKind = forceDateTimeKindOverride ?? DateTimeKind.Utc;
-
-            // Create DateTime from ticks with the specified kind
-            return new DateTime(ticks, targetKind);
-        }
-
-        return null;
+        return (objectType != typeof(DateTime) && objectType != typeof(DateTime?)) || reader.Value is null ? null : new DateTime((long)reader.Value, forceDateTimeKindOverride ?? DateTimeKind.Utc);
     }
 
     /// <inheritdoc/>

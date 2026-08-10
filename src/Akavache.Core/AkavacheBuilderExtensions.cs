@@ -1,10 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
 using System.IO.IsolatedStorage;
-using System.Reflection;
 using Splat;
 using Splat.Builder;
 
@@ -90,11 +89,13 @@ public static class AkavacheBuilderExtensions
                 for (var path = fullName; path != root && path is not null && index >= 0; path = Path.GetDirectoryName(path))
                 {
                     var filename = Path.GetFileName(path);
-                    if (!string.IsNullOrEmpty(filename))
+                    if (string.IsNullOrEmpty(filename))
                     {
-                        components[index] = filename;
-                        index--;
+                        continue;
                     }
+
+                    components[index] = filename;
+                    index--;
                 }
 
                 for (var i = 0; i < components.Length; i++)
@@ -176,7 +177,7 @@ public static class AkavacheBuilderExtensions
             using var isoStore = store;
 
             // Try to get a path within isolated storage for the settings cache using the application name
-            return isoStore is null ? null : ResolveIsolatedCachePath(isoStore, validatedApplicationName, validatedCacheName);
+            return isoStore is null ? null : IsolatedStorageHelpers.ResolveIsolatedCachePath(isoStore, validatedApplicationName, validatedCacheName);
         }
 
         /// <summary>Gets the legacy cache directory.</summary>
@@ -225,9 +226,9 @@ public static class AkavacheBuilderExtensions
 #elif IOS || MACCATALYST
             return cacheName switch
             {
-                "LocalMachine" => CreateAppDirectory(NSSearchPathDirectory.CachesDirectory, builder.ApplicationName),
-                "Secure" => CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, builder.ApplicationName, "SecretCache"),
-                _ => CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, builder.ApplicationName),
+                "LocalMachine" => NSSearchPathDirectory.CachesDirectory.CreateAppDirectory(builder.ApplicationName),
+                "Secure" => NSSearchPathDirectory.ApplicationSupportDirectory.CreateAppDirectory(builder.ApplicationName, "SecretCache"),
+                _ => NSSearchPathDirectory.ApplicationSupportDirectory.CreateAppDirectory(builder.ApplicationName),
             };
 #else
             return cacheName switch
@@ -367,13 +368,13 @@ public static class AkavacheBuilderExtensions
         /// <param name="configureAsync">Configures the CacheDatabase builder before it is built.</param>
         /// <param name="instanceAsync">Runs against the built instance.</param>
         /// <returns>A task producing the configured builder.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/>, <paramref name="configureAsync"/>, or <paramref name="instanceAsync"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
         /// <remarks>
         /// The <see cref="Action{T}"/> overloads give a caller doing asynchronous work no await
         /// point, leaving it to block inside the callback and park the calling thread. This form
         /// awaits both callbacks instead, so the work stays asynchronous end to end.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/>, <paramref name="configureAsync"/>, or <paramref name="instanceAsync"/> is null.</exception>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -479,76 +480,31 @@ public static class AkavacheBuilderExtensions
         }
     }
 
-    /// <summary>
-    /// Resolves the physical directory backing <paramref name="cacheName"/> inside an isolated
-    /// storage store, creating it when absent. Returns <c>null</c> when the store cannot be read
-    /// or written, which is the caller's signal to fall back to the local application data path.
-    /// </summary>
-    /// <param name="isoStore">The opened isolated storage store.</param>
-    /// <param name="applicationName">The already-validated application name segment.</param>
-    /// <param name="cacheName">The already-validated cache name segment.</param>
-    /// <returns>The physical cache directory, or <c>null</c> when isolated storage is unusable.</returns>
-    [ExcludeFromCodeCoverage]
-    [SuppressMessage(
-        "Serialization",
-        "SES1406:Reflection must not reach non-public members to bypass their declared accessibility",
-        Justification = "IsolatedStorageFile exposes no public member for the store's physical path; the null-tolerant lookup returns null on failure and the caller falls back.")]
-    internal static string? ResolveIsolatedCachePath(IsolatedStorageFile isoStore, string applicationName, string cacheName)
-    {
-        try
-        {
-            var isoPath = Path.Combine(applicationName, cacheName);
-
-            // Ensure the directory exists
-            if (!isoStore.DirectoryExists(isoPath))
-            {
-                isoStore.CreateDirectory(isoPath);
-            }
-
-            if (!isoStore.DirectoryExists(isoPath))
-            {
-                return null;
-            }
-
-            _ = isoStore.GetDirectoryNames(isoPath);
-
-            // 'RootDirectory' is the only route to the store's on-disk location: it is private on
-            // .NET and internal on .NET Framework, and neither IsolatedStorageFile nor its base
-            // type surfaces the path through any public member
-            var rootDirectory = isoStore.GetType()
-                .GetProperty("RootDirectory", BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.GetValue(isoStore)
-                ?.ToString();
-
-            return Path.Combine(rootDirectory ?? string.Empty, isoPath);
-        }
-        catch (Exception ex) when (ex is IsolatedStorageException or IOException or UnauthorizedAccessException or InvalidOperationException)
-        {
-            // The store can be unavailable, read-only, or already disposed on this platform, in
-            // which case the caller falls back to the local application data path
-            return null;
-        }
-    }
 #if IOS || MACCATALYST
-    /// <summary>Creates a per-application directory beneath a system search-path directory.</summary>
+    /// <summary>Extension members for <c>NSSearchPathDirectory</c>.</summary>
     /// <param name="targetDir">The platform search-path directory to use as the parent.</param>
-    /// <param name="applicationName">The application name segment to use within the path.</param>
-    /// <param name="subDir">The leaf cache sub-directory name.</param>
-    /// <returns>The fully qualified path of the created directory.</returns>
-    internal static string CreateAppDirectory(NSSearchPathDirectory targetDir, string applicationName, string subDir = "BlobCache")
+    extension(NSSearchPathDirectory targetDir)
     {
-        using var fm = new NSFileManager();
-        var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out _) ?? throw new DirectoryNotFoundException();
-        var rp = url.RelativePath ?? throw new DirectoryNotFoundException();
-        var ret = Path.Combine(rp, applicationName, subDir);
-
-        var di = new DirectoryInfo(ret);
-        if (!di.Exists)
+        /// <summary>Creates a per-application directory beneath a system search-path directory.</summary>
+        /// <param name="applicationName">The application name segment to use within the path.</param>
+        /// <param name="subDir">The leaf cache sub-directory name.</param>
+        /// <returns>The fully qualified path of the created directory.</returns>
+        /// <exception cref="DirectoryNotFoundException">Thrown when the search-path directory has no location on the local file system.</exception>
+        internal string CreateAppDirectory(string applicationName, string subDir = "BlobCache")
         {
-            di.CreateRecursive();
-        }
+            using var fm = new NSFileManager();
+            var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out _) ?? throw new DirectoryNotFoundException();
+            var rp = url.RelativePath ?? throw new DirectoryNotFoundException();
+            var ret = Path.Combine(rp, applicationName, subDir);
 
-        return ret;
+            var di = new DirectoryInfo(ret);
+            if (!di.Exists)
+            {
+                di.CreateRecursive();
+            }
+
+            return ret;
+        }
     }
 #endif
 }

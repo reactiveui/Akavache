@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Settings;
@@ -35,6 +36,7 @@ public static class AkavacheBuilderExtensions
         /// <param name="settings">Action to configure the settings instance once created.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAkavacheBuilder WithSecureSettingsStore<T>(string password, Action<T?> settings)
             where T : class, ISettingsStorage, new() =>
             builder.WithSecureSettingsStore(password, settings, (string?)null);
@@ -61,6 +63,7 @@ public static class AkavacheBuilderExtensions
         /// <param name="settings">Action to configure the settings instance once created.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAkavacheBuilder WithSettingsStore<T>(Action<T?> settings)
             where T : class, ISettingsStorage, new() =>
             builder.WithSettingsStore(settings, (string?)null);
@@ -71,6 +74,7 @@ public static class AkavacheBuilderExtensions
         /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAkavacheBuilder WithSettingsStore<T>(Action<T?> settings, string? overrideDatabaseName)
                 where T : class, ISettingsStorage, new() =>
                 builder.WithSettingsStore(settings, overrideDatabaseName, scheduler: null);
@@ -105,6 +109,7 @@ public static class AkavacheBuilderExtensions
         /// <param name="settings">Action to configure the settings instance once created.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="cache"/> is null.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAkavacheBuilder WithSettingsStore<T>(IBlobCache cache, Action<T?> settings)
             where T : class, ISettingsStorage, new() =>
             builder.WithSettingsStore(cache, settings, (string?)null);
@@ -143,6 +148,7 @@ public static class AkavacheBuilderExtensions
         /// </summary>
         /// <typeparam name="T">The settings type whose store should be deleted.</typeparam>
         /// <returns>A one-shot observable that completes when deletion is done.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -174,8 +180,7 @@ public static class AkavacheBuilderExtensions
                     {
                         if (builder.SettingsCachePath is not null && !string.IsNullOrEmpty(builder.SettingsCachePath) && Directory.Exists(builder.SettingsCachePath))
                         {
-                            var databaseName = overrideDatabaseName ?? typeof(T).Name;
-                            var validatedDatabaseName = SecurityUtilities.ValidateDatabaseName(databaseName, nameof(overrideDatabaseName));
+                            var validatedDatabaseName = SecurityUtilities.ValidateDatabaseName(overrideDatabaseName ?? typeof(T).Name, nameof(overrideDatabaseName));
                             var filePath = Path.Combine(builder.SettingsCachePath, $"{validatedDatabaseName}.db");
                             if (File.Exists(filePath))
                             {
@@ -205,6 +210,7 @@ public static class AkavacheBuilderExtensions
         /// <summary>Gets a settings store that has already been loaded into memory.</summary>
         /// <typeparam name="T">The settings type to retrieve.</typeparam>
         /// <returns>The loaded settings store instance, or <c>null</c> if not found.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -223,9 +229,7 @@ public static class AkavacheBuilderExtensions
         public ISettingsStorage? GetLoadedSettingsStore<T>(string? overrideDatabaseName)
         {
             ArgumentExceptionHelper.ThrowIfNull(builder);
-
-            var key = overrideDatabaseName ?? typeof(T).Name;
-            return builder.SettingsStores.TryGetValue(key, out var store) ? store : null;
+            return builder.SettingsStores.TryGetValue(overrideDatabaseName ?? typeof(T).Name, out var store) ? store : null;
         }
 
         /// <summary>
@@ -235,6 +239,7 @@ public static class AkavacheBuilderExtensions
         /// </summary>
         /// <typeparam name="T">The settings type whose store should be disposed.</typeparam>
         /// <returns>A one-shot observable that completes when disposal is done.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -285,6 +290,7 @@ public static class AkavacheBuilderExtensions
         /// <returns>The settings store instance configured for secure storage.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized or serializer is not configured.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -300,6 +306,7 @@ public static class AkavacheBuilderExtensions
         /// <returns>The settings store instance configured for secure storage.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized or serializer is not configured.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -319,6 +326,7 @@ public static class AkavacheBuilderExtensions
         /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
         /// <param name="scheduler">Scheduler to use for the underlying blob cache, or <see langword="null"/> for the default task-pool scheduler.</param>
         /// <returns>The settings store instance configured for secure storage.</returns>
+        /// <exception cref="InvalidOperationException">No serializer has been registered on the builder.</exception>
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -333,10 +341,8 @@ public static class AkavacheBuilderExtensions
                 throw new InvalidOperationException("AkavacheInstance serializer is not set. Ensure the builder has a serializer configured.");
             }
 
-            var key = overrideDatabaseName ?? typeof(T).Name;
-
             // Validate database name to prevent path traversal attacks
-            var validatedKey = SecurityUtilities.ValidateDatabaseName(key, nameof(overrideDatabaseName));
+            var validatedKey = SecurityUtilities.ValidateDatabaseName(overrideDatabaseName ?? typeof(T).Name, nameof(overrideDatabaseName));
 
             _ = Directory.CreateDirectory(builder.SettingsCachePath!);
             var dbPath = Path.Combine(builder.SettingsCachePath!, $"{validatedKey}.db");
@@ -360,6 +366,7 @@ public static class AkavacheBuilderExtensions
         /// <returns>The settings store instance configured for standard storage.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized or serializer is not configured.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -374,6 +381,7 @@ public static class AkavacheBuilderExtensions
         /// <returns>The settings store instance configured for standard storage.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized or serializer is not configured.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -392,6 +400,7 @@ public static class AkavacheBuilderExtensions
         /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
         /// <param name="scheduler">Scheduler to use for the underlying blob cache, or <see langword="null"/> for the default task-pool scheduler.</param>
         /// <returns>The settings store instance configured for standard storage.</returns>
+        /// <exception cref="InvalidOperationException">No serializer has been registered on the builder.</exception>
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -406,10 +415,8 @@ public static class AkavacheBuilderExtensions
                 throw new InvalidOperationException("AkavacheInstance serializer is not set. Ensure the builder has a serializer configured.");
             }
 
-            var key = overrideDatabaseName ?? typeof(T).Name;
-
             // Validate database name to prevent path traversal attacks
-            var validatedKey = SecurityUtilities.ValidateDatabaseName(key, nameof(overrideDatabaseName));
+            var validatedKey = SecurityUtilities.ValidateDatabaseName(overrideDatabaseName ?? typeof(T).Name, nameof(overrideDatabaseName));
 
             _ = Directory.CreateDirectory(builder.SettingsCachePath!);
             var dbPath = Path.Combine(builder.SettingsCachePath!, $"{validatedKey}.db");
@@ -441,6 +448,7 @@ public static class AkavacheBuilderExtensions
         /// <returns>The settings store instance configured with the custom cache.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="cache"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -470,10 +478,8 @@ public static class AkavacheBuilderExtensions
 
             ArgumentExceptionHelper.ThrowIfNull(cache);
 
-            var key = overrideDatabaseName ?? typeof(T).Name;
-
             // Validate database name to prevent path traversal attacks
-            var validatedKey = SecurityUtilities.ValidateDatabaseName(key, nameof(overrideDatabaseName));
+            var validatedKey = SecurityUtilities.ValidateDatabaseName(overrideDatabaseName ?? typeof(T).Name, nameof(overrideDatabaseName));
 
             builder.BlobCaches[validatedKey] = cache;
 

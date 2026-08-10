@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Splat.Builder;
@@ -16,6 +16,7 @@ namespace Akavache.Settings.Tests.Executors;
 /// after each test, then gives subclasses a hook to bootstrap any per-test-class
 /// configuration. Follows the ReactiveUI <c>BuilderTestExecutorBase</c> pattern.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public class AkavacheTestExecutorBase : ITestExecutor
 {
     /// <inheritdoc />

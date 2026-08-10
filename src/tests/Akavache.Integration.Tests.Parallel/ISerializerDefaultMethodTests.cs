@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
@@ -17,6 +18,7 @@ namespace Akavache.Integration.Tests;
 /// the AOT-safe <see cref="JsonTypeInfo{T}"/> serialization path on arbitrary
 /// <see cref="ISerializer"/> instances.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class ISerializerDefaultMethodTests
 {
@@ -126,6 +128,7 @@ public class ISerializerDefaultMethodTests
         public DateTimeKind? ForcedDateTimeKind { get; set; }
 
         /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresUnreferencedCode("Test only.")]
         [RequiresDynamicCode("Test only.")]
         public T? Deserialize<T>(byte[] bytes) => default;

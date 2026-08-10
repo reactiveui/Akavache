@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Newtonsoft.Json;
@@ -12,6 +12,7 @@ namespace Akavache.Integration.Tests;
 #endif
 
 /// <summary>Tests for NewtonsoftDateTimeTickConverter and NewtonsoftDateTimeOffsetTickConverter.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class NewtonsoftDateConvertersTests
 {
@@ -323,9 +324,7 @@ public class NewtonsoftDateConvertersTests
         var converter = NewtonsoftDateTimeTickConverter.Default;
         JsonSerializerSettings settings = new();
         settings.Converters.Add(converter);
-
-        var date = DateTime.MinValue;
-        var json = JsonConvert.SerializeObject(date, settings);
+        var json = JsonConvert.SerializeObject(DateTime.MinValue, settings);
         var result = JsonConvert.DeserializeObject<DateTime>(json, settings);
 
         await Assert.That(result.Ticks).IsEqualTo(0L);
@@ -502,9 +501,7 @@ public class NewtonsoftDateConvertersTests
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
         JsonSerializerSettings settings = new();
         settings.Converters.Add(converter);
-
-        var dto = DateTimeOffset.MinValue;
-        var json = JsonConvert.SerializeObject(dto, settings);
+        var json = JsonConvert.SerializeObject(DateTimeOffset.MinValue, settings);
         var result = JsonConvert.DeserializeObject<DateTimeOffset>(json, settings);
 
         await Assert.That(result.Ticks).IsEqualTo(0L);

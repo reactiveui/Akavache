@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Newtonsoft.Json;
@@ -23,6 +24,7 @@ namespace Akavache.SystemTextJson;
 /// A BSON serializer that uses Newtonsoft.Json.Bson for BSON encoding/decoding
 /// and System.Text.Json for object serialization.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{Options}")]
 public partial class SystemJsonBsonSerializer : ISerializer
 {
     /// <summary>Byte width of the length field every BSON document opens with.</summary>
@@ -65,7 +67,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
         }
 
         var firstChar = data[BsonLengthPrefixSize];
-        return firstChar is (byte)'{' or (byte)'[' or (byte)'"' ? false : !BinaryHelpers.StartsWithJsonOpener(data);
+        return firstChar is not ((byte)'{' or (byte)'[' or (byte)'"') && !BinaryHelpers.StartsWithJsonOpener(data);
     }
 
     /// <summary>
@@ -78,6 +80,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
     /// <param name="bytes">The bytes.</param>
     /// <param name="jsonTypeInfo">The JSON type information for AOT-safe deserialization.</param>
     /// <returns>The deserialized instance.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T? DeserializeAot<T>(byte[] bytes, JsonTypeInfo<T> jsonTypeInfo) =>
         SystemJsonSerializer.DeserializeAot(bytes, jsonTypeInfo);
 
@@ -91,6 +94,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
     /// <param name="item">The item to serialize.</param>
     /// <param name="jsonTypeInfo">The JSON type information for AOT-safe serialization.</param>
     /// <returns>The serialized bytes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[] SerializeAot<T>(T item, JsonTypeInfo<T> jsonTypeInfo) =>
         SystemJsonSerializer.SerializeAot(item, jsonTypeInfo);
 
@@ -128,6 +132,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("Reflection-based BSON serialization. For AOT-safe paths use the JsonTypeInfo overload (JSON only).")]
     [RequiresDynamicCode("Reflection-based BSON serialization. For AOT-safe paths use the JsonTypeInfo overload (JSON only).")]
     public byte[] Serialize<T>(T item) => SerializeToBson(item);

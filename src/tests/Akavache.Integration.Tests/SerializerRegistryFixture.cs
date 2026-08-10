@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Integration.Tests;
@@ -16,6 +18,7 @@ namespace Akavache.Integration.Tests;
 internal static class SerializerRegistryFixture
 {
     /// <summary>Clears the registry so registered serializers do not bleed between tests.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void Reset() => UniversalSerializer.ResetCaches();
 
     /// <summary>Registers every shipped serializer so the fallback paths have alternatives to try.</summary>

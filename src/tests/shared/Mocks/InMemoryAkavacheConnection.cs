@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Tests.Mocks;
@@ -79,6 +80,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
     internal bool BypassPredicate { get; set; }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> CreateSchema() =>
         Signal.Defer(() =>
         {
@@ -93,6 +95,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<bool> TableExists(string tableName) =>
         Signal.Defer(() =>
         {
@@ -101,6 +104,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<CacheEntry?> Get(string key, string? typeFullName, DateTimeOffset now) =>
         Signal.Defer(() =>
         {
@@ -124,6 +128,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<CacheEntry> GetMany(IReadOnlyList<string> keys, string? typeFullName, DateTimeOffset now) =>
         Signal.Defer(() =>
         {
@@ -153,6 +158,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<CacheEntry> GetAll(string? typeFullName, DateTimeOffset now) =>
         Signal.Defer(() =>
         {
@@ -177,6 +183,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<string> GetAllKeys(string? typeFullName, DateTimeOffset now) =>
         Signal.Defer(() =>
         {
@@ -204,6 +211,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Upsert(IReadOnlyList<CacheEntry> entries) =>
         Signal.Defer(() =>
         {
@@ -226,6 +234,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Invalidate(IReadOnlyList<string> keys, string? typeFullName) =>
         Signal.Defer(() =>
         {
@@ -249,6 +258,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> InvalidateAll(string? typeFullName) =>
         Signal.Defer(() =>
         {
@@ -271,6 +281,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> SetExpiry(string key, string? typeFullName, DateTimeOffset? expiresAt) =>
         Signal.Defer(() =>
         {
@@ -290,6 +301,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> VacuumExpired(DateTimeOffset now) =>
         Signal.Defer(() =>
         {
@@ -325,6 +337,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
     }
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Compact() =>
         Signal.Defer(() =>
         {
@@ -336,6 +349,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         });
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]?> TryReadLegacyV10Value(string key, DateTimeOffset now, Type? type) =>
         Signal.Defer(() =>
         {
@@ -370,6 +384,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         entry.ExpiresAt is null || entry.ExpiresAt > now;
 
     /// <summary>Throws <see cref="ObjectDisposedException"/> if <see cref="SimulateDisposed"/> is set.</summary>
+    /// <exception cref="ObjectDisposedException"><see cref="SimulateDisposed"/> is set.</exception>
     private void ThrowIfDisposed()
     {
         if (!SimulateDisposed)

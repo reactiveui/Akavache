@@ -1,0 +1,228 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.HttpDownloader.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.MemberNotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.NotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.HashCode))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.19041.0")]
+namespace Akavache;
+
+public static class HttpExtensions
+{
+    extension(Akavache.IBlobCache blobCache)
+    {
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url, System.Net.Http.HttpMethod? method) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string url, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string url, System.Net.Http.HttpMethod? method) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, System.Uri url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string url, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, string url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, System.Uri url, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, System.Uri url, System.Net.Http.HttpMethod? method) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, System.Uri url, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string url, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, string url, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, string url, System.Net.Http.HttpMethod? method) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, string url, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, System.Uri url, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, string url, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<byte[]> DownloadUrl(string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string key, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+        public System.IObservable<byte[]> DownloadUrl(string key, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<byte[]> DownloadUrl(string key, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        public void SetHttpService(Akavache.IHttpService httpService) { }
+    }
+    extension(System.IO.Stream blobCache)
+    {
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> WriteAsyncRx(byte[] data, int start, int length) { }
+    }
+}
+[System.Diagnostics.DebuggerDisplay("{HttpClient}")]
+public class HttpService : Akavache.IHttpService, System.IDisposable
+{
+    public HttpService() { }
+    public System.Net.Http.HttpClient HttpClient { get; set; }
+    public void Dispose() { }
+    protected virtual void Dispose(bool isDisposing) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Net.Http.HttpMethod? method) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, bool fetchAlways) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Net.Http.HttpMethod? method) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, bool fetchAlways) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Net.Http.HttpMethod? method) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, bool fetchAlways) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Net.Http.HttpMethod? method) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, bool fetchAlways) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+    public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+    protected virtual System.IObservable<System.Net.Http.HttpResponseMessage> MakeWebRequest(System.Uri uri, System.Net.Http.HttpMethod method) { }
+    protected virtual System.IObservable<System.Net.Http.HttpResponseMessage> MakeWebRequest(System.Uri uri, System.Net.Http.HttpMethod method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+    protected virtual System.IObservable<System.Net.Http.HttpResponseMessage> MakeWebRequest(System.Uri uri, System.Net.Http.HttpMethod method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, string? content) { }
+    protected virtual System.IObservable<System.Net.Http.HttpResponseMessage> MakeWebRequest(System.Uri uri, System.Net.Http.HttpMethod method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, string? content, int retries) { }
+    protected virtual System.IObservable<System.Net.Http.HttpResponseMessage> MakeWebRequest(System.Uri uri, System.Net.Http.HttpMethod method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, string? content, int retries, System.TimeSpan? timeout) { }
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    public class FastHttpService : Akavache.HttpService
+    {
+        public FastHttpService() { }
+        public FastHttpService(int retries) { }
+        public FastHttpService(int retries, System.TimeSpan timeout) { }
+        protected override System.IObservable<System.Net.Http.HttpResponseMessage> MakeWebRequest(System.Uri uri, System.Net.Http.HttpMethod method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, string? content, int retries, System.TimeSpan? timeout) { }
+    }
+}
+public interface IHttpService
+{
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Net.Http.HttpMethod? method) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, bool fetchAlways) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Net.Http.HttpMethod? method) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, bool fetchAlways) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Net.Http.HttpMethod? method) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, bool fetchAlways) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Net.Http.HttpMethod? method) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, bool fetchAlways) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+    System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Net.Http.HttpMethod? method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+}
+public static class ImageExtensions
+{
+    extension(Akavache.IBlobCache blobCache)
+    {
+        public System.IObservable<byte[]> LoadImageBytes(string key) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(System.Uri url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(string url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(System.Uri url, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(string key, System.Uri url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(string url, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(string key, string url) { }
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(System.Uri url, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(string key, System.Uri url, bool fetchAlways) { }
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(string url, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(string key, string url, bool fetchAlways) { }
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(string key, System.Uri url, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<byte[]> LoadImageBytesFromUrl(string key, string url, bool fetchAlways, System.DateTimeOffset? absoluteExpiration) { }
+    }
+    extension(byte[] imageBytes)
+    {
+        public bool IsValidImageFormat() { }
+    }
+}
+public static class RelativeTimeDownloadExtensions
+{
+    extension(Akavache.IBlobCache blobCache)
+    {
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url, System.Net.Http.HttpMethod httpMethod, System.TimeSpan expiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string url, System.Net.Http.HttpMethod httpMethod, System.TimeSpan expiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url, System.Net.Http.HttpMethod httpMethod, System.TimeSpan expiration, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]> DownloadUrl(string url, System.Net.Http.HttpMethod httpMethod, System.TimeSpan expiration, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers) { }
+        public System.IObservable<byte[]> DownloadUrl(System.Uri url, System.Net.Http.HttpMethod httpMethod, System.TimeSpan expiration, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+        public System.IObservable<byte[]> DownloadUrl(string url, System.Net.Http.HttpMethod httpMethod, System.TimeSpan expiration, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, bool fetchAlways) { }
+    }
+}

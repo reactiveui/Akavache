@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -10,6 +10,7 @@ using ReactiveUI.SourceGenerators;
 namespace AkavacheTodoMaui.ViewModels;
 
 /// <summary>View model for editing existing todo items.</summary>
+[System.Diagnostics.DebuggerDisplay("{PriorityOptions}")]
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public partial class EditTodoViewModel : ReactiveObject
@@ -43,6 +44,7 @@ public partial class EditTodoViewModel : ReactiveObject
 
     /// <summary>Initializes a new instance of the <see cref="EditTodoViewModel"/> class.</summary>
     /// <param name="todoItem">The todo item to edit.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="todoItem"/> is <see langword="null"/>.</exception>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public EditTodoViewModel(TodoItem todoItem)
@@ -143,7 +145,7 @@ public partial class EditTodoViewModel : ReactiveObject
                 Priority = editedPriority,
                 CreatedAt = _originalTodo.CreatedAt,
                 IsCompleted = _originalTodo.IsCompleted,
-                Tags = ParseTags(TagsString)
+                Tags = ParseTags(TagsString),
             };
 
             WasSaved = true;

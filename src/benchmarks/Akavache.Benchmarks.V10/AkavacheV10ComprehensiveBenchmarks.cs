@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
@@ -10,6 +11,7 @@ using BenchmarkDotNet.Jobs;
 namespace Akavache.Benchmarks.V10;
 
 /// <summary> Measures the full Akavache V10 object API — get-or-fetch, get-and-fetch-latest, invalidation, expiry and each of the four built-in caches — against a SQLite-backed store. </summary>
+[System.Diagnostics.DebuggerDisplay("{BenchmarkSize}")]
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
@@ -84,7 +86,7 @@ public class AkavacheV10ComprehensiveBenchmarks
                 Id = Guid.NewGuid(),
                 Name = $"Test Object {i}",
                 Value = PerfHelper.Rng.Next(1, MaxTestObjectValue),
-                Created = TimeProvider.System.GetLocalNow().AddDays(-PerfHelper.Rng.Next(0, MaxTestObjectAgeDays))
+                Created = TimeProvider.System.GetLocalNow().AddDays(-PerfHelper.Rng.Next(0, MaxTestObjectAgeDays)),
             });
         }
     }
@@ -100,6 +102,7 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Clears the cache before each iteration so every measured run starts from an empty database. </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [IterationSetup]
     public void IterationSetup() => BenchBlobCache!.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
 
@@ -190,8 +193,8 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Users the account operations. </summary>
-    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     [Benchmark]
     [BenchmarkCategory("UserAccount")]
     public async Task UserAccountOperations()
@@ -215,8 +218,8 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Locals the machine operations. </summary>
-    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     [Benchmark]
     [BenchmarkCategory("LocalMachine")]
     public async Task LocalMachineOperations()
@@ -240,8 +243,8 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Secures the operations. </summary>
-    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     [Benchmark]
     [BenchmarkCategory("Secure")]
     public async Task SecureOperations()
@@ -265,8 +268,8 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Ins the memory operations. </summary>
-    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     [Benchmark]
     [BenchmarkCategory("InMemory")]
     public async Task InMemoryOperations()
@@ -290,8 +293,8 @@ public class AkavacheV10ComprehensiveBenchmarks
     }
 
     /// <summary> Mixeds the operations. </summary>
-    /// <exception cref="InvalidOperationException">Update verification failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Update verification failed.</exception>
     [Benchmark]
     [BenchmarkCategory("Mixed")]
     public async Task MixedOperations()

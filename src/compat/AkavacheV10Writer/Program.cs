@@ -1,100 +1,78 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using Akavache;
 using Akavache.Sqlite3;
 
-/*
- V10 writer app
- - Initializes Akavache v10
- - Writes deterministic data to a known sqlite file path so v11 app can read it
-*/
-
-// Deterministic test data
-var dbPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "akavache-test.db"));
-Console.WriteLine($"V10 Writer starting. DB path: {dbPath}");
-
-// Ensure parent directory exists
-var dbDir = Path.GetDirectoryName(dbPath)!;
-Directory.CreateDirectory(dbDir);
-
-// V10 initialization
-BlobCache.ApplicationName = "AkavacheCompatTest";
-Akavache.Sqlite3.Registrations.Start("AkavacheCompatTest", static () => { });
-
-// Create a raw persistent cache pointing at our explicit path
-using SqlRawPersistentBlobCache cache = new(dbPath);
-
-// Keys
-const string keyString = "compat:string";
-const string keyInt = "compat:int";
-const string keyPerson = "compat:person";
-const string keyBytes = "compat:bytes";
-
-// Values (deterministic)
-const string valueString = "Hello, Akavache V10!";
-const int valueInt = 42;
-Person valuePerson = new() { Name = "Ada Lovelace", Age = 36, Email = "ada@example.com" };
-var valueBytes = "ByteArray:CAFEBABE"u8.ToArray();
-
-try
-{
-    // Insert string
-    cache.InsertObject(keyString, valueString).Wait();
-    Console.WriteLine($"Inserted: key='{keyString}', type=string, value='{valueString}'");
-
-    // Insert int
-    cache.InsertObject(keyInt, valueInt).Wait();
-    Console.WriteLine($"Inserted: key='{keyInt}', type=int, value={valueInt}");
-
-    // Insert complex object
-    cache.InsertObject(keyPerson, valuePerson).Wait();
-    Console.WriteLine($"Inserted: key='{keyPerson}', type=Person, value={{Name={valuePerson.Name},Age={valuePerson.Age},Email={valuePerson.Email}}}");
-
-    // Insert raw bytes
-    cache.Insert(keyBytes, valueBytes).Wait();
-    Console.WriteLine($"Inserted: key='{keyBytes}', type=byte[], value='{BitConverter.ToString(valueBytes)}'");
-
-    // Force flush
-    cache.Flush().Wait();
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"ERROR during inserts: {ex}");
-}
-finally
-{
-    try
-    {
-        BlobCache.Shutdown().Wait();
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Shutdown error: {ex}");
-    }
-}
-
-Console.WriteLine("V10 Writer completed.");
+namespace AkavacheV10Writer;
 
 /// <summary>
-/// Represents a person for testing serialization.
+/// Entry point for the compatibility writer. Produces an Akavache 10 database at a known path so
+/// the V11 reader can prove it still reads what version 10 wrote.
 /// </summary>
-public class Person
+internal static class Program
 {
-    /// <summary>
-    /// Gets or sets the person's name.
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
+    /// <summary>The application name both halves of the compatibility check initialise with.</summary>
+    private const string ApplicationName = "AkavacheCompatTest";
 
-    /// <summary>
-    /// Gets or sets the person's age.
-    /// </summary>
-    public int Age { get; set; }
+    /// <summary>The database file name both halves of the compatibility check agree on.</summary>
+    private const string DatabaseFileName = "akavache-test.db";
 
-    /// <summary>
-    /// Gets or sets the person's email address.
-    /// </summary>
-    public string Email { get; set; } = string.Empty;
+    /// <summary>Writes the dataset, reporting progress to standard output.</summary>
+    /// <returns>Zero when the dataset was written; one when it was not.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the database path has no parent directory to create.</exception>
+    internal static async Task<int> Main()
+    {
+        var dbPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), DatabaseFileName));
+        Report($"V10 Writer starting. DB path: {dbPath}");
+
+        var directory = Path.GetDirectoryName(dbPath)
+            ?? throw new InvalidOperationException($"Database path '{dbPath}' has no parent directory.");
+
+        _ = Directory.CreateDirectory(directory);
+
+        BlobCache.ApplicationName = ApplicationName;
+        Akavache.Sqlite3.Registrations.Start(ApplicationName, static () => { });
+
+        using SqlRawPersistentBlobCache cache = new(dbPath);
+        var exitCode = 0;
+
+        try
+        {
+            new V10CacheWriter(cache, Report).WriteDataset();
+        }
+        catch (Exception ex)
+        {
+            Report($"ERROR during inserts: {ex}");
+            exitCode = 1;
+        }
+        finally
+        {
+            await ShutdownAsync();
+        }
+
+        Report("V10 Writer completed.");
+        return exitCode;
+    }
+
+    /// <summary>Shuts Akavache 10 down, reporting rather than rethrowing a teardown failure.</summary>
+    /// <returns>A task that completes once shutdown has been attempted.</returns>
+    private static async Task ShutdownAsync()
+    {
+        try
+        {
+            await BlobCache.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            Report($"Shutdown error: {ex}");
+        }
+    }
+
+    /// <summary>Writes one progress line. Console output is this tool's product, not incidental logging.</summary>
+    /// <param name="message">The line to write.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void Report(string message) => Console.WriteLine(message);
 }

@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -16,6 +16,14 @@ namespace Akavache.Core.Observables;
 /// skipped and the next one is tried). If no candidate matches, completes with a single
 /// emission of <paramref name="fallback"/>.
 /// </summary>
+/// <typeparam name="TKey">The type of candidate keys.</typeparam>
+/// <typeparam name="TRaw">The element type emitted by the projected observable (e.g. <c>byte[]?</c>).</typeparam>
+/// <typeparam name="TResult">The final result type emitted to downstream after transformation.</typeparam>
+/// <param name="candidates">The ordered list of candidate keys to walk.</param>
+/// <param name="project">Projects a candidate key into a one-shot observable of raw values.</param>
+/// <param name="transform">Synchronous transform applied to each raw value to produce the result.</param>
+/// <param name="predicate">Returns <see langword="true"/> when a transformed value is a match.</param>
+/// <param name="fallback">Value emitted when no candidate matches (typically <see langword="default"/>).</param>
 /// <remarks>
 /// <para>
 /// <c>Subscribe</c> attempts a synchronous fast-path first: each candidate's projection
@@ -29,14 +37,6 @@ namespace Akavache.Core.Observables;
 /// then <c>OnCompleted</c>).
 /// </para>
 /// </remarks>
-/// <typeparam name="TKey">The type of candidate keys.</typeparam>
-/// <typeparam name="TRaw">The element type emitted by the projected observable (e.g. <c>byte[]?</c>).</typeparam>
-/// <typeparam name="TResult">The final result type emitted to downstream after transformation.</typeparam>
-/// <param name="candidates">The ordered list of candidate keys to walk.</param>
-/// <param name="project">Projects a candidate key into a one-shot observable of raw values.</param>
-/// <param name="transform">Synchronous transform applied to each raw value to produce the result.</param>
-/// <param name="predicate">Returns <see langword="true"/> when a transformed value is a match.</param>
-/// <param name="fallback">Value emitted when no candidate matches (typically <see langword="default"/>).</param>
 internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
     IReadOnlyList<TKey> candidates,
     Func<TKey, IObservable<TRaw>> project,
@@ -122,12 +122,14 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
                 continue;
             }
 
-            if (predicate(transformed))
+            if (!predicate(transformed))
             {
-                observer.OnNext(transformed);
-                observer.OnCompleted();
-                return Scope.Empty;
+                continue;
             }
+
+            observer.OnNext(transformed);
+            observer.OnCompleted();
+            return Scope.Empty;
         }
 
         observer.OnNext(fallback);
@@ -182,6 +184,37 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
     }
 
     /// <summary>
+    /// One-shot termination latch. Candidates can complete on different threads, so the claim is
+    /// interlocked rather than a plain flag. Losing the claim is only reachable when two threads
+    /// terminate the same sequence at once, which no test can arrange, so the latch is excluded
+    /// from coverage rather than left as a permanently unhit branch. It lives here rather than in
+    /// the shared helpers because every project that links this operator would otherwise have to
+    /// link a second file for it.
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    private static class CompletionLatch
+    {
+        /// <summary>
+        /// Claims the latch and, on the first claim, hands the value and the completion to the
+        /// observer. A caller that loses the claim does nothing: another thread has already
+        /// terminated the sequence.
+        /// </summary>
+        /// <param name="done">The atomic latch field. Transitions 0 to 1 exactly once.</param>
+        /// <param name="observer">The observer to terminate.</param>
+        /// <param name="value">The final value to emit.</param>
+        internal static void EmitOnce(ref int done, IObserver<TResult> observer, TResult value)
+        {
+            if (Interlocked.Exchange(ref done, 1) != 0)
+            {
+                return;
+            }
+
+            observer.OnNext(value);
+            observer.OnCompleted();
+        }
+    }
+
+    /// <summary>
     /// Heap-allocated observer used when a projection does not complete synchronously.
     /// Walks the remaining candidates via async callbacks.
     /// </summary>
@@ -207,8 +240,13 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
         /// <summary>The subscription to the current candidate's projected observable.</summary>
         private IDisposable? _currentSubscription;
 
-        /// <summary>Set once we've emitted a matching value or exhausted all candidates.</summary>
-        private bool _done;
+        /// <summary>
+        /// Completion latch, claimed exactly once by whichever thread emits the matching value,
+        /// emits the fallback, or disposes the sink. Candidates can complete on different threads,
+        /// so this is an interlocked latch rather than a plain flag: a check-then-set would let two
+        /// threads both reach <c>downstream.OnNext</c>.
+        /// </summary>
+        private int _done;
 
         /// <summary>Set by OnCompleted/OnError to signal TryNext that the source completed synchronously.</summary>
         private bool _syncCompleted;
@@ -219,7 +257,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
         /// <inheritdoc/>
         public void OnNext(TRaw value)
         {
-            if (_done)
+            if (Volatile.Read(ref _done) != 0)
             {
                 return;
             }
@@ -240,15 +278,13 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
                 return;
             }
 
-            _done = true;
-            downstream.OnNext(transformed);
-            downstream.OnCompleted();
+            CompletionLatch.EmitOnce(ref _done, downstream, transformed);
         }
 
         /// <inheritdoc/>
         public void OnError(Exception error)
         {
-            if (_done)
+            if (Volatile.Read(ref _done) != 0)
             {
                 return;
             }
@@ -266,7 +302,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
         /// <inheritdoc/>
         public void OnCompleted()
         {
-            if (_done)
+            if (Volatile.Read(ref _done) != 0)
             {
                 return;
             }
@@ -284,7 +320,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
         /// <inheritdoc/>
         public void Dispose()
         {
-            _done = true;
+            _ = Interlocked.Exchange(ref _done, 1);
             Interlocked.Exchange(ref _currentSubscription, null)?.Dispose();
         }
 
@@ -298,7 +334,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
             _looping = true;
             try
             {
-                while (!_done && _index < candidates.Count)
+                while (Volatile.Read(ref _done) == 0 && _index < candidates.Count)
                 {
                     var key = candidates[_index];
                     _index++;
@@ -333,14 +369,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
                 _looping = false;
             }
 
-            if (_done)
-            {
-                return;
-            }
-
-            _done = true;
-            downstream.OnNext(fallback);
-            downstream.OnCompleted();
+            CompletionLatch.EmitOnce(ref _done, downstream, fallback);
         }
     }
 }

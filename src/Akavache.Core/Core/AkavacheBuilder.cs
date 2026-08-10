@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -18,6 +18,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     private static readonly Lock _lock = new();
 
     /// <summary>Initializes a new instance of the <see cref="AkavacheBuilder"/> class.</summary>
+    /// <param name="fileLocationOption">The file location strategy.</param>
     /// <remarks>
     /// Sets <see cref="ApplicationRootPath"/> to the parent of
     /// <see cref="AppContext.BaseDirectory"/> and leaves
@@ -28,7 +29,6 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <see cref="WithExecutingAssembly(Assembly)"/> with a caller-owned
     /// <see cref="Assembly"/> reference — the AOT-safe path.
     /// </remarks>
-    /// <param name="fileLocationOption">The file location strategy.</param>
     public AkavacheBuilder(FileLocationOption fileLocationOption = FileLocationOption.Default)
     {
         FileLocationOption = fileLocationOption;
@@ -194,8 +194,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     public IAkavacheBuilder WithSerializer<T>()
         where T : class, ISerializer, new()
     {
-        var serializerType = typeof(T);
-        SerializerTypeName = serializerType.AssemblyQualifiedName;
+        SerializerTypeName = typeof(T).AssemblyQualifiedName;
         lock (_lock)
         {
             // Register the serializer if not already registered, we only want one instance of each serializer type
@@ -249,13 +248,13 @@ internal class AkavacheBuilder : IAkavacheBuilder
     }
 
     /// <summary>Reads and parses the <see cref="AssemblyFileVersionAttribute"/> from <paramref name="assembly"/> into a <see cref="System.Version"/>.</summary>
+    /// <param name="assembly">The caller-supplied assembly.</param>
+    /// <returns>The parsed version, or <see langword="null"/>.</returns>
     /// <remarks>
     /// Returns <see langword="null"/> if the attribute is missing or its value
     /// cannot be parsed. The assembly reference is caller-owned so there is no
     /// reflection-based discovery involved.
     /// </remarks>
-    /// <param name="assembly">The caller-supplied assembly.</param>
-    /// <returns>The parsed version, or <see langword="null"/>.</returns>
     internal static Version? ReadFileVersion(Assembly assembly) =>
         assembly.GetCustomAttribute<AssemblyFileVersionAttribute>() is { Version: var version }
             && Version.TryParse(version, out var parsed)
@@ -276,6 +275,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
 
     /// <summary>Creates a new <see cref="InMemoryBlobCache"/> using the registered serializer.</summary>
     /// <returns>The newly created in-memory cache instance.</returns>
+    /// <exception cref="InvalidOperationException">No serializer has been registered on the builder.</exception>
     internal InMemoryBlobCache CreateInMemoryCache()
     {
         if (Serializer is null)

@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Settings.Core;
@@ -20,6 +21,7 @@ namespace Akavache.Settings.Core;
 /// <typeparamref name="T"/> (so comparisons and assignments read naturally without
 /// <c>.Value</c>).
 /// </summary>
+/// <typeparam name="T">The property value type.</typeparam>
 /// <remarks>
 /// <para>
 /// Deliberately simpler than ReactiveUI's <c>ObservableAsPropertyHelper&lt;T&gt;</c> — no
@@ -49,7 +51,7 @@ namespace Akavache.Settings.Core;
 /// </code>
 /// </para>
 /// </remarks>
-/// <typeparam name="T">The property value type.</typeparam>
+[System.Diagnostics.DebuggerDisplay("{Value}")]
 public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyChanged, IDisposable
 {
     /// <summary>The backing stream that owns the persistent BehaviorSubject + blob cache integration.</summary>
@@ -95,6 +97,7 @@ public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyC
     /// The conversion is equivalent to <see cref="Value"/> — same latest-cached value,
     /// same synchronous read.
     /// </summary>
+    /// <param name="helper">The helper to unwrap.</param>
     /// <remarks>
     /// <para>
     /// The conversion does not fire in every context — in particular, generic
@@ -104,7 +107,6 @@ public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyC
     /// assignments into a typed variable all flow through naturally.
     /// </para>
     /// </remarks>
-    /// <param name="helper">The helper to unwrap.</param>
     public static implicit operator T(SettingsPropertyHelper<T> helper)
     {
         ArgumentExceptionHelper.ThrowIfNull(helper);
@@ -117,6 +119,7 @@ public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyC
     /// <see cref="Value"/> — returns the current cached value synchronously.
     /// </summary>
     /// <returns>The current <see cref="Value"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T ToT() => _value;
 
     /// <summary>
@@ -128,12 +131,15 @@ public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyC
     /// </summary>
     /// <param name="value">The new value.</param>
     /// <returns>A one-shot observable that fires <see cref="RxVoid"/> when the persistent write commits.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> Set(T value) => _stream.Set(value);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IDisposable Subscribe(IObserver<T> observer) => _stream.Subscribe(observer);
 
     /// <inheritdoc/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Dispose() => _subscription.Dispose();
 
     /// <summary>

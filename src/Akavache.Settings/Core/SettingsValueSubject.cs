@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -30,6 +30,7 @@ namespace Akavache.Settings.Core;
 ///   </item>
 /// </list>
 /// </summary>
+/// <typeparam name="T">The value type the subject carries.</typeparam>
 /// <remarks>
 /// <para>
 /// Semantics match <c>BehaviorSubject&lt;T&gt;</c> for the subset we care about:
@@ -49,7 +50,6 @@ namespace Akavache.Settings.Core;
 /// Broadcasting happens outside the lock so a slow observer cannot block writers.
 /// </para>
 /// </remarks>
-/// <typeparam name="T">The value type the subject carries.</typeparam>
 internal sealed class SettingsValueSubject<T> : IObservable<T>, IDisposable
 {
     /// <summary>

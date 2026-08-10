@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Newtonsoft.Json.Serialization;
@@ -15,11 +15,11 @@ namespace Akavache.NewtonsoftJson;
 /// It will also be able to use, if set, a external provider that a user has set.
 /// This provides consistent DateTime handling across all serializers.
 /// </summary>
+/// <param name="contractResolver">A inherited contract resolver.</param>
+/// <param name="forceDateTimeKind">If we should override the <see cref="DateTimeKind"/>.</param>
 /// <remarks>
 /// Initializes a new instance of the <see cref="NewtonsoftDateTimeContractResolver"/> class.
 /// </remarks>
-/// <param name="contractResolver">A inherited contract resolver.</param>
-/// <param name="forceDateTimeKind">If we should override the <see cref="DateTimeKind"/>.</param>
 internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKind) : DefaultContractResolver
 {
     /// <summary>Initializes a new instance of the <see cref="NewtonsoftDateTimeContractResolver"/> class.</summary>

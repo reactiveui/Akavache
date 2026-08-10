@@ -1,0 +1,80 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.EncryptedSqlite3.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.EncryptedSqlite3.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.HttpDownloader.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.MemberNotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.NotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.HashCode))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
+namespace Akavache.EncryptedSqlite3;
+
+public static class AkavacheBuilderExtensions
+{
+    extension(Akavache.IAkavacheBuilder builder)
+    {
+        public Akavache.IAkavacheBuilder WithEncryptedSqliteProvider() { }
+        public Akavache.IAkavacheBuilder WithSqliteDefaults(string password) { }
+    }
+}
+[System.Diagnostics.DebuggerDisplay("{Connection}")]
+public class EncryptedSqliteBlobCache : Akavache.ISecureBlobCache
+{
+    public EncryptedSqliteBlobCache(Akavache.IAkavacheConnection connection, Akavache.ISerializer serializer) { }
+    public EncryptedSqliteBlobCache(Akavache.IAkavacheConnection connection, Akavache.ISerializer serializer, ReactiveUI.Primitives.Concurrency.ISequencer scheduler) { }
+    public EncryptedSqliteBlobCache(string fileName, string password, Akavache.ISerializer serializer) { }
+    public EncryptedSqliteBlobCache(string fileName, string password, Akavache.ISerializer serializer, ReactiveUI.Primitives.Concurrency.ISequencer scheduler) { }
+    public Akavache.IAkavacheConnection Connection { get; }
+    public System.DateTimeKind? ForcedDateTimeKind { get; set; }
+    public ReactiveUI.Primitives.Concurrency.ISequencer Scheduler { get; }
+    public Akavache.ISerializer Serializer { get; }
+    protected virtual System.IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, ReactiveUI.Primitives.Concurrency.ISequencer scheduler) { }
+    public void Dispose() { }
+    protected virtual void Dispose(bool isDisposing) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Flush() { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Flush(System.Type type) { }
+    public System.IObservable<System.Collections.Generic.KeyValuePair<string, byte[]>> Get(System.Collections.Generic.IEnumerable<string> keys) { }
+    public System.IObservable<byte[]?> Get(string key) { }
+    public System.IObservable<System.Collections.Generic.KeyValuePair<string, byte[]>> Get(System.Collections.Generic.IEnumerable<string> keys, System.Type type) { }
+    public System.IObservable<byte[]> Get(string key, System.Type type) { }
+    public System.IObservable<System.Collections.Generic.KeyValuePair<string, byte[]>> GetAll(System.Type type) { }
+    public System.IObservable<string> GetAllKeys() { }
+    public System.IObservable<string> GetAllKeys(System.Type type) { }
+    public System.IObservable<(string Key, System.DateTimeOffset? Time)> GetCreatedAt(System.Collections.Generic.IEnumerable<string> keys) { }
+    public System.IObservable<System.DateTimeOffset?> GetCreatedAt(string key) { }
+    public System.IObservable<(string Key, System.DateTimeOffset? Time)> GetCreatedAt(System.Collections.Generic.IEnumerable<string> keys, System.Type type) { }
+    public System.IObservable<System.DateTimeOffset?> GetCreatedAt(string key, System.Type type) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs, System.DateTimeOffset? absoluteExpiration) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs, System.Type type) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data, System.DateTimeOffset? absoluteExpiration) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data, System.Type type) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(System.Collections.Generic.IEnumerable<string> keys) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(string key) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(System.Collections.Generic.IEnumerable<string> keys, System.Type type) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(string key, System.Type type) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateAll() { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateAll(System.Type type) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(System.Collections.Generic.IEnumerable<string> keys, System.DateTimeOffset? absoluteExpiration) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(string key, System.DateTimeOffset? absoluteExpiration) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(System.Collections.Generic.IEnumerable<string> keys, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(string key, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+    public System.IObservable<ReactiveUI.Primitives.RxVoid> Vacuum() { }
+}

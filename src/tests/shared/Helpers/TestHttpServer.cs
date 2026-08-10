@@ -1,9 +1,10 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Tests.Helpers;
@@ -20,6 +21,7 @@ namespace Akavache.Tests.Helpers;
 /// <see cref="NullReferenceException"/> from <c>HttpConnection.get_LocalEndPoint</c>
 /// on a ThreadPool worker, which is unhandled and terminates the process.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{BaseUrl}")]
 public sealed class TestHttpServer : IDisposable
 {
     /// <summary>Content type served when a caller does not name one.</summary>
@@ -50,7 +52,7 @@ public sealed class TestHttpServer : IDisposable
     private readonly Task _serverTask;
 
     /// <summary>Indicates whether the server has already been disposed.</summary>
-    private bool _disposed;
+    private int _disposed;
 
     /// <summary>Initializes a new instance of the <see cref="TestHttpServer"/> class, binding to an ephemeral port on the loopback interface.</summary>
     public TestHttpServer()
@@ -60,9 +62,7 @@ public sealed class TestHttpServer : IDisposable
 
         _listener = new(IPAddress.Loopback, port: 0);
         _listener.Start();
-
-        var port = ((IPEndPoint)_listener.LocalEndpoint).Port;
-        BaseUrl = $"http://localhost:{port}/";
+        BaseUrl = $"http://localhost:{((IPEndPoint)_listener.LocalEndpoint).Port}/";
 
         var cancellationToken = _cancellationTokenSource.Token;
         _serverTask = Task.Run(() => AcceptLoopAsync(cancellationToken), cancellationToken);
@@ -77,6 +77,7 @@ public sealed class TestHttpServer : IDisposable
     /// <summary>Sets up an HTML response for a specific path.</summary>
     /// <param name="path">The path to respond to (e.g., "/html", "/json").</param>
     /// <param name="content">The content to return.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetupResponse(string path, string content) =>
         SetupResponse(path, content, HttpStatusCode.OK, DefaultContentType);
 
@@ -84,6 +85,7 @@ public sealed class TestHttpServer : IDisposable
     /// <param name="path">The path to respond to (e.g., "/html", "/json").</param>
     /// <param name="content">The content to return.</param>
     /// <param name="statusCode">The HTTP status code to return.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetupResponse(string path, string content, HttpStatusCode statusCode) =>
         SetupResponse(path, content, statusCode, DefaultContentType);
 
@@ -109,12 +111,12 @@ public sealed class TestHttpServer : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        if (_disposed)
+        // Claimed up front so a second caller returns immediately rather than racing the first
+        // through the shutdown below.
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
         {
             return;
         }
-
-        _disposed = true;
 
         _cancellationTokenSource.Cancel();
 
@@ -199,6 +201,7 @@ public sealed class TestHttpServer : IDisposable
     /// <param name="buffer">The buffer to scan.</param>
     /// <param name="length">The valid length of the buffer.</param>
     /// <returns>The index of the double CRLF, or -1 if not found.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int IndexOfDoubleCrlf(byte[] buffer, int length) =>
         buffer.AsSpan(0, length).IndexOf(HeaderTerminator);
 

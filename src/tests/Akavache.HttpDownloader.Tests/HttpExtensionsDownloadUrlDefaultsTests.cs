@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Integration.Tests;
@@ -13,6 +15,7 @@ namespace Akavache.Integration.Tests;
 /// them in. Each test pins the request the overload produces and the effect of the value it supplied
 /// for the argument the caller left out.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
     "Usage",
@@ -39,6 +42,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A method-only download sends no headers, and the cache serves the repeat because it did not force a fetch.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlStringWithMethodShouldSendNoHeadersAndServeRepeatFromCache() =>
         DownloadOverloadAssertions.AssertRepeatServedFromCache(
@@ -50,6 +54,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A download given headers sends them, and the cache serves the repeat because it did not force a fetch.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlStringWithHeadersShouldSendThemAndServeRepeatFromCache() =>
         DownloadOverloadAssertions.AssertRepeatServedFromCache(
@@ -61,6 +66,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A download told to always fetch bypasses the cached entry on every call and stores the fresh response without an expiration.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlStringWithFetchAlwaysShouldRefetchOnEveryCall() =>
         DownloadOverloadAssertions.AssertEveryCallIssuesRequest(
@@ -72,6 +78,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A download that states only the fetch-always flag falls back to GET and sends no headers.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlStringWithOnlyFetchAlwaysShouldRefetchUsingGet() =>
         DownloadOverloadAssertions.AssertEveryCallIssuesRequest(
@@ -83,6 +90,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A method-only URI download sends no headers, and the cache serves the repeat because it did not force a fetch.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlUriWithMethodShouldSendNoHeadersAndServeRepeatFromCache() =>
         DownloadOverloadAssertions.AssertRepeatServedFromCache(
@@ -94,6 +102,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A URI download given headers sends them, and the cache serves the repeat because it did not force a fetch.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlUriWithHeadersShouldSendThemAndServeRepeatFromCache() =>
         DownloadOverloadAssertions.AssertRepeatServedFromCache(
@@ -105,6 +114,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A URI download told to always fetch bypasses the cached entry on every call and stores the fresh response without an expiration.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlUriWithFetchAlwaysShouldRefetchOnEveryCall() =>
         DownloadOverloadAssertions.AssertEveryCallIssuesRequest(
@@ -116,6 +126,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A URI download that states only the fetch-always flag falls back to GET and sends no headers.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlUriWithOnlyFetchAlwaysShouldRefetchUsingGet() =>
         DownloadOverloadAssertions.AssertEveryCallIssuesRequest(
@@ -127,6 +138,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A keyed download with only a method sends no headers and stores the response under the caller's key, which then serves the repeat.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlKeyStringWithMethodShouldSendNoHeadersAndCacheUnderTheKey() =>
         DownloadOverloadAssertions.AssertRepeatServedFromCache(
@@ -138,6 +150,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A keyed download given headers sends them and stores the response under the caller's key, which then serves the repeat.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlKeyStringWithHeadersShouldSendThemAndCacheUnderTheKey() =>
         DownloadOverloadAssertions.AssertRepeatServedFromCache(
@@ -149,6 +162,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A keyed download told to always fetch bypasses the cached entry on every call and stores the fresh response without an expiration.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlKeyStringWithFetchAlwaysShouldRefetchOnEveryCall() =>
         DownloadOverloadAssertions.AssertEveryCallIssuesRequest(
@@ -160,6 +174,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A keyed URI download with only a method sends no headers and stores the response under the caller's key, which then serves the repeat.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlKeyUriWithMethodShouldSendNoHeadersAndCacheUnderTheKey() =>
         DownloadOverloadAssertions.AssertRepeatServedFromCache(
@@ -171,6 +186,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A keyed URI download given headers sends them and stores the response under the caller's key, which then serves the repeat.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlKeyUriWithHeadersShouldSendThemAndCacheUnderTheKey() =>
         DownloadOverloadAssertions.AssertRepeatServedFromCache(
@@ -182,6 +198,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A keyed URI download told to always fetch bypasses the cached entry on every call and stores the fresh response without an expiration.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlKeyUriWithFetchAlwaysShouldRefetchOnEveryCall() =>
         DownloadOverloadAssertions.AssertEveryCallIssuesRequest(
@@ -193,6 +210,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A keyed download given only an expiration fetches with GET and stores the response with that expiration.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlKeyStringWithExpirationShouldFetchWithGetAndApplyTheExpiration() =>
         DownloadOverloadAssertions.AssertCachedEntryAlreadyExpired(
@@ -204,6 +222,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A keyed URI download given only an expiration fetches with GET and stores the response with that expiration.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlKeyUriWithExpirationShouldFetchWithGetAndApplyTheExpiration() =>
         DownloadOverloadAssertions.AssertCachedEntryAlreadyExpired(
@@ -215,6 +234,7 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>A URI download given only an expiration fetches with GET and stores the response under the URL with that expiration.</summary>
     /// <returns>A task.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Test]
     public Task DownloadUrlUriWithExpirationShouldFetchWithGetAndApplyTheExpiration() =>
         DownloadOverloadAssertions.AssertCachedEntryAlreadyExpired(
@@ -226,5 +246,6 @@ public class HttpExtensionsDownloadUrlDefaultsTests
 
     /// <summary>Gets a moment that has already passed, so an entry stored with it is expired on arrival.</summary>
     /// <returns>An expiration in the past.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static DateTimeOffset LapsedMoment() => TimeProvider.System.GetUtcNow().AddMinutes(-LapsedMinutes);
 }

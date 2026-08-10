@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Drawing;
@@ -11,11 +12,11 @@ namespace Akavache.Drawing;
 #endif
 
 /// <summary>Represents the size dimensions of an image with width and height values.</summary>
+/// <param name="width">The width dimension in pixels.</param>
+/// <param name="height">The height dimension in pixels.</param>
 /// <remarks>
 /// Initializes a new instance of the <see cref="Size"/> struct with the specified dimensions.
 /// </remarks>
-/// <param name="width">The width dimension in pixels.</param>
-/// <param name="height">The height dimension in pixels.</param>
 [DebuggerDisplay("Width: {Width}, Height: {Height}")]
 public readonly struct Size(float width, float height) : IEquatable<Size>
 {
@@ -32,6 +33,7 @@ public readonly struct Size(float width, float height) : IEquatable<Size>
     /// <param name="left">The first size to compare.</param>
     /// <param name="right">The second size to compare.</param>
     /// <returns><c>true</c> if the sizes are equal; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator ==(in Size left, in Size right) => left.Equals(right);
 
     /// <summary>Determines whether two <see cref="Size"/> instances are not equal.</summary>

@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
@@ -11,6 +11,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>A base class for tests about bulk operations.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public abstract class BlobCacheTestsBase : IDisposable
 {
     /// <summary>How long a fetch-backed observable is given to produce its value.</summary>
@@ -20,7 +21,7 @@ public abstract class BlobCacheTestsBase : IDisposable
     private const int CachedAndLatestEmissionCount = 2;
 
     /// <summary>A backing field which indicates if the class has been disposed.</summary>
-    private bool _disposed;
+    private int _disposed;
 
     /// <summary>Gets the serializers to use.</summary>
     public static IEnumerable<object[]> Serializers { get; } =
@@ -49,8 +50,9 @@ public abstract class BlobCacheTestsBase : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             if (fixture.GetType().Name.Contains("Encrypted"))
             {
                 return;
@@ -116,8 +118,9 @@ public abstract class BlobCacheTestsBase : IDisposable
         var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path, serializer))
         {
+            using var fixture = CreateBlobCache(path, serializer);
+
             if (fixture.GetType().Name.Contains("Encrypted"))
             {
                 return;
@@ -206,6 +209,7 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <param name="serializerType">The serializer type to check.</param>
     /// <param name="cacheType">The cache type to check against.</param>
     /// <returns>True if the serializer is compatible with the cache type.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="serializerType"/> or <paramref name="cacheType"/> is <see langword="null"/>.</exception>
     protected virtual bool IsSerializerCompatibleWithCache(Type serializerType, Type cacheType)
     {
         // With the universal shim, most combinations should now work
@@ -222,12 +226,12 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <param name="disposing">if set to <c>true</c> [disposing].</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed)
+        // Claimed up front so a second caller returns immediately rather than racing the first
+        // through the disposal below.
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
         {
             return;
         }
-
-        _disposed = true;
     }
 
     /// <summary>Sets up the test with the specified serializer type.</summary>

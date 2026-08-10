@@ -1,8 +1,9 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Akavache;
 using AkavacheTodoMaui.Models;
 
@@ -25,6 +26,7 @@ public static class TodoCacheService
 
     /// <summary>Gets all todos from cache.</summary>
     /// <returns>Observable list of todos.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<List<TodoItem>> GetAllTodos() => CacheDatabase.UserAccount
@@ -35,6 +37,7 @@ public static class TodoCacheService
     /// <summary>Saves todos to cache so that they never expire.</summary>
     /// <param name="todos">The todos to save.</param>
     /// <returns>Observable unit.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<RxVoid> SaveTodos(List<TodoItem> todos) => SaveTodos(todos, null);
@@ -43,6 +46,7 @@ public static class TodoCacheService
     /// <param name="todos">The todos to save.</param>
     /// <param name="expiration">The absolute expiration time, or null to keep the entry indefinitely.</param>
     /// <returns>Observable unit.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<RxVoid> SaveTodos(List<TodoItem> todos, DateTimeOffset? expiration) =>
@@ -50,6 +54,7 @@ public static class TodoCacheService
 
     /// <summary>Gets application settings.</summary>
     /// <returns>Observable app settings.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<AppSettings> GetSettings() => CacheDatabase.UserAccount
@@ -59,6 +64,7 @@ public static class TodoCacheService
     /// <summary>Saves application settings.</summary>
     /// <param name="settings">The settings to save.</param>
     /// <returns>Observable unit.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<RxVoid> SaveSettings(AppSettings? settings) =>
@@ -66,12 +72,14 @@ public static class TodoCacheService
 
     /// <summary>Gets todo statistics.</summary>
     /// <returns>Observable todo statistics.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<TodoStats> GetTodoStats() => GetAllTodos().Select(Summarize);
 
     /// <summary>Gets cache information with enhanced debugging and error handling.</summary>
     /// <returns>Observable cache information.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IObservable<CacheInfo> GetCacheInfo() =>
         Signal.Defer(static () =>
         {
@@ -116,7 +124,7 @@ public static class TodoCacheService
                         LocalMachineKeys = localKeys?.Length ?? 0,
                         SecureKeys = secureKeys?.Length ?? 0,
                         TotalKeys = (userKeys?.Length ?? 0) + (localKeys?.Length ?? 0) + (secureKeys?.Length ?? 0),
-                        LastChecked = TimeProvider.System.GetLocalNow()
+                        LastChecked = TimeProvider.System.GetLocalNow(),
                     };
 
                     System.Diagnostics.Debug.WriteLine($"Cache keys found: User={result.UserAccountKeys}, Local={result.LocalMachineKeys}, Secure={result.SecureKeys}");
@@ -133,15 +141,18 @@ public static class TodoCacheService
     /// <summary>Invalidates a todo by ID.</summary>
     /// <param name="todoId">The todo ID to invalidate.</param>
     /// <returns>Observable unit.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IObservable<RxVoid> InvalidateTodo(string todoId) =>
         CacheDatabase.UserAccount.Invalidate($"todo_{todoId}");
 
     /// <summary>Cleans up the cache.</summary>
     /// <returns>Observable unit.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IObservable<RxVoid> CleanupCache() => CacheDatabase.UserAccount.Vacuum();
 
     /// <summary>Saves application state.</summary>
     /// <returns>Observable unit.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<RxVoid> SaveApplicationState() =>
@@ -184,6 +195,6 @@ public static class TodoCacheService
         LocalMachineKeys = UnknownKeyCount,
         SecureKeys = UnknownKeyCount,
         TotalKeys = UnknownKeyCount * TrackedCacheCount,
-        LastChecked = TimeProvider.System.GetLocalNow()
+        LastChecked = TimeProvider.System.GetLocalNow(),
     };
 }

@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using TUnit.Assertions.Exceptions;
@@ -30,6 +30,7 @@ internal static class TaskAssertionExtensions
         /// <summary>Awaits the task and asserts that it faults with an exception of type <typeparamref name="TException"/> (or a derived type).</summary>
         /// <typeparam name="TException">The expected exception type.</typeparam>
         /// <returns>A task representing the asynchronous assertion.</returns>
+        /// <exception cref="AssertionException">The task completed without faulting, or faulted with a different exception type.</exception>
         internal async Task ShouldThrowAsync<TException>()
             where TException : Exception
         {

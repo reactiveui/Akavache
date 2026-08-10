@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -14,6 +14,7 @@ namespace Akavache.Tests;
 /// three DateTime recovery strategies. These tests exercise the helpers in isolation
 /// without going through any serializer.
 /// </summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class DateTimeHelpersTests
 {
@@ -521,8 +522,7 @@ public class DateTimeHelpersTests
         // Build a buffer where the first 8 bytes encode an Int64 little-endian millisecond
         // value that decodes to a year between 2000 and 2100.
         DateTime target = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
-        var ms = (long)(target - DateTime.UnixEpoch).TotalMilliseconds;
-        var data = BitConverter.GetBytes(ms);
+        var data = BitConverter.GetBytes((long)(target - DateTime.UnixEpoch).TotalMilliseconds);
 
         var result = DateTimeHelpers.TryRecoverDateTimeFromBinary(data);
 

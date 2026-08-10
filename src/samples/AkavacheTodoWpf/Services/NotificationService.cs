@@ -1,7 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Threading;
@@ -11,6 +12,7 @@ using ReactiveUI;
 namespace AkavacheTodoWpf.Services;
 
 /// <summary>Service for handling todo notifications and reminders in WPF.</summary>
+[System.Diagnostics.DebuggerDisplay("{CacheInfo}")]
 [SupportedOSPlatform("windows10.0.19041.0")]
 public class NotificationService : ReactiveObject, IDisposable
 {
@@ -74,6 +76,7 @@ public class NotificationService : ReactiveObject, IDisposable
     /// <param name="todo">The todo item.</param>
     /// <param name="message">The notification message.</param>
     /// <returns>Observable unit.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IObservable<RxVoid> ShowTrayNotification(TodoItem todo, string message) =>
         Signal.FromAsync(async () =>
         {
@@ -115,35 +118,38 @@ public class NotificationService : ReactiveObject, IDisposable
     /// <summary>Schedules a reminder for a specific todo item.</summary>
     /// <param name="todo">The todo item to schedule.</param>
     /// <returns>Observable unit.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="todo"/> is null.</exception>
     public IObservable<RxVoid> ScheduleReminder(TodoItem todo)
     {
-        if (todo?.DueDate.HasValue == false || !_currentSettings.NotificationsEnabled)
+        ArgumentNullException.ThrowIfNull(todo);
+
+        if (!todo.DueDate.HasValue || !_currentSettings.NotificationsEnabled)
         {
             return Signal.Return(RxVoid.Default);
         }
 
-        var reminderTime = todo?.DueDate!.Value.AddMinutes(-_currentSettings.NotificationMinutes);
+        var reminderTime = todo.DueDate.Value.AddMinutes(-_currentSettings.NotificationMinutes);
 
         if (reminderTime <= TimeProvider.System.GetLocalNow())
         {
             // Immediate notification for overdue items
-            _reminderSubject.OnNext(todo!);
+            _reminderSubject.OnNext(todo);
             return Signal.Return(RxVoid.Default);
         }
 
         // Schedule future notification
         var delay = reminderTime - TimeProvider.System.GetLocalNow();
-        if (delay is null || delay.Value < TimeSpan.Zero)
+        if (delay < TimeSpan.Zero)
         {
             // If the delay is negative, it means the todo is overdue
-            _reminderSubject.OnNext(todo!);
+            _reminderSubject.OnNext(todo);
             return Signal.Return(RxVoid.Default);
         }
 
-        return Signal.Timer(delay.Value)
+        return Signal.Timer(delay)
             .Select(_ =>
             {
-                if (todo?.IsCompleted == false)
+                if (!todo.IsCompleted)
                 {
                     _reminderSubject.OnNext(todo);
                 }
@@ -154,6 +160,7 @@ public class NotificationService : ReactiveObject, IDisposable
 
     /// <summary>Gets all todos that are due soon and need reminders.</summary>
     /// <returns>Observable list of todos needing reminders.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<List<TodoItem>?> GetTodosNeedingReminders() => TodoCacheService.GetAllTodos()
             .Select(SelectTodosNeedingReminders);
 
@@ -161,6 +168,7 @@ public class NotificationService : ReactiveObject, IDisposable
     /// <param name="todo">The todo item.</param>
     /// <param name="message">The notification message.</param>
     /// <returns>Observable unit.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> SendNotification(TodoItem todo, string message) =>
         Signal.FromAsync(async () =>
         {
@@ -181,6 +189,7 @@ _reminderSubject.OnNext(todo);
 
     /// <summary>Checks for todos that need immediate reminders.</summary>
     /// <returns>An observable unit that signals when the check is complete.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<RxVoid> CheckImmediateReminders() => GetTodosNeedingReminders()
             .SelectMany(todos => todos is null || todos.Count == 0
                 ? Signal.Return(RxVoid.Default)

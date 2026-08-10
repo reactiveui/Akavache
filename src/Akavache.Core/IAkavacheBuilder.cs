@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -29,6 +29,8 @@ public interface IAkavacheBuilder : IAkavacheInstance
     IAkavacheBuilder WithApplicationName(string? applicationName);
 
     /// <summary>Configures the executing assembly explicitly, bypassing the reflection fallback used by the default constructor.</summary>
+    /// <param name="assembly">The assembly to use as the executing assembly.</param>
+    /// <returns>The builder instance for fluent configuration.</returns>
     /// <remarks>
     /// Calling this also refreshes
     /// <see cref="IAkavacheInstance.ExecutingAssemblyName"/> and
@@ -38,8 +40,6 @@ public interface IAkavacheBuilder : IAkavacheInstance
     /// Akavache does not need to probe
     /// <see cref="Assembly.GetEntryAssembly"/> at runtime.
     /// </remarks>
-    /// <param name="assembly">The assembly to use as the executing assembly.</param>
-    /// <returns>The builder instance for fluent configuration.</returns>
     IAkavacheBuilder WithExecutingAssembly(Assembly assembly);
 
     /// <summary>Sets the InMemory cache instance.</summary>

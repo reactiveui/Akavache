@@ -1,9 +1,10 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Runtime.CompilerServices;
 #if NET462_OR_GREATER
 using System.Net.Http;
 #endif
@@ -15,6 +16,7 @@ namespace Akavache;
 #endif
 
 /// <summary>Provides a default implementation of HTTP service functionality for Akavache.</summary>
+[System.Diagnostics.DebuggerDisplay("{HttpClient}")]
 [SuppressMessage(
     "Usage",
     "CA2234:Pass System.Uri objects instead of strings",
@@ -47,22 +49,27 @@ public class HttpService : IHttpService, IDisposable
     public HttpClient HttpClient { get; set; }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url) =>
         DownloadUrl(blobCache, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method) =>
         DownloadUrl(blobCache, url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
         DownloadUrl(blobCache, url, method, headers, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
         DownloadUrl(blobCache, url, method, headers, fetchAlways, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(
         IBlobCache blobCache,
         string url,
@@ -73,22 +80,27 @@ public class HttpService : IHttpService, IDisposable
         blobCache.DownloadUrl(url, url, method, headers, fetchAlways, absoluteExpiration);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, bool fetchAlways) =>
         DownloadUrl(blobCache, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url) =>
         DownloadUrl(blobCache, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method) =>
         DownloadUrl(blobCache, url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
         DownloadUrl(blobCache, url, method, headers, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
         DownloadUrl(blobCache, url, method, headers, fetchAlways, (DateTimeOffset?)null);
 
@@ -100,22 +112,27 @@ public class HttpService : IHttpService, IDisposable
     }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, bool fetchAlways) =>
         DownloadUrl(blobCache, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url) =>
         DownloadUrl(blobCache, key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method) =>
         DownloadUrl(blobCache, key, url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
         DownloadUrl(blobCache, key, url, method, headers, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
         DownloadUrl(blobCache, key, url, method, headers, fetchAlways, (DateTimeOffset?)null);
 
@@ -144,22 +161,27 @@ public class HttpService : IHttpService, IDisposable
     }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, bool fetchAlways) =>
         DownloadUrl(blobCache, key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url) =>
         DownloadUrl(blobCache, key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method) =>
         DownloadUrl(blobCache, key, url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
         DownloadUrl(blobCache, key, url, method, headers, false, (DateTimeOffset?)null);
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
         DownloadUrl(blobCache, key, url, method, headers, fetchAlways, (DateTimeOffset?)null);
 
@@ -188,6 +210,7 @@ public class HttpService : IHttpService, IDisposable
     }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, bool fetchAlways) =>
         DownloadUrl(blobCache, key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
 
@@ -233,8 +256,9 @@ public class HttpService : IHttpService, IDisposable
     /// <param name="url">The original request URI, used in error messages.</param>
     /// <param name="absoluteExpiration">The requested absolute expiration, used in error messages.</param>
     /// <returns>An observable that emits the response bytes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, Uri url, DateTimeOffset? absoluteExpiration) =>
-        ProcessWebResponse(responseMessage, url?.OriginalString!, absoluteExpiration);
+        ProcessWebResponse(responseMessage, url.OriginalString, absoluteExpiration);
 
     /// <summary>Makes a web request to the specified URI.</summary>
     /// <param name="uri">The URI to make the request to.</param>
@@ -320,6 +344,7 @@ public class HttpService : IHttpService, IDisposable
     }
 
     /// <summary>Provides a fast-failing HTTP service that reduces retries and timeouts to speed up tests.</summary>
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     public class FastHttpService : HttpService
     {
         /// <summary>Retry count this fast variant applies when a caller does not state one.</summary>

@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -9,6 +9,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for error handling and edge case scenarios across Akavache functionality.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class ErrorHandlingAndEdgeCaseTests
 {
@@ -123,8 +124,7 @@ public class ErrorHandlingAndEdgeCaseTests
         await Assert.That(retrieved).IsNull();
 
         // Test with nullable reference types
-        UserObject? nullUser = null;
-        cache.InsertObject("null_user", nullUser).WaitForCompletion();
+        cache.InsertObject<UserObject?>("null_user", null).WaitForCompletion();
 
         var retrievedUser = cache.GetObject<UserObject?>("null_user").SubscribeGetValue();
 
@@ -421,7 +421,7 @@ public class ErrorHandlingAndEdgeCaseTests
         {
             ["version"] = "1.0.0",
             ["features"] = (string[])["feature1", "feature2", "feature3"],
-            ["config"] = new ComplexObjectConfig(true, TimeSpan.FromMinutes(ConfigTimeoutMinutes), ConfigRetryCount)
+            ["config"] = new ComplexObjectConfig(true, TimeSpan.FromMinutes(ConfigTimeoutMinutes), ConfigRetryCount),
         };
 
         ComplexObjectGraph complexObject = new(
@@ -518,7 +518,7 @@ public class ErrorHandlingAndEdgeCaseTests
             ["currency"] = "���$�????",
             ["special_chars"] = "!@#$%^&*()_+-=[]{}|;':\",./<>?`~",
             ["control_chars"] = "Line1\nLine2\tTabbed\rCarriageReturn",
-            ["mixed"] = "Mixed: ??? + Espa�ol + Fran�ais + ??????? + ??????? + ??"
+            ["mixed"] = "Mixed: ??? + Espa�ol + Fran�ais + ??????? + ??????? + ??",
         };
 
         foreach (var testCase in testCases)
@@ -554,6 +554,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
     /// <summary>Tests that cache operations handle DateTime edge cases correctly across time zones.</summary>
     /// <returns>A task representing the test.</returns>
+    /// <exception cref="InvalidOperationException">A round-tripped value could not be read back from the cache.</exception>
     [Test]
     public async Task CacheShouldHandleDateTimeEdgeCasesCorrectly()
     {
@@ -575,7 +576,7 @@ public class ErrorHandlingAndEdgeCaseTests
             ["y2k38"] = new(2038, 1, 19, 3, 14, 7, DateTimeKind.Utc), // Unix timestamp edge
             ["local"] = TimeProvider.System.GetUtcNow().UtcDateTime,
             ["utc"] = TimeProvider.System.GetUtcNow().UtcDateTime,
-            ["unspecified"] = new(2025, 1, 15, 12, 30, 45, DateTimeKind.Unspecified)
+            ["unspecified"] = new(2025, 1, 15, 12, 30, 45, DateTimeKind.Unspecified),
         };
 
         foreach (var dateTimeCase in dateTimeCases)
@@ -588,7 +589,7 @@ public class ErrorHandlingAndEdgeCaseTests
                 var retrieved = cache.GetObject<DateTime>(dateTimeCase.Key).SubscribeGetValue();
 
                 // Assert - Allow for some tolerance due to serialization precision
-                var timeDifference = Math.Abs((dateTimeCase.Value - retrieved!).TotalMilliseconds);
+                var timeDifference = Math.Abs((dateTimeCase.Value - retrieved).TotalMilliseconds);
                 await Assert.That(timeDifference).IsLessThan(SerializationToleranceMilliseconds);
             }
             catch (Exception ex)
@@ -608,6 +609,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
     /// <summary>Tests that cache operations handle DateTimeOffset edge cases correctly across time zones.</summary>
     /// <returns>A task representing the test.</returns>
+    /// <exception cref="InvalidOperationException">A round-tripped value could not be read back from the cache.</exception>
     [Test]
     public async Task CacheShouldHandleDateTimeOffsetEdgeCasesCorrectly()
     {
@@ -621,7 +623,7 @@ public class ErrorHandlingAndEdgeCaseTests
             ["offset_utc"] = TimeProvider.System.GetUtcNow(),
             ["offset_positive"] = new(2025, 1, 15, 12, 0, 0, TimeSpan.FromHours(PositiveOffsetHours)),
             ["offset_negative"] = new(2025, 1, 15, 12, 0, 0, TimeSpan.FromHours(NegativeOffsetHours)),
-            ["offset_zero"] = new(2025, 1, 15, 12, 0, 0, TimeSpan.Zero)
+            ["offset_zero"] = new(2025, 1, 15, 12, 0, 0, TimeSpan.Zero),
         };
 
         foreach (var offsetCase in dateTimeOffsetCases)
@@ -632,7 +634,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
                 var retrieved = cache.GetObject<DateTimeOffset>(offsetCase.Key).SubscribeGetValue();
 
-                var timeDifference = Math.Abs((offsetCase.Value - retrieved!).TotalMilliseconds);
+                var timeDifference = Math.Abs((offsetCase.Value - retrieved).TotalMilliseconds);
                 await Assert.That(timeDifference).IsLessThan(SerializationToleranceMilliseconds);
             }
             catch (Exception ex)

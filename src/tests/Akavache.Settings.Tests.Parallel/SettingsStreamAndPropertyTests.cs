@@ -1,9 +1,10 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Settings.Tests;
@@ -12,6 +13,7 @@ namespace Akavache.Settings.Tests;
 #endif
 
 /// <summary>Tests targeting missed coverage lines in <see cref="SettingsStorage"/>, <see cref="SettingsStream{T}"/>, <see cref="SettingsPropertyHelper{T}"/>, and <see cref="SettingsBase"/>.</summary>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 [Category("Akavache")]
 public class SettingsStreamAndPropertyTests
 {
@@ -71,10 +73,7 @@ public class SettingsStreamAndPropertyTests
         using var storage = new ObservableTestSettings(
             new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
-        var first = storage.Name;
-        var second = storage.Name;
-
-        await Assert.That(ReferenceEquals(first, second)).IsTrue();
+        await Assert.That(ReferenceEquals(storage.Name, storage.Name)).IsTrue();
     }
 
     // ───────────────────────── SettingsStorage: SetObservable creates stream on the fly ───
@@ -229,9 +228,7 @@ public class SettingsStreamAndPropertyTests
         using var storage = new PropertyHelperTestSettings(
             new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
-        int value = storage.Score;
-
-        await Assert.That(value).IsEqualTo(DefaultScore);
+        await Assert.That(storage.Score).IsEqualTo(DefaultScore);
     }
 
     /// <summary>Verifies that <see cref="SettingsPropertyHelper{T}.ToT"/> returns the current value.</summary>
@@ -397,6 +394,7 @@ public class SettingsStreamAndPropertyTests
         /// The key is named explicitly because the caller-member name here is <c>SetName</c>,
         /// not <c>Name</c>, and the setter has to address the same stream as the getter.
         /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal IObservable<RxVoid> SetName(string value) => SetObservable(value, nameof(Name));
     }
 
@@ -435,18 +433,23 @@ public class SettingsStreamAndPropertyTests
         /// <para>
         /// The stream registry is a private field with no injection seam, so this
         /// deliberately couples to <c>SettingsStorage._streams</c>. It is the only
-        /// reflective reach in this fixture; if the field is ever renamed the null-forgiving
-        /// lookup below fails loudly rather than silently skipping the assertion.
+        /// reflective reach in this fixture; if the field is ever renamed or retyped the
+        /// lookup below throws rather than silently skipping the assertion.
         /// </para>
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when <c>SettingsStorage._streams</c> has been renamed or retyped.</exception>
         [SuppressMessage(
             "Usage",
             "CA2000:Dispose objects before losing scope",
             Justification = "Intentionally leaking for test.")]
         internal void InjectThrowingStream()
         {
-            var field = typeof(SettingsStorage).GetTypeInfo().GetDeclaredField("_streams")!;
-            var dict = (ConcurrentDictionary<string, ISettingsStream>)field.GetValue(this)!;
+            var field = typeof(SettingsStorage).GetTypeInfo().GetDeclaredField("_streams")
+                ?? throw new InvalidOperationException("SettingsStorage._streams was renamed; update this fixture.");
+
+            var dict = field.GetValue(this) as ConcurrentDictionary<string, ISettingsStream>
+                ?? throw new InvalidOperationException("SettingsStorage._streams is no longer a ConcurrentDictionary; update this fixture.");
+
             _ = dict.TryAdd("_throwOnDispose", new ThrowingStream());
         }
 
@@ -458,9 +461,11 @@ public class SettingsStreamAndPropertyTests
                 static () => throw new InvalidOperationException("dispose failure");
 
             /// <inheritdoc/>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public IObservable<RxVoid> EnsureLoaded() => Signal.Return(RxVoid.Default);
 
             /// <inheritdoc/>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Dispose() => FailingTeardown();
         }
     }

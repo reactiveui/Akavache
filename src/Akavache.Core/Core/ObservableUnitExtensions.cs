@@ -1,6 +1,8 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.Core;
@@ -28,6 +30,7 @@ internal static class ObservableUnitExtensions
         /// <c>source.Select(static _ =&gt; Unit.Default)</c> but clearer at the call site.
         /// </summary>
         /// <returns>An observable that emits <see cref="RxVoid.Default"/> once per emission of <paramref name="source"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal IObservable<RxVoid> SelectUnit() =>
             new SelectConstantObservable<T, RxVoid>(source, RxVoid.Default);
     }

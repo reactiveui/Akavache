@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
-// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI and Contributors. All rights reserved.
+// ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if REACTIVE_SHIM
@@ -20,6 +20,7 @@ namespace Akavache.V10toV11;
 /// <param name="MigrateUserAccount">Whether to migrate the UserAccount cache (V10: <c>userblobs.db</c>). Default <see langword="true"/>.</param>
 /// <param name="MigrateSecure">Whether to migrate the Secure cache (V10: <c>secret.db</c>). Default <see langword="true"/>.</param>
 /// <param name="Logger">Optional logging callback for migration progress and diagnostic messages.</param>
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public sealed record V10MigrationOptions(
     bool DeleteOldFiles = false,
     bool ReserializeToCurrentFormat = true,

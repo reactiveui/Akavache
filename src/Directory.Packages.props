@@ -15,7 +15,7 @@
     <TUnitVersion>1.63.0</TUnitVersion>
     <!-- StyleSharp.Analyzers, PerformanceSharp.Analyzers and SecuritySharp.Analyzers ship from the
          same release pipeline and always share a version. -->
-    <RoslynCommonAnalyzersVersion>3.41.7</RoslynCommonAnalyzersVersion>
+    <RoslynCommonAnalyzersVersion>3.43.0</RoslynCommonAnalyzersVersion>
   </PropertyGroup>
   <!-- All projects -->
   <ItemGroup>
@@ -23,7 +23,7 @@
     <PackageVersion Include="StyleSharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="PerformanceSharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="SecuritySharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0" />
+    <PackageVersion Include="PublicApiSharp.Analyzers" Version="1.0.7" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.31.0.145097" />
     <PackageVersion Include="Blazor.Common.Analyzers" Version="2.1.0" />
