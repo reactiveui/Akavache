@@ -2,6 +2,7 @@
 // ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 #if REACTIVE_SHIM
@@ -230,21 +231,14 @@ internal static class V10MigrationService
                 return value;
             }
 
-            var deserializeMethod = typeof(UniversalSerializer)
-                .GetMethod(nameof(UniversalSerializer.Deserialize))
-                .MakeGenericMethod(type);
-
+            var deserializeMethod = GetSerializerMethod(nameof(UniversalSerializer.Deserialize)).MakeGenericMethod(type);
             var deserialized = deserializeMethod.Invoke(null, [value, serializer, null]);
-            if (deserialized is null)
-            {
-                return value;
-            }
 
-            var serializeMethod = typeof(UniversalSerializer)
-                .GetMethod(nameof(UniversalSerializer.Serialize))
-                .MakeGenericMethod(type);
-
-            return (byte[]?)serializeMethod.Invoke(null, [deserialized, serializer, null]);
+            return deserialized is null
+                ? value
+                : (byte[]?)GetSerializerMethod(nameof(UniversalSerializer.Serialize))
+                    .MakeGenericMethod(type)
+                    .Invoke(null, [deserialized, serializer, null]);
         }
         catch (Exception ex)
         {
@@ -378,4 +372,19 @@ internal static class V10MigrationService
             options.Logger?.Invoke($"Failed to delete V10 database '{v10DbPath}': {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// Resolves the open generic <c>UniversalSerializer</c> overload that takes an explicit
+    /// <see cref="DateTimeKind"/>. Selected by parameter count because both <c>Serialize</c> and
+    /// <c>Deserialize</c> are overloaded, so looking either up by name alone is ambiguous.
+    /// </summary>
+    /// <param name="name">The method name to resolve.</param>
+    /// <returns>The open generic method definition.</returns>
+    /// <exception cref="MissingMethodException">Thrown when no such overload exists, which means the serializer surface changed.</exception>
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Reflects over UniversalSerializer to call its generic Serialize/Deserialize methods.")]
+    private static MethodInfo GetSerializerMethod(string name) =>
+        Array.Find(
+            typeof(UniversalSerializer).GetMethods(BindingFlags.Public | BindingFlags.Static),
+            x => x.Name == name && x.IsGenericMethodDefinition && x.GetParameters().Length == 3)
+        ?? throw new MissingMethodException(typeof(UniversalSerializer).FullName, name);
 }
