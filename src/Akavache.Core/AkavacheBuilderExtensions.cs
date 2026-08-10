@@ -226,9 +226,9 @@ public static class AkavacheBuilderExtensions
 #elif IOS || MACCATALYST
             return cacheName switch
             {
-                "LocalMachine" => CreateAppDirectory(NSSearchPathDirectory.CachesDirectory, builder.ApplicationName),
-                "Secure" => CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, builder.ApplicationName, "SecretCache"),
-                _ => CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, builder.ApplicationName),
+                "LocalMachine" => NSSearchPathDirectory.CachesDirectory.CreateAppDirectory(builder.ApplicationName),
+                "Secure" => NSSearchPathDirectory.ApplicationSupportDirectory.CreateAppDirectory(builder.ApplicationName, "SecretCache"),
+                _ => NSSearchPathDirectory.ApplicationSupportDirectory.CreateAppDirectory(builder.ApplicationName),
             };
 #else
             return cacheName switch
@@ -481,25 +481,30 @@ public static class AkavacheBuilderExtensions
     }
 
 #if IOS || MACCATALYST
-    /// <summary>Creates a per-application directory beneath a system search-path directory.</summary>
+    /// <summary>Extension members for <c>NSSearchPathDirectory</c>.</summary>
     /// <param name="targetDir">The platform search-path directory to use as the parent.</param>
-    /// <param name="applicationName">The application name segment to use within the path.</param>
-    /// <param name="subDir">The leaf cache sub-directory name.</param>
-    /// <returns>The fully qualified path of the created directory.</returns>
-    internal static string CreateAppDirectory(NSSearchPathDirectory targetDir, string applicationName, string subDir = "BlobCache")
+    extension(NSSearchPathDirectory targetDir)
     {
-        using var fm = new NSFileManager();
-        var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out _) ?? throw new DirectoryNotFoundException();
-        var rp = url.RelativePath ?? throw new DirectoryNotFoundException();
-        var ret = Path.Combine(rp, applicationName, subDir);
-
-        var di = new DirectoryInfo(ret);
-        if (!di.Exists)
+        /// <summary>Creates a per-application directory beneath a system search-path directory.</summary>
+        /// <param name="applicationName">The application name segment to use within the path.</param>
+        /// <param name="subDir">The leaf cache sub-directory name.</param>
+        /// <returns>The fully qualified path of the created directory.</returns>
+        /// <exception cref="DirectoryNotFoundException">Thrown when the search-path directory has no location on the local file system.</exception>
+        internal string CreateAppDirectory(string applicationName, string subDir = "BlobCache")
         {
-            di.CreateRecursive();
-        }
+            using var fm = new NSFileManager();
+            var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out _) ?? throw new DirectoryNotFoundException();
+            var rp = url.RelativePath ?? throw new DirectoryNotFoundException();
+            var ret = Path.Combine(rp, applicationName, subDir);
 
-        return ret;
+            var di = new DirectoryInfo(ret);
+            if (!di.Exists)
+            {
+                di.CreateRecursive();
+            }
+
+            return ret;
+        }
     }
 #endif
 }
