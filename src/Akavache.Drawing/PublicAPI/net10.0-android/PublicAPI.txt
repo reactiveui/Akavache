@@ -1,0 +1,122 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.MemberNotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.NotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.HashCode))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("Android21.0")]
+namespace Akavache.Drawing;
+
+public static class BitmapImageExtensions
+{
+    extension(Akavache.IBlobCache blobCache)
+    {
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImage(string key) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImage(string key, float? desiredWidth) { }
+        public System.IObservable<Splat.IBitmap> LoadImage(string key, float? desiredWidth, float? desiredHeight) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(System.Uri url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(System.Uri url, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string key, System.Uri url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string url, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string key, string url) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(System.Uri url, bool fetchAlways, float? desiredWidth) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string key, System.Uri url, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string url, bool fetchAlways, float? desiredWidth) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string key, string url, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(System.Uri url, bool fetchAlways, float? desiredWidth, float? desiredHeight) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string key, System.Uri url, bool fetchAlways, float? desiredWidth) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string url, bool fetchAlways, float? desiredWidth, float? desiredHeight) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string key, string url, bool fetchAlways, float? desiredWidth) { }
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(System.Uri url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string key, System.Uri url, bool fetchAlways, float? desiredWidth, float? desiredHeight) { }
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string key, string url, bool fetchAlways, float? desiredWidth, float? desiredHeight) { }
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string key, System.Uri url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrl(string key, string url, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> SaveImage(string key, Splat.IBitmap image) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> SaveImage(string key, Splat.IBitmap image, System.DateTimeOffset? absoluteExpiration) { }
+    }
+    extension(Splat.IBitmap image)
+    {
+        public System.IObservable<byte[]> ImageToBytes() { }
+    }
+}
+public static class ImageCacheExtensions
+{
+    extension(Akavache.IBlobCache blobCache)
+    {
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> ClearImageCache(System.Func<string, bool> keyPattern) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> CreateAndCacheThumbnail(string sourceKey, string thumbnailKey, float thumbnailWidth, float thumbnailHeight) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> CreateAndCacheThumbnail(string sourceKey, string thumbnailKey, float thumbnailWidth, float thumbnailHeight, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<Akavache.Drawing.Size> GetImageSize(string key) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrlWithFallback(string url, byte[] fallbackImageBytes) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrlWithFallback(string url, byte[] fallbackImageBytes, bool fetchAlways) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrlWithFallback(string url, byte[] fallbackImageBytes, bool fetchAlways, float? desiredWidth) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrlWithFallback(string url, byte[] fallbackImageBytes, bool fetchAlways, float? desiredWidth, float? desiredHeight) { }
+        public System.IObservable<Splat.IBitmap> LoadImageFromUrlWithFallback(string url, byte[] fallbackImageBytes, bool fetchAlways, float? desiredWidth, float? desiredHeight, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageWithFallback(string key, byte[] fallbackImageBytes) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<Splat.IBitmap> LoadImageWithFallback(string key, byte[] fallbackImageBytes, float? desiredWidth) { }
+        public System.IObservable<Splat.IBitmap> LoadImageWithFallback(string key, byte[] fallbackImageBytes, float? desiredWidth, float? desiredHeight) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<System.Collections.Generic.KeyValuePair<string, Splat.IBitmap>> LoadImages(System.Collections.Generic.IEnumerable<string> keys) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<System.Collections.Generic.KeyValuePair<string, Splat.IBitmap>> LoadImages(System.Collections.Generic.IEnumerable<string> keys, float? desiredWidth) { }
+        public System.IObservable<System.Collections.Generic.KeyValuePair<string, Splat.IBitmap>> LoadImages(System.Collections.Generic.IEnumerable<string> keys, float? desiredWidth, float? desiredHeight) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> PreloadImagesFromUrls(System.Collections.Generic.IEnumerable<string> urls) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> PreloadImagesFromUrls(System.Collections.Generic.IEnumerable<string> urls, System.DateTimeOffset? absoluteExpiration) { }
+    }
+}
+public class Resource : _Microsoft.Android.Resource.Designer.Resource
+{
+    public Resource() { }
+}
+[System.Diagnostics.DebuggerDisplay("Width: {Width}, Height: {Height}")]
+public readonly struct Size : System.IEquatable<Akavache.Drawing.Size>
+{
+    public Size(float width, float height) { }
+    public float AspectRatio { get; }
+    public float Height { get; }
+    public float Width { get; }
+    public readonly bool Equals(Akavache.Drawing.Size other) { }
+    public override readonly bool Equals(object? obj) { }
+    public override readonly int GetHashCode() { }
+    public override readonly string ToString() { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(in Akavache.Drawing.Size left, in Akavache.Drawing.Size right) { }
+    public static bool operator !=(in Akavache.Drawing.Size left, in Akavache.Drawing.Size right) { }
+}

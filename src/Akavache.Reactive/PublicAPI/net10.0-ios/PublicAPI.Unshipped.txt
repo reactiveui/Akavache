@@ -1,2 +1,0 @@
-#nullable enable
-Akavache.Reactive.AkavacheBuilderExtensions.extension(Foundation.NSSearchPathDirectory)

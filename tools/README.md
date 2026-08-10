@@ -4,19 +4,34 @@ Maintenance scripts for the Akavache repository.
 
 ## generate-publicapi
 
-Regenerates the **PublicAPI baseline files** consumed by
-`Microsoft.CodeAnalysis.PublicApiAnalyzers` (`RS0016`, `RS0017`, `RS0037`).
+Regenerates the **PublicAPI baseline files** consumed by `PublicApiSharp.Analyzers`
+(`PAS0001`-`PAS0005`).
 
 Each shipped library tracks its public surface per target framework in:
 
 ```
-src/<Project>/PublicAPI/<tfm>/PublicAPI.Shipped.txt
-src/<Project>/PublicAPI/<tfm>/PublicAPI.Unshipped.txt
+src/<Project>/PublicAPI/<tfm>/PublicAPI.txt
 ```
 
-When you add, remove, or change public API, those files must be updated or the build
-fails with `RS0016` (symbol not in baseline) / `RS0017` (baseline entry not found) /
-`RS0037` (missing `#nullable enable`). These scripts do that for you.
+The baseline is nested C# describing what the assembly exposes right now, so a reviewer
+reads an API change the way they read code:
+
+```csharp
+namespace Akavache;
+
+public static class AkavacheBuilderExtensions
+{
+    extension(Akavache.IAkavacheBuilder builder)
+    {
+        public Akavache.IAkavacheBuilder WithInMemory() { }
+    }
+}
+```
+
+There is no shipped/unshipped split and no promotion step — the baseline is updated in the
+same commit that changes the API. When the surface and the file disagree the build fails
+with `PAS0001` (surface not in the baseline), `PAS0002` (baseline entry no longer exists)
+or `PAS0003` (surface differs from the baseline). These scripts update the files for you.
 
 Both sides of the lean/`.Reactive` seam are tracked. `Akavache.X` publishes
 `IObservable<RxVoid>` and `ISequencer`; `Akavache.X.Reactive` compiles the same source
@@ -50,14 +65,11 @@ path, so you can scope a run to a single library while iterating.
 
 ### What it does per TFM
 
-1. Resets both `PublicAPI/<tfm>/PublicAPI.Shipped.txt` and `PublicAPI.Unshipped.txt`
-   to just `#nullable enable`, so the analyzer reports the *entire* current surface.
-2. Runs `dotnet format analyzers <proj> -f <tfm> --diagnostics RS0016 RS0017 RS0037
-   --severity info`, which fills `PublicAPI.Unshipped.txt` with the current public API.
-3. Folds that surface into `PublicAPI.Shipped.txt` (ordinally sorted, deduped) and
-   resets `PublicAPI.Unshipped.txt` back to the bare header. This repo keeps the full
-   surface in **Shipped** with **Unshipped empty**, so a later API change shows up as
-   new Unshipped lines.
+1. Empties `PublicAPI/<tfm>/PublicAPI.txt`, so the analyzer reports the *entire* current
+   surface as `PAS0001`. The file has to exist — with no baseline at all the analyzer
+   reports `PAS0004`, which has no fix.
+2. Runs `dotnet format analyzers <proj> -f <tfm> --diagnostics PAS0001 PAS0003
+   --severity info`, whose fix writes the rendered surface back into the file.
 
 ### Platform notes
 
@@ -71,24 +83,25 @@ path, so you can scope a run to a single library while iterating.
     `\\host.lan\Data\rxui\Akavache`.
   * **macOS** additionally builds the Apple TFMs natively.
 * A target framework whose workload or SDK is missing is reported as failed and its
-  existing baseline is left untouched, rather than being wiped; the rest of the run
+  existing baseline is restored, rather than being left empty; the rest of the run
   continues. The exit code is non-zero if any TFM failed, so CI can detect an
   incomplete run.
 * The scripts set `MinVerVersionOverride` (default `255.255.255-dev`) so versioning
   does not depend on git history; override it by exporting/setting the variable first.
 
+### SDK floor
+
+The surface is rendered by whichever Roslyn slot the host SDK loads. C# 14 extension
+blocks only round-trip from the `roslyn5.3` slot (the .NET 11 SDK line) — an older SDK
+silently leaves them out of the baseline rather than writing syntax it cannot read back.
+This repo uses extension blocks, so generate with the .NET 11 SDK; CI installs it, so a
+baseline generated on an older SDK would fail there.
+
 ### Android caveat
 
 The Android SDK emits `__Microsoft.Android.Resource.Designer.cs` into `obj/` during the
-build, so a first-ever generation run does not see `<RootNamespace>.Resource` and the
-next build fails `RS0016` on it. Add the two lines by hand to the `net10.0-android`
-baseline (as the other libraries in this org do) or re-run generation once the designer
-file exists:
-
-```
-<RootNamespace>.Resource
-<RootNamespace>.Resource.Resource() -> void
-```
+build, so a first-ever generation run may not see `<RootNamespace>.Resource`. Re-run
+generation once the designer file exists if the next build reports it.
 
 ### When to run
 

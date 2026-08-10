@@ -1,0 +1,34 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel.Reactive")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Reactive")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests.Parallel.Reactive")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests.Reactive")]
+namespace Akavache.Reactive.NewtonsoftJson;
+
+public static class AkavacheBuilderExtensions
+{
+    extension(Akavache.Reactive.IAkavacheBuilder builder)
+    {
+        public Akavache.Reactive.IAkavacheBuilder WithSerializerNewtonsoftBson() { }
+        public Akavache.Reactive.IAkavacheBuilder WithSerializerNewtonsoftBson(Newtonsoft.Json.JsonSerializerSettings settings) { }
+        public Akavache.Reactive.IAkavacheBuilder WithSerializerNewtonsoftBson(System.Action<Newtonsoft.Json.JsonSerializerSettings> configure) { }
+        public Akavache.Reactive.IAkavacheBuilder WithSerializerNewtonsoftJson() { }
+        public Akavache.Reactive.IAkavacheBuilder WithSerializerNewtonsoftJson(Newtonsoft.Json.JsonSerializerSettings settings) { }
+        public Akavache.Reactive.IAkavacheBuilder WithSerializerNewtonsoftJson(System.Action<Newtonsoft.Json.JsonSerializerSettings> configure) { }
+    }
+}
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+public class NewtonsoftBsonSerializer : Akavache.Reactive.NewtonsoftJson.NewtonsoftSerializer
+{
+    public NewtonsoftBsonSerializer() { }
+}
+[System.Diagnostics.DebuggerDisplay("{Options}")]
+public class NewtonsoftSerializer : Akavache.Reactive.ISerializer
+{
+    public NewtonsoftSerializer() { }
+    public System.DateTimeKind? ForcedDateTimeKind { get; set; }
+    public Newtonsoft.Json.JsonSerializerSettings? Options { get; set; }
+    public bool UseBsonFormat { get; set; }
+    public T? Deserialize<T>(byte[] bytes) { }
+    public byte[] Serialize<T>(T item) { }
+    public static bool IsPotentialBsonData(byte[] data) { }
+}

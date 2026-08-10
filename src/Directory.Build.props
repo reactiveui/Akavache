@@ -243,10 +243,13 @@
     <PackageReference Include="Blazor.Common.Analyzers" PrivateAssets="All" />
   </ItemGroup>
 
-  <!-- Public-API tracking (RS0016 / RS0017 / RS0037): a per-TFM Shipped/Unshipped pair under
-       <Project>/PublicAPI/<tfm>/. Both leaves of the seam are tracked, so a change to the shared
-       source shows up as a diff on the lean and the .Reactive surface alike. Regenerate with
-       tools/generate-publicapi.sh (or the .ps1 sibling on Windows, which reaches the Apple TFMs). -->
+  <!-- Public-API tracking (PAS0001-PAS0005): one baseline per TFM at
+       <Project>/PublicAPI/<tfm>/PublicAPI.txt, rendered as nested C# so a reviewer reads an API
+       change the way they read code. There is no shipped/unshipped split — the baseline states the
+       current surface and is updated in the same commit that changes it. Both leaves of the seam are
+       tracked, so a change to the shared source shows up as a diff on the lean and the .Reactive
+       surface alike. Regenerate with tools/generate-publicapi.sh (or the .ps1 sibling on Windows,
+       which reaches the Apple TFMs). -->
   <PropertyGroup>
     <TrackPublicApi Condition="'$(TrackPublicApi)' == ''">true</TrackPublicApi>
     <TrackPublicApi Condition="'$(IsTestProject)' == 'true'">false</TrackPublicApi>
@@ -257,9 +260,11 @@
     <!-- The WPF markup pass generates '<Project>_<hash>_wpftmp.csproj' in the real project's
          directory, so it resolves the same baseline path and would overwrite it. -->
     <TrackPublicApi Condition="$(MSBuildProjectName.EndsWith('_wpftmp'))">false</TrackPublicApi>
+    <!-- The analyzer's own targets resolve <Project>/PublicAPI/<tfm>/PublicAPI.txt and add it to
+         AdditionalFiles, so the baseline path needs no wiring here. -->
+    <EnablePublicApiBaseline>$(TrackPublicApi)</EnablePublicApiBaseline>
   </PropertyGroup>
   <ItemGroup Condition="'$(TrackPublicApi)' == 'true'">
-    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
-    <AdditionalFiles Include="$(MSBuildProjectDirectory)\PublicAPI\$(TargetFramework)\PublicAPI.*.txt" />
+    <PackageReference Include="PublicApiSharp.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 </Project>

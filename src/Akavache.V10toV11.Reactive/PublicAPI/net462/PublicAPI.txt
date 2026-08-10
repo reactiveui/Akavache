@@ -1,0 +1,25 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel.Reactive")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Reactive")]
+namespace Akavache.Reactive.V10toV11;
+
+public static class AkavacheBuilderExtensions
+{
+    extension(Akavache.Reactive.IAkavacheBuilder builder)
+    {
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public Akavache.Reactive.IAkavacheBuilder MigrateFromV10() { }
+        public Akavache.Reactive.IAkavacheBuilder MigrateFromV10(System.Action<Akavache.Reactive.V10toV11.V10MigrationOptions>? configure) { }
+        public Akavache.Reactive.IAkavacheBuilder WithV10FileNames() { }
+    }
+}
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+public record V10MigrationOptions : System.IEquatable<Akavache.Reactive.V10toV11.V10MigrationOptions>
+{
+    public V10MigrationOptions(bool DeleteOldFiles = false, bool ReserializeToCurrentFormat = true, bool MigrateLocalMachine = true, bool MigrateUserAccount = true, bool MigrateSecure = true, System.Action<string>? Logger = null) { }
+    public bool DeleteOldFiles { get; init; }
+    public System.Action<string>? Logger { get; init; }
+    public bool MigrateLocalMachine { get; init; }
+    public bool MigrateSecure { get; init; }
+    public bool MigrateUserAccount { get; init; }
+    public bool ReserializeToCurrentFormat { get; init; }
+}

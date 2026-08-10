@@ -1,0 +1,42 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.MemberNotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.NotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.HashCode))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.19041.0")]
+namespace Akavache.SystemTextJson;
+
+public static class AkavacheBuilderExtensions
+{
+    extension(Akavache.IAkavacheBuilder builder)
+    {
+        public Akavache.IAkavacheBuilder UseSystemTextJsonSerializer(System.Action<System.Text.Json.JsonSerializerOptions> configure) { }
+        public Akavache.IAkavacheBuilder WithSerializerSystemTextJson() { }
+        public Akavache.IAkavacheBuilder WithSerializerSystemTextJson(System.Text.Json.JsonSerializerOptions settings) { }
+    }
+}
+[System.Diagnostics.DebuggerDisplay("{Options}")]
+public class SystemJsonSerializer : Akavache.ISerializer
+{
+    public SystemJsonSerializer() { }
+    public System.DateTimeKind? ForcedDateTimeKind { get; set; }
+    public System.Text.Json.JsonSerializerOptions? Options { get; set; }
+    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Reflection-based JSON deserialization. For AOT, use the JsonTypeInfo overload.")]
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Reflection-based JSON deserialization. For AOT, use the JsonTypeInfo overload.")]
+    public T? Deserialize<T>(byte[] bytes) { }
+    public System.Text.Json.JsonSerializerOptions GetEffectiveOptions() { }
+    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Reflection-based JSON serialization. For AOT, use the JsonTypeInfo overload.")]
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Reflection-based JSON serialization. For AOT, use the JsonTypeInfo overload.")]
+    public byte[] Serialize<T>(T item) { }
+    public static T? DeserializeAot<T>(byte[] bytes, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public static byte[] SerializeAot<T>(T item, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+}

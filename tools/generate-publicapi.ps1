@@ -5,16 +5,14 @@
     across each target framework that builds on this machine.
 
 .DESCRIPTION
-    The Microsoft.CodeAnalysis.PublicApiAnalyzers (RS0016 / RS0017 / RS0037) require a
-    per-TFM pair of tracking files:
+    PublicApiSharp.Analyzers (PAS0001-PAS0005) tracks one baseline per target framework:
 
-        <Project>/PublicAPI/<tfm>/PublicAPI.Shipped.txt
-        <Project>/PublicAPI/<tfm>/PublicAPI.Unshipped.txt
+        <Project>/PublicAPI/<tfm>/PublicAPI.txt
 
-    This script seeds those files and uses `dotnet format analyzers` to capture the
-    project's current public surface (RS0016), drop stale entries (RS0017), and record
-    nullability (RS0037), then folds the surface into Shipped (this repo keeps the full
-    surface in Shipped with Unshipped empty).
+    The file is nested C# describing the assembly's current surface — there is no
+    shipped/unshipped split and nothing to promote. This script seeds an empty baseline so
+    the analyzer reports the whole surface as PAS0001, then lets `dotnet format analyzers`
+    apply the baseline fix, which writes the file.
 
     Only projects with MSBuild property TrackPublicApi=true are processed; tests,
     benchmarks, samples and compat opt out centrally in src/Directory.Build.props.
@@ -23,14 +21,14 @@
     as a diff against Akavache.X and Akavache.X.Reactive alike.
 
     Each (project, TFM) pair is independent — `dotnet format` builds an in-memory
-    MSBuildWorkspace and only writes its own PublicAPI/<tfm>/ files — so the pairs run
-    in parallel (PowerShell 7+ runspaces; falls back to sequential on 5.1). Override the
-    width with -Jobs <n> or $env:JOBS.
+    MSBuildWorkspace and only writes its own PublicAPI/<tfm>/PublicAPI.txt — so the pairs
+    run in parallel (PowerShell 7+ runspaces; falls back to sequential on 5.1). Override
+    the width with -Jobs <n> or $env:JOBS.
 
     Run on Windows to generate the Windows-desktop and (with the relevant workloads)
     Apple/Android target frameworks. Use the bash sibling (generate-publicapi.sh) on
-    Linux/macOS. A TFM whose workload/SDK is missing is reported as failed (its seed
-    files are left in place) rather than aborting the whole run.
+    Linux/macOS. A TFM whose workload/SDK is missing is reported as failed (its previous
+    baseline is restored) rather than aborting the whole run.
 
 .PARAMETER Filter
     Optional substring; only projects whose path contains it are processed.
@@ -69,7 +67,9 @@ if ($Jobs -le 0) {
     $Jobs = if ($env:JOBS) { [int]$env:JOBS } else { [Math]::Min([Environment]::ProcessorCount, 8) }
 }
 
-$diags = @('RS0016', 'RS0017', 'RS0037')
+# PAS0001 (surface missing from the baseline) and PAS0003 (surface differs) are the two
+# fixable rules; both resolve to the same "write the baseline" fix.
+$diags = @('PAS0001', 'PAS0003')
 
 Write-Host 'PublicAPI baseline generation'
 Write-Host "  src        : $srcDir"
@@ -86,37 +86,34 @@ function Get-MsBuildProperty {
     return ($value | Out-String).Trim()
 }
 
-# Regenerate one (project, TFM) pair and fold the surface into Shipped. Returns a result
-# object; also defined inside the parallel block below via its source text.
+# Regenerate one (project, TFM) baseline. Returns a result object; also defined inside the
+# parallel block below via its source text.
 function Invoke-PublicApiOne {
     param($Item, [string[]]$Diags)
     $proj = $Item.Proj
     $tfm = $Item.Tfm
-    $lf = "`n"
-    $header = '#nullable enable'
-    # Write LF-only so the baselines match the bash sibling's output byte-for-byte.
-    $writeLf = { param($p, $lines) [IO.File]::WriteAllText($p, (($lines -join $lf) + $lf)) }
     # Back up any existing baseline so a build failure (a TFM whose workload this platform
     # lacks) restores it instead of wiping it.
-    $shippedBak = if (Test-Path $Item.Shipped) { (Get-Content -Raw $Item.Shipped) -replace "`r`n", "`n" } else { $null }
-    $unshippedBak = if (Test-Path $Item.Unshipped) { (Get-Content -Raw $Item.Unshipped) -replace "`r`n", "`n" } else { $null }
-    # Empty both to the bare header so the analyzer reports the entire current surface.
-    & $writeLf $Item.Shipped @($header)
-    & $writeLf $Item.Unshipped @($header)
+    $baselineBak = if (Test-Path $Item.Baseline) { (Get-Content -Raw $Item.Baseline) -replace "`r`n", "`n" } else { $null }
+    # An empty baseline makes the analyzer report the entire current surface as PAS0001,
+    # which the fix then writes back in full. The file has to exist: with no baseline at
+    # all the analyzer reports PAS0004, which has no fix.
+    [IO.File]::WriteAllText($Item.Baseline, '')
     & dotnet format analyzers $proj -f $tfm --diagnostics $Diags --severity info -v quiet
     if ($LASTEXITCODE -eq 0) {
-        # `dotnet format` records the surface in Unshipped; fold it into Shipped (ordinally
-        # sorted+deduped, matching `LC_ALL=C sort -u`) and reset Unshipped to the bare header.
-        $surface = [string[]]@(Get-Content $Item.Unshipped | Where-Object { $_ -ne $header -and $_.Trim() -ne '' } | Select-Object -Unique)
-        [Array]::Sort($surface, [System.StringComparer]::Ordinal)
-        & $writeLf $Item.Shipped (@($header) + $surface)
-        & $writeLf $Item.Unshipped @($header)
+        # Normalize to LF so the baselines match the bash sibling's output byte-for-byte.
+        $written = (Get-Content -Raw $Item.Baseline) -replace "`r`n", "`n"
+        [IO.File]::WriteAllText($Item.Baseline, $written)
         Write-Host "OK   [$tfm] $proj"
         return [pscustomobject]@{ Ok = $true }
     }
     # Restore the prior baseline (if any) so nothing is wiped for a TFM we can't build here.
-    if ($null -ne $shippedBak) { [IO.File]::WriteAllText($Item.Shipped, $shippedBak) }
-    if ($null -ne $unshippedBak) { [IO.File]::WriteAllText($Item.Unshipped, $unshippedBak) }
+    if ($null -ne $baselineBak) {
+        [IO.File]::WriteAllText($Item.Baseline, $baselineBak)
+    }
+    else {
+        Remove-Item -Force -ErrorAction SilentlyContinue $Item.Baseline
+    }
     Write-Host "FAIL [$tfm] $proj (missing workload/SDK for this platform?)"
     return [pscustomobject]@{ Ok = $false }
 }
@@ -130,7 +127,7 @@ $projects = Get-ChildItem -Path . -Recurse -Filter '*.csproj' |
     } |
     Sort-Object FullName
 
-# Collect (project, TFM) work items; the worker seeds, generates, and folds each pair.
+# Collect (project, TFM) work items; the worker seeds and generates each one.
 $items = [System.Collections.Generic.List[object]]::new()
 $restoreSet = [System.Collections.Generic.List[string]]::new()
 $skipped = 0
@@ -167,9 +164,8 @@ foreach ($projItem in $projects) {
         $apiDir = Join-Path $projDir (Join-Path 'PublicAPI' $tfm)
         New-Item -ItemType Directory -Force -Path $apiDir | Out-Null
 
-        $shipped = Join-Path $apiDir 'PublicAPI.Shipped.txt'
-        $unshipped = Join-Path $apiDir 'PublicAPI.Unshipped.txt'
-        $items.Add([pscustomobject]@{ Proj = $proj; Tfm = $tfm; Shipped = $shipped; Unshipped = $unshipped })
+        $baseline = Join-Path $apiDir 'PublicAPI.txt'
+        $items.Add([pscustomobject]@{ Proj = $proj; Tfm = $tfm; Baseline = $baseline })
     }
 }
 Write-Host ''
