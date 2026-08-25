@@ -25,7 +25,7 @@
     <PackageVersion Include="SecuritySharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="PublicApiSharp.Analyzers" Version="1.0.7" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.16.1" />
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.32.0.713" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.33.0.1635" />
     <PackageVersion Include="Blazor.Common.Analyzers" Version="2.1.0" />
   </ItemGroup>
   <!-- Non-test projects only -->
