@@ -319,6 +319,8 @@ Settings are automatically persisted and will survive app updates, making them p
 [OpenAI](https://openai.com/) supports them with [Codex](https://openai.com/codex/) through
 [Codex for Open Source](https://developers.openai.com/community/codex-for-oss).
 
+This project is tested with [BrowserStack](https://www.browserstack.com/).
+
 [![JetBrains](https://raw.githubusercontent.com/reactiveui/website/main/docs/images/sponsors/jetbrains.svg)](https://www.jetbrains.com/)
 [![Claude by Anthropic](https://raw.githubusercontent.com/reactiveui/website/main/docs/images/sponsors/claude.svg)](https://claude.com/)
 [![OpenAI](https://raw.githubusercontent.com/reactiveui/website/main/docs/images/sponsors/openai.svg)](https://openai.com/codex/)
