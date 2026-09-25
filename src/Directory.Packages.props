@@ -1,45 +1,40 @@
-<Project>
+﻿<Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <!-- Version groups for packages that share the same version -->
   <PropertyGroup>
-    <MicrosoftExtensionsVersion>10.0.10</MicrosoftExtensionsVersion>
+    <MicrosoftExtensionsVersion>10.0.12</MicrosoftExtensionsVersion>
     <SqlitePclRawVersion>3.0.5</SqlitePclRawVersion>
     <Sqlite3MultipleCiphersVersion>2.4.0</Sqlite3MultipleCiphersVersion>
     <SplatVersion>21.0.0</SplatVersion>
-    <ReactiveUIVersion>24.1.0</ReactiveUIVersion>
-    <ReactiveUIPrimitivesVersion>7.1.0</ReactiveUIPrimitivesVersion>
-    <MauiVersion>10.0.90</MauiVersion>
-    <TUnitVersion>1.63.0</TUnitVersion>
-    <!-- StyleSharp.Analyzers, PerformanceSharp.Analyzers and SecuritySharp.Analyzers ship from the
-         same release pipeline and always share a version. -->
-    <RoslynCommonAnalyzersVersion>3.43.0</RoslynCommonAnalyzersVersion>
+    <ReactiveUIVersion>24.3.0</ReactiveUIVersion>
+    <ReactiveUIPrimitivesVersion>8.2.0</ReactiveUIPrimitivesVersion>
+    <MauiVersion>10.0.110</MauiVersion>
+    <TUnitVersion>1.69.0</TUnitVersion>
+    <RoslynCommonAnalyzersVersion>5.1.2</RoslynCommonAnalyzersVersion>
   </PropertyGroup>
   <!-- All projects -->
   <ItemGroup>
-    <PackageVersion Include="MinVer" Version="7.0.0" />
+    <PackageVersion Include="MinVer" Version="8.0.0" />
     <PackageVersion Include="StyleSharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="PerformanceSharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="SecuritySharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
-    <PackageVersion Include="PublicApiSharp.Analyzers" Version="1.0.7" />
-    <PackageVersion Include="Roslynator.Analyzers" Version="4.16.1" />
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.32.0.713" />
-    <PackageVersion Include="Blazor.Common.Analyzers" Version="2.1.0" />
+    <PackageVersion Include="PublicApiSharp.Analyzers" Version="2.0.1" />
   </ItemGroup>
   <!-- Non-test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.400" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" />
   </ItemGroup>
   <!-- Test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="TUnit" Version="$(TUnitVersion)" />
     <PackageVersion Include="TUnit.Core" Version="$(TUnitVersion)" />
     <PackageVersion Include="Verify.TUnit" Version="31.28.0" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0" />
-    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.3.3" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
+    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.4.1" />
   </ItemGroup>
   <!-- Core library packages -->
   <ItemGroup>
@@ -91,7 +86,7 @@
   </ItemGroup>
   <!-- Windows-specific packages for MAUI -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.3.1" />
-    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2526" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
+    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
   </ItemGroup>
 </Project>

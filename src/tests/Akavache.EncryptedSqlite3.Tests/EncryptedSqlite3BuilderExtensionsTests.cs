@@ -119,7 +119,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithApplicationName("CreateEncryptedSqliteCacheEmptyName")
             .WithSerializer<SystemJsonSerializer>();
 
-        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(string.Empty, builder, PlaceholderPassword))
+        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheNameExtensions.CreateEncryptedSqliteCache(string.Empty, builder, PlaceholderPassword))
             .Throws<ArgumentException>();
     }
 
@@ -131,7 +131,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
         var builder = CacheDatabase.CreateBuilder()
             .WithApplicationName("CreateEncryptedSqliteCacheNoSerializer");
 
-        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccountCacheName, builder, PlaceholderPassword))
+        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheNameExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, PlaceholderPassword))
             .Throws<InvalidOperationException>();
     }
 
@@ -145,7 +145,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithApplicationName("CreateEncryptedSqliteCacheWhitespaceName")
             .WithSerializer<SystemJsonSerializer>();
 
-        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache("   ", builder, PlaceholderPassword))
+        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheNameExtensions.CreateEncryptedSqliteCache("   ", builder, PlaceholderPassword))
             .Throws<ArgumentException>();
     }
 
@@ -160,7 +160,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithSerializer<SystemJsonSerializer>()
             .WithEncryptedSqliteProvider();
 
-        var cache = EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
+        var cache = EncryptedSqlite3.EncryptedSqliteCacheNameExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
 
         try
         {
@@ -185,7 +185,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithEncryptedSqliteProvider()
             .UseForcedDateTimeKind(DateTimeKind.Utc);
 
-        var cache = EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
+        var cache = EncryptedSqlite3.EncryptedSqliteCacheNameExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
 
         try
         {
@@ -209,7 +209,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithEncryptedSqliteProvider()
             .WithLegacyFileLocation();
 
-        var cache = EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
+        var cache = EncryptedSqlite3.EncryptedSqliteCacheNameExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
 
         try
         {
@@ -286,7 +286,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
         SystemJsonSerializer serializer = new();
         FakeBuilder builder = new() { ApplicationName = string.Empty, Serializer = serializer, SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName, };
 
-        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccountCacheName, builder, "test123"))
+        await Assert.That(() => EncryptedSqlite3.EncryptedSqliteCacheNameExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, "test123"))
             .Throws<ArgumentException>();
     }
 

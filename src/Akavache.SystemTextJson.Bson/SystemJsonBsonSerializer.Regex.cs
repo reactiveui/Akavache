@@ -21,12 +21,18 @@ namespace Akavache.SystemTextJson;
 /// </summary>
 public partial class SystemJsonBsonSerializer
 {
+    /// <summary>Upper bound on a single date-field match, so a hostile payload cannot stall the scan.</summary>
+    private const int DateRegexTimeoutMilliseconds = 1000;
+
 #if NET7_0_OR_GREATER
     /// <summary>Gets a regular expression matching tick-based BSON date fields.</summary>
     /// <returns>A regular expression matching tick-based date representations.</returns>
-    [GeneratedRegex("""
-                    "Date":(\d{15,})
-                    """)]
+    [GeneratedRegex(
+        """
+        "Date":(\d{15,})
+        """,
+        RegexOptions.CultureInvariant,
+        DateRegexTimeoutMilliseconds)]
     private static partial Regex GetDateRegex();
 #else
     /// <summary>Compiled fallback regex matching tick-based BSON date fields.</summary>
@@ -34,7 +40,8 @@ public partial class SystemJsonBsonSerializer
         """
         "Date":(\d{15,})
         """,
-        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        RegexOptions.Compiled | RegexOptions.CultureInvariant,
+        TimeSpan.FromMilliseconds(DateRegexTimeoutMilliseconds));
 
     /// <summary>Gets a regular expression matching tick-based BSON date fields.</summary>
     /// <returns>A regular expression matching tick-based date representations.</returns>

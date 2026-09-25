@@ -13,7 +13,7 @@ using BenchmarkDotNet.Jobs;
 namespace Akavache.Benchmarks;
 
 /// <summary> Measures how fast Akavache V11 writes blobs and objects into a SQLite-backed cache, one key at a time, in bulk and with an expiry. </summary>
-[System.Diagnostics.DebuggerDisplay("{BenchmarkSize}")]
+[System.Diagnostics.DebuggerDisplay("CacheDatabaseWriteBenchmarks: {BenchmarkSize}")]
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]

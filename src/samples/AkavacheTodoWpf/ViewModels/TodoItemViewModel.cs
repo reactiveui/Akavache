@@ -14,7 +14,7 @@ using ReactiveUI;
 namespace AkavacheTodoWpf.ViewModels;
 
 /// <summary>View model for individual todo items with reactive behaviors for WPF.</summary>
-[System.Diagnostics.DebuggerDisplay("{Activator}")]
+[System.Diagnostics.DebuggerDisplay("TodoItemViewModel: {Activator}")]
 [SupportedOSPlatform("windows10.0.19041.0")]
 public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 {

@@ -43,7 +43,7 @@
   -->
   <ItemGroup>
     <Compile Include="..\Akavache.Sqlite3\*.cs"
-             Exclude="..\Akavache.Sqlite3\AkavacheBuilderExtensions.cs"
+             Exclude="..\Akavache.Sqlite3\AkavacheBuilderExtensions.cs;..\Akavache.Sqlite3\SqliteCacheNameExtensions.cs"
              Link="Shared\Sqlite3\%(Filename)%(Extension)" />
   </ItemGroup>
 

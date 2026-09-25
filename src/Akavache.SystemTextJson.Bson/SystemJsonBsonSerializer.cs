@@ -24,7 +24,7 @@ namespace Akavache.SystemTextJson;
 /// A BSON serializer that uses Newtonsoft.Json.Bson for BSON encoding/decoding
 /// and System.Text.Json for object serialization.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{Options}")]
+[System.Diagnostics.DebuggerDisplay("SystemJsonBsonSerializer: {Options}")]
 public partial class SystemJsonBsonSerializer : ISerializer
 {
     /// <summary>Byte width of the length field every BSON document opens with.</summary>

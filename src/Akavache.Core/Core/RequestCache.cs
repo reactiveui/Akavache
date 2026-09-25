@@ -103,7 +103,7 @@ internal static class RequestCache
         }
 
         var keySuffix = $":{key}";
-        List<string> keysToRemove = new(_inflightRequests.Count);
+        List<string> keysToRemove = [with(_inflightRequests.Count)];
 
         // Indexing Key rather than deconstructing: KeyValuePair.Deconstruct postdates net4x.
         foreach (var entry in _inflightRequests)

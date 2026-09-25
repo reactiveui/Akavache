@@ -5,7 +5,7 @@
 namespace AkavacheTodoMaui.Models;
 
 /// <summary>Represents todo statistics for dashboard display.</summary>
-[System.Diagnostics.DebuggerDisplay("{TotalTodos}")]
+[System.Diagnostics.DebuggerDisplay("TodoStats: {TotalTodos}")]
 public class TodoStats
 {
     /// <summary>Gets or sets the total number of todos.</summary>

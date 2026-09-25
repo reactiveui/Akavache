@@ -48,10 +48,10 @@ public class V10FileNameBuilderExtensionsTests
             await Assert.That(result).IsSameReferenceAs(builder);
             await Assert.That(builder.UserAccount).IsTypeOf<SqliteBlobCache>();
             await Assert.That(builder.LocalMachine).IsTypeOf<SqliteBlobCache>();
-            await Assert.That(V10MigrationHelpers.GetUnderlyingBlobCache(builder.Secure)).IsTypeOf<SqliteBlobCache>();
-            await Assert.That(File.Exists(V10MigrationHelpers.GetV10DatabasePath(builder, "UserAccount")!)).IsTrue();
-            await Assert.That(File.Exists(V10MigrationHelpers.GetV10DatabasePath(builder, "LocalMachine")!)).IsTrue();
-            await Assert.That(File.Exists(V10MigrationHelpers.GetV10DatabasePath(builder, "Secure")!)).IsTrue();
+            await Assert.That(V10CacheExtensions.GetUnderlyingBlobCache(builder.Secure)).IsTypeOf<SqliteBlobCache>();
+            await Assert.That(File.Exists(V10toV11.AkavacheBuilderExtensions.GetV10DatabasePath(builder, "UserAccount")!)).IsTrue();
+            await Assert.That(File.Exists(V10toV11.AkavacheBuilderExtensions.GetV10DatabasePath(builder, "LocalMachine")!)).IsTrue();
+            await Assert.That(File.Exists(V10toV11.AkavacheBuilderExtensions.GetV10DatabasePath(builder, "Secure")!)).IsTrue();
         }
     }
 
@@ -64,9 +64,9 @@ public class V10FileNameBuilderExtensionsTests
 
         using (Assert.Multiple())
         {
-            await Assert.That(Path.GetFileName(V10MigrationHelpers.GetV10DatabasePath(builder, "UserAccount")!)).IsEqualTo(UserAccountV10FileName);
-            await Assert.That(Path.GetFileName(V10MigrationHelpers.GetV10DatabasePath(builder, "LocalMachine")!)).IsEqualTo(LocalMachineV10FileName);
-            await Assert.That(Path.GetFileName(V10MigrationHelpers.GetV10DatabasePath(builder, "Secure")!)).IsEqualTo(SecureV10FileName);
+            await Assert.That(Path.GetFileName(V10toV11.AkavacheBuilderExtensions.GetV10DatabasePath(builder, "UserAccount")!)).IsEqualTo(UserAccountV10FileName);
+            await Assert.That(Path.GetFileName(V10toV11.AkavacheBuilderExtensions.GetV10DatabasePath(builder, "LocalMachine")!)).IsEqualTo(LocalMachineV10FileName);
+            await Assert.That(Path.GetFileName(V10toV11.AkavacheBuilderExtensions.GetV10DatabasePath(builder, "Secure")!)).IsEqualTo(SecureV10FileName);
         }
     }
 

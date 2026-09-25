@@ -11,7 +11,7 @@ using BenchmarkDotNet.Jobs;
 namespace Akavache.Benchmarks.V10;
 
 /// <summary> Measures the full Akavache V10 object API — get-or-fetch, get-and-fetch-latest, invalidation, expiry and each of the four built-in caches — against a SQLite-backed store. </summary>
-[System.Diagnostics.DebuggerDisplay("{BenchmarkSize}")]
+[System.Diagnostics.DebuggerDisplay("AkavacheV10ComprehensiveBenchmarks: {BenchmarkSize}")]
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]

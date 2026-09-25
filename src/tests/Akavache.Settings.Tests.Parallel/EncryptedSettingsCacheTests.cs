@@ -15,7 +15,7 @@ namespace Akavache.EncryptedSettings.Tests;
 /// Tests for the encrypted settings cache, isolated per test to avoid static state leakage.
 /// Uses eventually-consistent polling and treats transient disposal as retryable.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("EncryptedSettingsCacheTests: {_appBuilder}")]
 [Category("Akavache")]
 public class EncryptedSettingsCacheTests
 {
@@ -540,7 +540,6 @@ public class EncryptedSettingsCacheTests
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Task WriteModifiedSettingsAsync(IAkavacheInstance instance, string testName) =>
         TestHelper.EventuallyAsync(() => TestHelper.WithFreshStoreAsync(
-            instance,
             () => instance.GetSecureSettingsStore<ViewSettings>(PersistencePassword, testName),
             async s =>
             {
@@ -562,7 +561,6 @@ public class EncryptedSettingsCacheTests
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Task WriteRoundValueAsync(IAkavacheInstance instance, string testName, int round) =>
         TestHelper.EventuallyAsync(() => TestHelper.WithFreshStoreAsync(
-            instance,
             () => instance.GetSecureSettingsStore<ViewSettings>(PersistencePassword, testName),
             async s =>
             {
@@ -606,7 +604,6 @@ public class EncryptedSettingsCacheTests
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Task WriteSecretAsync(IAkavacheInstance instance, string testName) =>
         TestHelper.EventuallyAsync(() => TestHelper.WithFreshStoreAsync(
-            instance,
             () => instance.GetSecureSettingsStore<ViewSettings>(CorrectPassword, testName),
             async s =>
             {

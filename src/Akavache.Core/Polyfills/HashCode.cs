@@ -110,12 +110,20 @@ internal struct HashCode : IEquatable<HashCode>
     /// <param name="obj">Ignored.</param>
     /// <returns>Never returns.</returns>
     /// <exception cref="NotSupportedException">Always thrown.</exception>
+    [SuppressMessage(
+        "Design",
+        "CA1065:Do not raise exceptions in unexpected locations",
+        Justification = "Polyfill mirrors System.HashCode, whose Equals throws NotSupportedException.")]
     public override readonly bool Equals(object? obj) => throw new NotSupportedException("HashCode is a mutable accumulator and is not comparable.");
 
     /// <summary>Not supported; matches the BCL, which forbids comparing accumulators.</summary>
     /// <param name="other">Ignored.</param>
     /// <returns>Never returns.</returns>
     /// <exception cref="NotSupportedException">Always thrown.</exception>
+    [SuppressMessage(
+        "Design",
+        "CA1065:Do not raise exceptions in unexpected locations",
+        Justification = "Polyfill mirrors System.HashCode, whose Equals throws NotSupportedException.")]
     public readonly bool Equals(HashCode other) => throw new NotSupportedException("HashCode is a mutable accumulator and is not comparable.");
 
     /// <summary>Folds one component hash into the accumulator.</summary>

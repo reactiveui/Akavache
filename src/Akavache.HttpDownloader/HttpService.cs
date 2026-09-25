@@ -16,7 +16,7 @@ namespace Akavache;
 #endif
 
 /// <summary>Provides a default implementation of HTTP service functionality for Akavache.</summary>
-[System.Diagnostics.DebuggerDisplay("{HttpClient}")]
+[System.Diagnostics.DebuggerDisplay("HttpService: {HttpClient}")]
 [SuppressMessage(
     "Usage",
     "CA2234:Pass System.Uri objects instead of strings",
@@ -326,9 +326,9 @@ public class HttpService : IHttpService, IDisposable
 
         var timedRequest = request.Timeout(timeout ?? DefaultTimeout, CacheDatabase.TaskpoolScheduler);
 
-        // retries is the total number of attempts, but Retry counts re-subscriptions after the
-        // first one, so the initial attempt has to come off the top.
-        return retries > 0 ? timedRequest.Retry(retries - 1) : timedRequest;
+        // retries is the total number of attempts, which is exactly what Retry counts. Zero still
+        // makes the single attempt rather than running the request not at all.
+        return retries > 0 ? timedRequest.Retry(retries) : timedRequest;
     }
 
     /// <summary>Releases the resources used by the <see cref="HttpService"/>.</summary>
@@ -344,7 +344,7 @@ public class HttpService : IHttpService, IDisposable
     }
 
     /// <summary>Provides a fast-failing HTTP service that reduces retries and timeouts to speed up tests.</summary>
-    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    [System.Diagnostics.DebuggerDisplay("FastHttpService: {_retries}")]
     public class FastHttpService : HttpService
     {
         /// <summary>Retry count this fast variant applies when a caller does not state one.</summary>

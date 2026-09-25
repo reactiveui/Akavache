@@ -1157,7 +1157,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     /// <param name="resultCode">The SQLite result code.</param>
     /// <param name="db">The database handle for error message extraction, or null.</param>
     /// <param name="operation">A description of the operation for the error message.</param>
-    /// <exception cref="AkavacheSqliteException"><paramref name="resultCode"/> is not a SQLite success code.</exception>
+    /// <exception cref="AkavacheSqliteException">Thrown when <paramref name="resultCode"/> indicates failure.</exception>
     internal static void CheckRc(int resultCode, sqlite3? db, string operation)
     {
         if (resultCode is SQLITE_OK or SQLITE_DONE or SQLITE_ROW)

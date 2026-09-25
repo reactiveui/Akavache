@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.CompilerServices;
+using Splat;
 
 #if REACTIVE_SHIM
 namespace Akavache.Reactive.V10toV11;
@@ -47,7 +48,7 @@ public static class AkavacheBuilderExtensions
                 throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using V10 file names.");
             }
 
-            V10MigrationHelpers.ValidateApplicationName(builder.ApplicationName);
+            builder.ApplicationName.ValidateApplicationName();
 
             // Ensure legacy file location is set so directories resolve to V10 paths
             if (builder.FileLocationOption != FileLocationOption.Legacy)
@@ -56,10 +57,10 @@ public static class AkavacheBuilderExtensions
             }
 
             // Create caches using V10 filenames at legacy directory locations
-            _ = builder.WithUserAccount(V10MigrationHelpers.CreateV10Cache(UserAccount, builder))
-                   .WithLocalMachine(V10MigrationHelpers.CreateV10Cache(LocalMachine, builder))
+            _ = builder.WithUserAccount(UserAccount.CreateV10Cache(builder))
+                   .WithLocalMachine(LocalMachine.CreateV10Cache(builder))
                    .WithInMemory()
-                   .WithSecure(new SecureBlobCacheWrapper(V10MigrationHelpers.CreateV10Cache(Secure, builder)));
+                   .WithSecure(new SecureBlobCacheWrapper(Secure.CreateV10Cache(builder)));
 
             return builder;
         }
@@ -112,13 +113,62 @@ public static class AkavacheBuilderExtensions
             // the blocking bridge lives here rather than inside V10MigrationService. Each
             // BuildMigration call returns Observable.Return(Unit.Default) when its cache
             // kind is disabled or unavailable, so Concat runs exactly the enabled ones.
-            var pipeline = V10MigrationHelpers.BuildMigration(builder, UserAccount, options.MigrateUserAccount, builder.UserAccount as SqliteBlobCache, serializer, options)
-                .Concat(V10MigrationHelpers.BuildMigration(builder, LocalMachine, options.MigrateLocalMachine, builder.LocalMachine as SqliteBlobCache, serializer, options))
-                .Concat(V10MigrationHelpers.BuildMigration(builder, Secure, options.MigrateSecure, V10MigrationHelpers.GetUnderlyingBlobCache(builder.Secure) as SqliteBlobCache, serializer, options));
+            var pipeline = BuildMigration(builder, UserAccount, options.MigrateUserAccount, builder.UserAccount as SqliteBlobCache, serializer, options)
+                .Concat(BuildMigration(builder, LocalMachine, options.MigrateLocalMachine, builder.LocalMachine as SqliteBlobCache, serializer, options))
+                .Concat(BuildMigration(builder, Secure, options.MigrateSecure, builder.Secure.GetUnderlyingBlobCache() as SqliteBlobCache, serializer, options));
 
             pipeline.WaitForCompletion();
 
             return builder;
+        }
+
+        /// <summary>Gets the absolute path to the V10 database file for the given cache name, or <c>null</c> if no legacy directory is available.</summary>
+        /// <param name="cacheName">The logical V11 cache name.</param>
+        /// <returns>The full path to the V10 database file, or <c>null</c> if it cannot be determined.</returns>
+        internal string? GetV10DatabasePath(string cacheName)
+        {
+            var directory = builder.GetLegacyCacheDirectory(cacheName);
+            return directory is null || string.IsNullOrWhiteSpace(directory) ? null : Path.Combine(directory, V10FileNameMap.GetV10FileName(cacheName));
+        }
+
+        /// <summary>
+        /// Wraps a single cache-kind migration in an <see cref="IObservable{RxVoid}"/> that
+        /// short-circuits when the kind is disabled, the underlying cache is not a
+        /// <see cref="SqliteBlobCache"/>, or no V10 database file exists for it. The
+        /// returned observable emits a single <see cref="RxVoid"/> on completion regardless
+        /// of which branch fired — so callers can <c>Concat</c> multiple kinds into one
+        /// pipeline without tracking each one individually.
+        /// </summary>
+        /// <param name="cacheName">Logical cache-kind name (<c>UserAccount</c> / <c>LocalMachine</c> / <c>Secure</c>).</param>
+        /// <param name="enabled">Whether the migration is enabled for this kind in the options.</param>
+        /// <param name="sqliteCache">The V11 destination cache, or <see langword="null"/> when the kind isn't a SqliteBlobCache.</param>
+        /// <param name="serializer">The current serializer (used by the row-conversion path).</param>
+        /// <param name="options">Migration options.</param>
+        /// <returns>A one-shot observable that completes when migration for this kind finishes (or is skipped).</returns>
+        /// <remarks>
+        /// Marked <c>internal</c> so tests can drive each branch in isolation without
+        /// spinning up the full <c>MigrateFromV10</c> entry point. Every
+        /// observable branch returns one item then completes, which makes it trivial to
+        /// assert on the result sequence in a unit test.
+        /// </remarks>
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+        internal IObservable<RxVoid> BuildMigration(
+            string cacheName,
+            bool enabled,
+            SqliteBlobCache? sqliteCache,
+            ISerializer serializer,
+            V10MigrationOptions options)
+        {
+            if (!enabled || sqliteCache is null)
+            {
+                return ImmutableReturnRxVoidSignal.Instance;
+            }
+
+            var v10Path = GetV10DatabasePath(builder, cacheName);
+            return v10Path is null
+                ? ImmutableReturnRxVoidSignal.Instance
+                : V10MigrationService.Migrate(v10Path, sqliteCache, serializer, options);
         }
     }
 }

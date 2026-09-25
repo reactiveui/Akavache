@@ -14,7 +14,7 @@ namespace Akavache.Settings.Tests;
 /// Tests for the unencrypted settings cache, isolated per test to avoid static state leakage.
 /// Uses eventually-consistent polling and treats transient disposal as retryable.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("SettingsCacheTests: {_appBuilder}")]
 [Category("Akavache")]
 public class SettingsCacheTests
 {
@@ -694,7 +694,7 @@ public class SettingsCacheTests
     /// <param name="bodyAsync">Async test body. Also receives the shared CT.</param>
     /// <param name="timeout">Optional hard timeout. Defaults to 30 seconds.</param>
     /// <returns>A task that completes when both the configure and body lambdas complete.</returns>
-    /// <exception cref="TimeoutException">The configure or body lambda did not complete within <paramref name="timeout"/>.</exception>
+    /// <exception cref="TimeoutException">Thrown when the configure or body callback does not complete within <paramref name="timeout"/>.</exception>
     private async Task RunWithAkavacheAsync<TSerializer>(
         string? applicationName,
         Func<IAkavacheBuilder, CancellationToken, Task> configureAsync,

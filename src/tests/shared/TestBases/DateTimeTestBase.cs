@@ -12,7 +12,7 @@ namespace Akavache.Tests.TestBases;
 #endif
 
 /// <summary>Tests associated with the DateTime and DateTimeOffset.</summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("DateTimeTestBase: {_disposed}")]
 public abstract class DateTimeTestBase : IDisposable
 {
     /// <summary>Type-name fragment identifying an encrypted cache implementation.</summary>
@@ -281,7 +281,11 @@ public abstract class DateTimeTestBase : IDisposable
 
     /// <summary>Disposes resources.</summary>
     /// <param name="disposing">True to dispose managed resources.</param>
-    protected virtual void Dispose(bool disposing) => _ = Interlocked.Exchange(ref _disposed, 1);
+    protected virtual void Dispose(bool disposing)
+    {
+        // No managed resources to dispose in this base class.
+        _ = Interlocked.Exchange(ref _disposed, 1);
+    }
 
     /// <summary>Determines whether the cache under test is an encrypted implementation.</summary>
     /// <param name="blobCache">The cache under test.</param>

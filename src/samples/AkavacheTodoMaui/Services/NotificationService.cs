@@ -9,7 +9,7 @@ using AkavacheTodoMaui.Models;
 namespace AkavacheTodoMaui.Services;
 
 /// <summary>Service for handling todo notifications and reminders.</summary>
-[System.Diagnostics.DebuggerDisplay("{ReminderNotifications}")]
+[System.Diagnostics.DebuggerDisplay("NotificationService: {ReminderNotifications}")]
 public class NotificationService : IDisposable
 {
     /// <summary>Subject used to publish reminder notifications.</summary>

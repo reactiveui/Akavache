@@ -117,7 +117,7 @@ public static class SerializerExtensions
         /// <param name="value">The object to serialize and cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date for the cached data.</param>
         /// <returns>An observable that signals when the insertion is complete.</returns>
-        /// <exception cref="InvalidOperationException">No serializer has been registered for the cache.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <paramref name="value"/> cannot be serialized.</exception>
         [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization.")]
         [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization.")]
         public IObservable<RxVoid> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration)
@@ -954,7 +954,7 @@ public static class SerializerExtensions
         try
         {
             // For DateTime objects, use the Universal Serializer Shim for better compatibility
-            if (SerializerHelpers.IsDateTime(typeof(T)))
+            if (typeof(T).IsDateTime())
             {
                 return UniversalSerializer.Serialize(value, serializer, cache.ForcedDateTimeKind);
             }
@@ -1004,7 +1004,7 @@ public static class SerializerExtensions
         try
         {
             // For DateTime objects, use the Universal Serializer Shim for better compatibility
-            if (SerializerHelpers.IsDateTime(typeof(T)))
+            if (typeof(T).IsDateTime())
             {
                 return UniversalSerializer.Deserialize<T>(data, serializer, cache.ForcedDateTimeKind);
             }
@@ -1022,7 +1022,7 @@ public static class SerializerExtensions
             // For critical DateTime failures, try the Universal Serializer Shim as a fallback.
             // UniversalSerializer.Deserialize swallows exceptions internally and returns
             // default rather than throwing, so no inner try/catch is needed here.
-            if (SerializerHelpers.IsDateTimeOrDateTimeOffset(typeof(T)))
+            if (typeof(T).IsDateTimeOrDateTimeOffset())
             {
                 return UniversalSerializer.Deserialize<T>(data, serializer, cache.ForcedDateTimeKind);
             }

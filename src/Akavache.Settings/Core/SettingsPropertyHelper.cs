@@ -51,7 +51,7 @@ namespace Akavache.Settings.Core;
 /// </code>
 /// </para>
 /// </remarks>
-[System.Diagnostics.DebuggerDisplay("{Value}")]
+[System.Diagnostics.DebuggerDisplay("SettingsPropertyHelper: {Value}")]
 public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyChanged, IDisposable
 {
     /// <summary>The backing stream that owns the persistent BehaviorSubject + blob cache integration.</summary>

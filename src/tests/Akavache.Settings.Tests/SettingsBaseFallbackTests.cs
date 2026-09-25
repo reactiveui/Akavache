@@ -14,7 +14,7 @@ namespace Akavache.Settings.Tests;
 /// Tests for SettingsBase fallback logic when no explicit cache is configured.
 /// Validates the cache selection priority: explicit BlobCaches -> CacheDatabase -> InMemoryBlobCache.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("SettingsBaseFallbackTests: {_appBuilder}")]
 [Category("Akavache")]
 [TestExecutor<AkavacheTestExecutor>]
 public class SettingsBaseFallbackTests
@@ -127,7 +127,7 @@ public class SettingsBaseFallbackTests
             var settings1 = instance!.GetSettingsStore<TestSettings>(
                 overrideDatabaseName: databaseName,
                 scheduler: ImmediateSequencer.Instance);
-            settings1.Initialize().WaitForCompletion();
+            await settings1.InitializeAsync();
             settings1.TestValue.Set(expectedValue).WaitForCompletion();
 
             // Verify the value was set.
@@ -140,7 +140,7 @@ public class SettingsBaseFallbackTests
             var settings2 = instance!.GetSettingsStore<TestSettings>(
                 overrideDatabaseName: databaseName,
                 scheduler: ImmediateSequencer.Instance);
-            settings2.Initialize().WaitForCompletion();
+            await settings2.InitializeAsync();
 
             await Assert.That((int)settings2.TestValue).IsEqualTo(expectedValue);
 

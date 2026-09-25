@@ -10,7 +10,7 @@ namespace Akavache.SystemTextJson
             public byte[] Serialize<T>(T item, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
         }
     }
-    [System.Diagnostics.DebuggerDisplay("{Options}")]
+    [System.Diagnostics.DebuggerDisplay("SystemJsonBsonSerializer: {Options}")]
     public class SystemJsonBsonSerializer : Akavache.ISerializer
     {
         public SystemJsonBsonSerializer() { }

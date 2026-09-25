@@ -13,7 +13,7 @@ using BenchmarkDotNet.Loggers;
 namespace Akavache.Benchmarks;
 
 /// <summary> Measures how fast Akavache V11 reads blobs back out of a pre-seeded SQLite-backed cache, sequentially, concurrently and as a single bulk request. </summary>
-[System.Diagnostics.DebuggerDisplay("{BenchmarkSize}")]
+[System.Diagnostics.DebuggerDisplay("CacheDatabaseReadBenchmarks: {BenchmarkSize}")]
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
