@@ -310,27 +310,23 @@ Settings are automatically persisted and will survive app updates, making them p
 - 💬 **Chat**: [ReactiveUI Slack](https://reactiveui.net/slack)
 - 📦 **NuGet**: [Akavache Packages](https://www.nuget.org/packages?q=akavache)
 
-## Thanks 
+## Sponsors
 
-This project is tested with BrowserStack.
+[JetBrains](https://www.jetbrains.com/) gives ReactiveUI's maintainers licences for its tools through its
+[open source support programme](https://www.jetbrains.com/community/opensource/).
+[Anthropic](https://www.anthropic.com/) supports them with [Claude](https://claude.com/) through
+[Claude for Open Source](https://claude.com/contact-sales/claude-for-oss).
+[OpenAI](https://openai.com/) supports them with [Codex](https://openai.com/codex/) through
+[Codex for Open Source](https://developers.openai.com/community/codex-for-oss).
 
-We want to thank the following contributors and libraries that help make Akavache possible:
+This project is tested with [BrowserStack](https://www.browserstack.com/).
 
-### Core Libraries
+[![JetBrains](https://raw.githubusercontent.com/reactiveui/website/main/docs/images/sponsors/jetbrains.svg)](https://www.jetbrains.com/)
+[![Claude by Anthropic](https://raw.githubusercontent.com/reactiveui/website/main/docs/images/sponsors/claude.svg)](https://claude.com/)
+[![OpenAI](https://raw.githubusercontent.com/reactiveui/website/main/docs/images/sponsors/openai.svg)](https://openai.com/codex/)
 
-- **SQLite**: [SQLitePCLRaw](https://github.com/ericsink/SQLitePCL.raw) and [SQLite3MultipleCiphers](https://github.com/nicola-decao/SQLite3MultipleCiphers) - SQLite access and encryption for .NET
-- **System.Reactive**: [Reactive Extensions for .NET](https://github.com/dotnet/reactive) - The foundation of Akavache's asynchronous API
-- **Splat**: [Splat](https://github.com/reactiveui/splat) - Cross-platform utilities and service location
-- **System.Text.Json**: Microsoft's high-performance JSON serializer
-- **Newtonsoft.Json**: James Newton-King's Json.NET - The most popular .NET JSON library
-
-### Microsoft
-
-<a href="https://dotnetfoundation.org">
-  <img src="https://theme.dotnetfoundation.org/img/logo.svg" width="100" />
-</a>
-
-We thank Microsoft for their ongoing support of the .NET ecosystem and the development tools that make Akavache possible.
+See [our sponsors](https://www.reactiveui.net/sponsors/) for more information.
+JetBrains, Claude, Anthropic, OpenAI and Codex names and logos are trademarks of their respective owners.
 
 ## License
 
