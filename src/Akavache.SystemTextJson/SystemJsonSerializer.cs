@@ -14,7 +14,7 @@ namespace Akavache.SystemTextJson;
 #endif
 
 /// <summary>A serializer using System.Text.Json for JSON serialization.</summary>
-[System.Diagnostics.DebuggerDisplay("{Options}")]
+[System.Diagnostics.DebuggerDisplay("SystemJsonSerializer: {Options}")]
 public class SystemJsonSerializer : ISerializer
 {
     /// <summary>

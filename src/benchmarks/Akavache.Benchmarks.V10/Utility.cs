@@ -39,8 +39,7 @@ internal static class Utility
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine("***** Failed to clean up!! *****");
-            Console.Error.WriteLine(ex);
+            System.Diagnostics.Trace.TraceWarning($"Failed to clean up '{directoryPath}': {ex}");
         }
 
         static void Retry(Action block, int retries = 2)

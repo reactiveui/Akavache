@@ -135,7 +135,7 @@ public static class UniversalSerializer
     /// <param name="targetSerializer">The target serializer.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The serialized data.</returns>
-    /// <exception cref="InvalidOperationException">Every serializer, including the fallbacks, failed to serialize the value.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when neither the target serializer nor any fallback serializer can serialize <paramref name="value"/>.</exception>
     [RequiresUnreferencedCode("Universal serialization requires types to be preserved.")]
     [RequiresDynamicCode("Universal serialization requires types to be preserved.")]
     public static byte[] Serialize<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind)
@@ -329,7 +329,7 @@ public static class UniversalSerializer
         ];
 
         var prefixSuffix = $"___{requestedKey}";
-        List<string> candidates = new(InitialKeyCandidateCapacity);
+        List<string> candidates = [with(InitialKeyCandidateCapacity)];
         foreach (var key in allKeys)
         {
             if (possibleKeys.Contains(key) || key.EndsWith(prefixSuffix, StringComparison.Ordinal))
@@ -487,7 +487,7 @@ public static class UniversalSerializer
     /// <param name="targetSerializer">The target serializer that failed.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The serialized data.</returns>
-    /// <exception cref="InvalidOperationException">No fallback serializer could serialize the value either.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when no alternative serializer succeeds.</exception>
     [RequiresUnreferencedCode("Calls ISerializer.Serialize<T>.")]
     [RequiresDynamicCode("Calls ISerializer.Serialize<T>.")]
     internal static byte[] TryFallbackSerialization<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind)

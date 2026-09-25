@@ -33,7 +33,7 @@ public class V10MigrationHelpersTests
         var builder = CreateBuilder();
         List<string> log = [];
 
-        var result = V10MigrationHelpers.BuildMigration(
+        var result = V10toV11.AkavacheBuilderExtensions.BuildMigration(
             builder,
             UserAccount,
             enabled: false,
@@ -53,7 +53,7 @@ public class V10MigrationHelpersTests
         var builder = CreateBuilder();
         List<string> log = [];
 
-        var result = V10MigrationHelpers.BuildMigration(
+        var result = V10toV11.AkavacheBuilderExtensions.BuildMigration(
             builder,
             UserAccount,
             enabled: true,
@@ -78,7 +78,7 @@ public class V10MigrationHelpersTests
         using SqliteBlobCache destination = new(Path.Combine(path, "v11.db"), new SystemJsonSerializer(), ImmediateSequencer.Instance);
         List<string> log = [];
 
-        var result = V10MigrationHelpers.BuildMigration(
+        var result = V10toV11.AkavacheBuilderExtensions.BuildMigration(
             builder,
             UserAccount,
             enabled: true,
@@ -99,7 +99,7 @@ public class V10MigrationHelpersTests
     {
         var builder = CreateBuilder();
 
-        var result = V10MigrationHelpers.GetV10DatabasePath(builder, UserAccount);
+        var result = V10toV11.AkavacheBuilderExtensions.GetV10DatabasePath(builder, UserAccount);
 
         await Assert.That(result).IsNotNull();
         await Assert.That(Path.GetFileName(result!)).IsEqualTo(UserAccountV10FileName);
@@ -111,9 +111,9 @@ public class V10MigrationHelpersTests
     public async Task CreateV10CacheShouldOpenTheLegacyFileAndCreateItsDirectory()
     {
         var builder = CreateBuilder();
-        var expectedPath = V10MigrationHelpers.GetV10DatabasePath(builder, UserAccount)!;
+        var expectedPath = V10toV11.AkavacheBuilderExtensions.GetV10DatabasePath(builder, UserAccount)!;
 
-        using var cache = V10MigrationHelpers.CreateV10Cache(UserAccount, builder);
+        using var cache = V10CacheExtensions.CreateV10Cache(UserAccount, builder);
 
         await Assert.That(cache).IsNotNull();
         await Assert.That(Directory.Exists(Path.GetDirectoryName(expectedPath))).IsTrue();
@@ -127,7 +127,7 @@ public class V10MigrationHelpersTests
         var builder = CreateBuilder();
         _ = builder.UseForcedDateTimeKind(DateTimeKind.Utc);
 
-        using var cache = V10MigrationHelpers.CreateV10Cache(UserAccount, builder);
+        using var cache = V10CacheExtensions.CreateV10Cache(UserAccount, builder);
 
         await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
     }
@@ -140,7 +140,7 @@ public class V10MigrationHelpersTests
         var builder = CreateBuilder();
         ((AkavacheBuilder)builder).SerializerTypeName = "Akavache.Tests.NoSuchSerializer, Akavache.Tests.NoSuchAssembly";
 
-        await Assert.That(() => V10MigrationHelpers.CreateV10Cache(UserAccount, builder))
+        await Assert.That(() => V10CacheExtensions.CreateV10Cache(UserAccount, builder))
             .Throws<InvalidOperationException>()
             .WithMessageContaining("is registered in the service locator");
     }
@@ -157,7 +157,7 @@ public class V10MigrationHelpersTests
         var builder = CreateBuilder();
         _ = builder.WithV10FileNames();
 
-        var result = V10MigrationHelpers.GetUnderlyingBlobCache(builder.Secure);
+        var result = V10CacheExtensions.GetUnderlyingBlobCache(builder.Secure);
 
         await Assert.That(result).IsNotNull();
         await Assert.That(result).IsNotSameReferenceAs(builder.Secure);
@@ -171,7 +171,7 @@ public class V10MigrationHelpersTests
     {
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
 
-        var result = V10MigrationHelpers.GetUnderlyingBlobCache(cache);
+        var result = V10CacheExtensions.GetUnderlyingBlobCache(cache);
 
         await Assert.That(result).IsSameReferenceAs(cache);
     }
@@ -181,7 +181,7 @@ public class V10MigrationHelpersTests
     [Test]
     public async Task GetUnderlyingBlobCacheShouldReturnNullForNoCache()
     {
-        var result = V10MigrationHelpers.GetUnderlyingBlobCache(null);
+        var result = V10CacheExtensions.GetUnderlyingBlobCache(null);
 
         await Assert.That(result).IsNull();
     }
@@ -190,7 +190,7 @@ public class V10MigrationHelpersTests
     /// <returns>A task.</returns>
     [Test]
     public async Task ValidateApplicationNameShouldAcceptAConfiguredName() =>
-        await Assert.That(static () => V10MigrationHelpers.ValidateApplicationName("ConfiguredApp")).ThrowsNothing();
+        await Assert.That(static () => V10CacheExtensions.ValidateApplicationName("ConfiguredApp")).ThrowsNothing();
 
     /// <summary>An unset application name is reported, because the V10 paths are built from it.</summary>
     /// <param name="applicationName">The missing or blank name.</param>
@@ -200,7 +200,7 @@ public class V10MigrationHelpersTests
     [Arguments("")]
     [Arguments("   ")]
     public async Task ValidateApplicationNameShouldThrowWhenTheNameIsMissing(string? applicationName) =>
-        await Assert.That(() => V10MigrationHelpers.ValidateApplicationName(applicationName))
+        await Assert.That(() => V10CacheExtensions.ValidateApplicationName(applicationName))
             .Throws<InvalidOperationException>()
             .WithMessageContaining("Application name must be set");
 

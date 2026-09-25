@@ -86,7 +86,7 @@ namespace Akavache
             public System.IObservable<ReactiveUI.Primitives.RxVoid> WriteAsyncRx(byte[] data, int start, int length) { }
         }
     }
-    [System.Diagnostics.DebuggerDisplay("{HttpClient}")]
+    [System.Diagnostics.DebuggerDisplay("HttpService: {HttpClient}")]
     public class HttpService : Akavache.IHttpService, System.IDisposable
     {
         public HttpService() { }
@@ -143,7 +143,7 @@ namespace Akavache
         protected virtual System.IObservable<System.Net.Http.HttpResponseMessage> MakeWebRequest(System.Uri uri, System.Net.Http.HttpMethod method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, string? content) { }
         protected virtual System.IObservable<System.Net.Http.HttpResponseMessage> MakeWebRequest(System.Uri uri, System.Net.Http.HttpMethod method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, string? content, int retries) { }
         protected virtual System.IObservable<System.Net.Http.HttpResponseMessage> MakeWebRequest(System.Uri uri, System.Net.Http.HttpMethod method, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>? headers, string? content, int retries, System.TimeSpan? timeout) { }
-        [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+        [System.Diagnostics.DebuggerDisplay("FastHttpService: {_retries}")]
         public class FastHttpService : Akavache.HttpService
         {
             public FastHttpService() { }

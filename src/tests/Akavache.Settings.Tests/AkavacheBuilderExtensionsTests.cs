@@ -11,7 +11,7 @@ namespace Akavache.Settings.Tests;
 #endif
 
 /// <summary>Tests for <see cref="AkavacheBuilderExtensions"/> covering null guards, edge cases, and the IBlobCache-based settings store overloads.</summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("AkavacheBuilderExtensionsTests: {_appBuilder}")]
 [Category("Akavache")]
 [TestExecutor<AkavacheTestExecutor>]
 public class AkavacheBuilderExtensionsTests

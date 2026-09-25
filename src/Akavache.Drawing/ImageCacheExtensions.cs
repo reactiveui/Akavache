@@ -104,7 +104,7 @@ public static class ImageCacheExtensions
             ArgumentExceptionHelper.ThrowIfNull(fallbackImageBytes);
 
             return blobCache.LoadImage(key, desiredWidth, desiredHeight)
-                .Catch<IBitmap, Exception>(_ => BitmapHelpers.BytesToImage(fallbackImageBytes, desiredWidth, desiredHeight));
+                .Catch<IBitmap, Exception>(_ => fallbackImageBytes.BytesToImage(desiredWidth, desiredHeight));
         }
 
         /// <summary>Load an image from URL with automatic fallback to a default image if loading fails.</summary>
@@ -159,7 +159,7 @@ public static class ImageCacheExtensions
             ArgumentExceptionHelper.ThrowIfNull(fallbackImageBytes);
 
             return blobCache.LoadImageFromUrl(url, fetchAlways, desiredWidth, desiredHeight, absoluteExpiration)
-                .Catch<IBitmap, Exception>(_ => BitmapHelpers.BytesToImage(fallbackImageBytes, desiredWidth, desiredHeight));
+                .Catch<IBitmap, Exception>(_ => fallbackImageBytes.BytesToImage(desiredWidth, desiredHeight));
         }
 
         /// <summary>Create a thumbnail version of an image and cache it separately.</summary>
@@ -195,8 +195,8 @@ public static class ImageCacheExtensions
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return blobCache.Get(key)
-                .SelectMany(BitmapHelpers.ThrowOnNullOrBadImageBuffer)
-                .SelectMany(BitmapHelpers.LoadBitmapSize);
+                .SelectMany(BitmapBufferExtensions.ThrowOnNullOrBadImageBuffer)
+                .SelectMany(BitmapBufferExtensions.LoadBitmapSize);
         }
 
         /// <summary>Clear all cached images that match a specific pattern.</summary>

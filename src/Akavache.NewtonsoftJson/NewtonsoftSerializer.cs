@@ -16,7 +16,7 @@ namespace Akavache.NewtonsoftJson;
 /// A unified serializer using Newtonsoft.Json with automatic format detection.
 /// Supports both JSON and BSON formats for maximum compatibility with Akavache.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{Options}")]
+[System.Diagnostics.DebuggerDisplay("NewtonsoftSerializer: {Options}")]
 public class NewtonsoftSerializer : ISerializer
 {
     /// <summary>Byte width of the length field every BSON document opens with.</summary>

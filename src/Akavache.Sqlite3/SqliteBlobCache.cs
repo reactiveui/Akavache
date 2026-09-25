@@ -25,11 +25,11 @@ namespace Akavache.Sqlite3;
 /// This cache stores data in a SQLite database file for reliable persistence across application restarts.
 /// </summary>
 #if ENCRYPTED
-[System.Diagnostics.DebuggerDisplay("{Connection}")]
+[System.Diagnostics.DebuggerDisplay("EncryptedSqliteBlobCache: {Connection}")]
 [SuppressMessage("Documentation", "SST1649:File name should match the first type", Justification = "Reused file.")]
 public class EncryptedSqliteBlobCache : ISecureBlobCache
 #else
-[System.Diagnostics.DebuggerDisplay("{Connection}")]
+[System.Diagnostics.DebuggerDisplay("SqliteBlobCache: {Connection}")]
 public class SqliteBlobCache : IBlobCache
 #endif
 {

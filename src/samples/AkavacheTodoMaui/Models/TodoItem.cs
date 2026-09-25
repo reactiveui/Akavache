@@ -9,7 +9,7 @@ using ReactiveUI;
 namespace AkavacheTodoMaui.Models;
 
 /// <summary>Represents a Todo item with all necessary properties for demonstration.</summary>
-[System.Diagnostics.DebuggerDisplay("{Id}")]
+[System.Diagnostics.DebuggerDisplay("TodoItem: {Id}")]
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public class TodoItem : ReactiveObject

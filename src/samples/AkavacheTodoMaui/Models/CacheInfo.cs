@@ -5,7 +5,7 @@
 namespace AkavacheTodoMaui.Models;
 
 /// <summary>Represents information about cache usage.</summary>
-[System.Diagnostics.DebuggerDisplay("{UserAccountKeys}")]
+[System.Diagnostics.DebuggerDisplay("CacheInfo: {UserAccountKeys}")]
 public class CacheInfo
 {
     /// <summary>Gets or sets the number of keys in UserAccount cache.</summary>

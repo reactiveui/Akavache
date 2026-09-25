@@ -18,7 +18,7 @@ namespace Akavache;
 /// <param name="Value">The serialized payload bytes.</param>
 /// <param name="CreatedAt">The instant at which the entry was created.</param>
 /// <param name="ExpiresAt">Optional absolute expiration time. <see langword="null"/> means "never expires".</param>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("CacheEntry: {ToString(),nq}")]
 public sealed record CacheEntry(
     string? Id,
     string? TypeName,

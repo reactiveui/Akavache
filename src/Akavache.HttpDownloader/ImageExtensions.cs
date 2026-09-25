@@ -17,6 +17,12 @@ namespace Akavache;
     Justification = "The string overloads are long-standing public API. Each is paired with a Uri overload it forwards to, so the Uri form is always available.")]
 public static class ImageExtensions
 {
+    /// <summary>Offset of the WebP format marker, past the RIFF header and the four-byte chunk size.</summary>
+    private const int WebPMarkerOffset = 8;
+
+    /// <summary>Smallest buffer that can carry both WebP markers.</summary>
+    private const int WebPPrefixLength = 12;
+
     /// <summary>The PNG header.</summary>
     private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47];
 
@@ -28,6 +34,12 @@ public static class ImageExtensions
 
     /// <summary>Gets the BMP header.</summary>
     private static ReadOnlySpan<byte> BmpHeader => "BM"u8;
+
+    /// <summary>Gets the RIFF container header that a WebP file opens with.</summary>
+    private static ReadOnlySpan<byte> RiffHeader => "RIFF"u8;
+
+    /// <summary>Gets the format marker that follows the RIFF chunk size in a WebP file.</summary>
+    private static ReadOnlySpan<byte> WebPHeader => "WEBP"u8;
 
     /// <summary>Extension members for <c>IBlobCache</c>.</summary>
     /// <param name="blobCache">The blob cache to load the image from.</param>
@@ -41,7 +53,7 @@ public static class ImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return blobCache.Get(key)
-                .SelectMany(ImageBufferHelpers.ThrowOnNullOrBadImageBuffer);
+                .SelectMany(ImageBufferExtensions.ThrowOnNullOrBadImageBuffer);
         }
 
         /// <summary>
@@ -83,7 +95,7 @@ public static class ImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(url);
 
             return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectMany(ImageBufferHelpers.ThrowOnBadImageBuffer);
+                .SelectMany(ImageBufferExtensions.ThrowOnBadImageBuffer);
         }
 
         /// <summary>
@@ -125,7 +137,7 @@ public static class ImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(url);
 
             return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectMany(ImageBufferHelpers.ThrowOnBadImageBuffer);
+                .SelectMany(ImageBufferExtensions.ThrowOnBadImageBuffer);
         }
 
         /// <summary>
@@ -170,7 +182,7 @@ public static class ImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(url);
 
             return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectMany(ImageBufferHelpers.ThrowOnBadImageBuffer);
+                .SelectMany(ImageBufferExtensions.ThrowOnBadImageBuffer);
         }
 
         /// <summary>
@@ -215,7 +227,7 @@ public static class ImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(url);
 
             return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectMany(ImageBufferHelpers.ThrowOnBadImageBuffer);
+                .SelectMany(ImageBufferExtensions.ThrowOnBadImageBuffer);
         }
     }
 
@@ -238,7 +250,14 @@ public static class ImageExtensions
                    || header.StartsWith(JpegHeader)
                    || header.StartsWith(GifHeader)
                    || header.StartsWith(BmpHeader)
-                   || ImageBufferHelpers.IsWebP(imageBytes);
+                   || IsWebP(imageBytes);
         }
+
+        /// <summary>Returns true if the image data is in WebP format.</summary>
+        /// <returns>True if it is WebP.</returns>
+        internal bool IsWebP() =>
+            imageBytes.Length >= WebPPrefixLength
+            && imageBytes.AsSpan(0, RiffHeader.Length).SequenceEqual(RiffHeader)
+            && imageBytes.AsSpan(WebPMarkerOffset, WebPHeader.Length).SequenceEqual(WebPHeader);
     }
 }

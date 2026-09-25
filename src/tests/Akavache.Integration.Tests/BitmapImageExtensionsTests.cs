@@ -13,7 +13,7 @@ namespace Akavache.Integration.Tests;
 #endif
 
 /// <summary>Tests for Akavache.Drawing BitmapImageExtensions functionality.</summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("BitmapImageExtensionsTests: {_originalLoader}")]
 [Category("Akavache")]
 public class BitmapImageExtensionsTests
 {
@@ -282,7 +282,7 @@ public class BitmapImageExtensionsTests
         }
 
         // Act
-        var result = BitmapHelpers.ThrowOnBadImageBuffer(validImageData)
+        var result = BitmapBufferExtensions.ThrowOnBadImageBuffer(validImageData)
             .SubscribeGetValue();
 
         // Assert
@@ -295,7 +295,7 @@ public class BitmapImageExtensionsTests
     public async Task ThrowOnBadImageBufferShouldThrowForNullData()
     {
         // Act & Assert
-        var error = BitmapHelpers.ThrowOnBadImageBuffer(null).SubscribeGetError();
+        var error = BitmapBufferExtensions.ThrowOnBadImageBuffer(null).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
@@ -308,7 +308,7 @@ public class BitmapImageExtensionsTests
         var tooSmallData = new byte[32]; // Less than 64 bytes
 
         // Act & Assert
-        var error = BitmapHelpers.ThrowOnBadImageBuffer(tooSmallData).SubscribeGetError();
+        var error = BitmapBufferExtensions.ThrowOnBadImageBuffer(tooSmallData).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
@@ -394,7 +394,7 @@ public class BitmapImageExtensionsTests
         if (shouldSucceed)
         {
             // Act
-            var result = BitmapHelpers.ThrowOnBadImageBuffer(buffer)
+            var result = BitmapBufferExtensions.ThrowOnBadImageBuffer(buffer)
                 .SubscribeGetValue();
 
             // Assert
@@ -403,7 +403,7 @@ public class BitmapImageExtensionsTests
         else
         {
             // Act & Assert
-            var error = BitmapHelpers.ThrowOnBadImageBuffer(buffer)
+            var error = BitmapBufferExtensions.ThrowOnBadImageBuffer(buffer)
                 .SubscribeGetError();
             await Assert.That(error).IsTypeOf<InvalidOperationException>();
         }
@@ -627,40 +627,40 @@ public class BitmapImageExtensionsTests
                 BitmapImageExtensions.LoadImageFromUrl(null!, "mykey", new Uri(SampleImageUrl)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>Tests <see cref="BitmapHelpers.ThrowOnNullOrBadImageBuffer"/> throws an "Image data is null" error when handed a <see langword="null"/> buffer.</summary>
+    /// <summary>Tests <see cref="BitmapBufferExtensions.ThrowOnNullOrBadImageBuffer"/> throws an "Image data is null" error when handed a <see langword="null"/> buffer.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldThrowForNullInput()
     {
-        var error = BitmapHelpers.ThrowOnNullOrBadImageBuffer(null).SubscribeGetError();
+        var error = BitmapBufferExtensions.ThrowOnNullOrBadImageBuffer(null).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
-    /// <summary>Tests <see cref="BitmapHelpers.ThrowOnNullOrBadImageBuffer"/> routes a valid (&gt;= 64-byte) buffer through the bad-image guard and returns it.</summary>
+    /// <summary>Tests <see cref="BitmapBufferExtensions.ThrowOnNullOrBadImageBuffer"/> routes a valid (&gt;= 64-byte) buffer through the bad-image guard and returns it.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldReturnValidBuffer()
     {
         var buffer = new byte[128];
 
-        var result = BitmapHelpers.ThrowOnNullOrBadImageBuffer(buffer).SubscribeGetValue();
+        var result = BitmapBufferExtensions.ThrowOnNullOrBadImageBuffer(buffer).SubscribeGetValue();
 
         await Assert.That(result).IsSameReferenceAs(buffer);
     }
 
-    /// <summary>Tests <see cref="BitmapHelpers.ThrowOnNullOrBadImageBuffer"/> forwards the short-buffer error from <see cref="BitmapHelpers.ThrowOnBadImageBuffer"/>.</summary>
+    /// <summary>Tests <see cref="BitmapBufferExtensions.ThrowOnNullOrBadImageBuffer"/> forwards the short-buffer error from <see cref="BitmapBufferExtensions.ThrowOnBadImageBuffer"/>.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldThrowForShortBuffer()
     {
         byte[] undersizedBuffer = [1, 2, 3];
 
-        var error = BitmapHelpers.ThrowOnNullOrBadImageBuffer(undersizedBuffer).SubscribeGetError();
+        var error = BitmapBufferExtensions.ThrowOnNullOrBadImageBuffer(undersizedBuffer).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
     /// <summary>
-    /// Tests <see cref="BitmapHelpers.BytesToImage"/> returns a decoded
+    /// Tests <see cref="BitmapBufferExtensions.BytesToImage"/> returns a decoded
     /// <see cref="IBitmap"/> on the happy path by routing through
     /// <see cref="BitmapLoader.Current"/> (the ambient Splat bitmap loader).
     /// </summary>
@@ -672,7 +672,7 @@ public class BitmapImageExtensionsTests
         BitmapLoader.Current = new MockBitmapLoader();
         try
         {
-            var bitmap = BitmapHelpers.BytesToImage(new byte[128], null, null).SubscribeGetValue();
+            var bitmap = BitmapBufferExtensions.BytesToImage(new byte[128], null, null).SubscribeGetValue();
 
             await Assert.That(bitmap).IsNotNull();
         }
@@ -682,7 +682,7 @@ public class BitmapImageExtensionsTests
         }
     }
 
-    /// <summary>Tests <see cref="BitmapHelpers.BytesToImage"/> throws an <see cref="IOException"/> when <see cref="BitmapLoader.Current"/> returns a <see langword="null"/> bitmap.</summary>
+    /// <summary>Tests <see cref="BitmapBufferExtensions.BytesToImage"/> throws an <see cref="IOException"/> when <see cref="BitmapLoader.Current"/> returns a <see langword="null"/> bitmap.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task BytesToImageShouldThrowWhenLoaderReturnsNullBitmap()
@@ -691,7 +691,7 @@ public class BitmapImageExtensionsTests
         BitmapLoader.Current = new NullReturningBitmapLoader();
         try
         {
-            var error = BitmapHelpers.BytesToImage(new byte[128], null, null).SubscribeGetError();
+            var error = BitmapBufferExtensions.BytesToImage(new byte[128], null, null).SubscribeGetError();
             await Assert.That(error).IsTypeOf<IOException>();
         }
         finally
@@ -700,7 +700,7 @@ public class BitmapImageExtensionsTests
         }
     }
 
-    /// <summary>Tests <see cref="BitmapHelpers.BytesToImage"/> propagates desired size parameters through to the loader on the happy path.</summary>
+    /// <summary>Tests <see cref="BitmapBufferExtensions.BytesToImage"/> propagates desired size parameters through to the loader on the happy path.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task BytesToImageShouldForwardDesiredSizeToLoader()
@@ -710,7 +710,7 @@ public class BitmapImageExtensionsTests
         BitmapLoader.Current = capturing;
         try
         {
-            _ = BitmapHelpers.BytesToImage(new byte[128], ForwardedWidthPixels, ForwardedHeightPixels)
+            _ = BitmapBufferExtensions.BytesToImage(new byte[128], ForwardedWidthPixels, ForwardedHeightPixels)
                 .SubscribeGetValue();
 
             await Assert.That(capturing.LastWidth).IsEqualTo(ForwardedWidthPixels);
@@ -1082,7 +1082,7 @@ public class BitmapImageExtensionsTests
         return new(cache, httpService, loader);
     }
 
-    /// <summary>Creates a deterministic PNG-signature buffer large enough to pass <see cref="BitmapHelpers.ThrowOnBadImageBuffer"/>.</summary>
+    /// <summary>Creates a deterministic PNG-signature buffer large enough to pass <see cref="BitmapBufferExtensions.ThrowOnBadImageBuffer"/>.</summary>
     /// <returns>A 128-byte buffer prefixed with the PNG magic bytes.</returns>
     private static byte[] CreateValidImageBytes()
     {

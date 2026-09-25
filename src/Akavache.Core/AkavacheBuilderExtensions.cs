@@ -177,7 +177,7 @@ public static class AkavacheBuilderExtensions
             using var isoStore = store;
 
             // Try to get a path within isolated storage for the settings cache using the application name
-            return isoStore is null ? null : IsolatedStorageHelpers.ResolveIsolatedCachePath(isoStore, validatedApplicationName, validatedCacheName);
+            return isoStore is null ? null : isoStore.ResolveIsolatedCachePath(validatedApplicationName, validatedCacheName);
         }
 
         /// <summary>Gets the legacy cache directory.</summary>

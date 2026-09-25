@@ -14,7 +14,7 @@ using ReactiveUI.SourceGenerators;
 namespace AkavacheTodoMaui.ViewModels;
 
 /// <summary>Main view model for the MAUI Todo application demonstrating ReactiveUI and Akavache integration.</summary>
-[System.Diagnostics.DebuggerDisplay("{IsLoading}")]
+[System.Diagnostics.DebuggerDisplay("MainViewModel: {IsLoading}")]
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public sealed partial class MainViewModel : ReactiveObject, IActivatableViewModel
@@ -510,7 +510,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
     private IObservable<RxVoid> SaveCurrentTodos()
     {
-        List<TodoItem> todos = new(Todos.Count);
+        List<TodoItem> todos = [with(Todos.Count)];
         foreach (var todoViewModel in Todos)
         {
             todos.Add(todoViewModel.TodoItem);

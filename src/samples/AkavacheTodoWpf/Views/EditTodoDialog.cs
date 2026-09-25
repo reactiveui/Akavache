@@ -8,12 +8,12 @@ using AkavacheTodoWpf.Models;
 namespace AkavacheTodoWpf.Views;
 
 /// <summary>EditTodoDialog for comprehensive todo editing.</summary>
-[System.Diagnostics.DebuggerDisplay("{OriginalTodo}")]
+[System.Diagnostics.DebuggerDisplay("EditTodoDialog: {OriginalTodo}")]
 public partial class EditTodoDialog : Window
 {
     /// <summary>Initializes a new instance of the <see cref="EditTodoDialog"/> class.</summary>
     /// <param name="todoItem">The todo item to edit.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="todoItem"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <c>todoItem</c> is <see langword="null"/>.</exception>
     public EditTodoDialog(TodoItem todoItem)
     {
         _ = todoItem ?? throw new ArgumentNullException(nameof(todoItem));

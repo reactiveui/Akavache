@@ -22,7 +22,7 @@ public static class AkavacheBuilderExtensions
         public Akavache.IAkavacheBuilder WithSerializerSystemTextJson(System.Text.Json.JsonSerializerOptions settings) { }
     }
 }
-[System.Diagnostics.DebuggerDisplay("{Options}")]
+[System.Diagnostics.DebuggerDisplay("SystemJsonSerializer: {Options}")]
 public class SystemJsonSerializer : Akavache.ISerializer
 {
     public SystemJsonSerializer() { }

@@ -554,7 +554,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
     /// <summary>Tests that cache operations handle DateTime edge cases correctly across time zones.</summary>
     /// <returns>A task representing the test.</returns>
-    /// <exception cref="InvalidOperationException">A round-tripped value could not be read back from the cache.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when a DateTime case other than the known extreme values fails to round-trip.</exception>
     [Test]
     public async Task CacheShouldHandleDateTimeEdgeCasesCorrectly()
     {
@@ -609,7 +609,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
     /// <summary>Tests that cache operations handle DateTimeOffset edge cases correctly across time zones.</summary>
     /// <returns>A task representing the test.</returns>
-    /// <exception cref="InvalidOperationException">A round-tripped value could not be read back from the cache.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when a DateTimeOffset case other than the known extreme values fails to round-trip.</exception>
     [Test]
     public async Task CacheShouldHandleDateTimeOffsetEdgeCasesCorrectly()
     {

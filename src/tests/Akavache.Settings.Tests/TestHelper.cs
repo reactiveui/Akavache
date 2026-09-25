@@ -82,14 +82,12 @@ internal static class TestHelper
     /// Opens a fresh secure settings store, runs an async action, disposes the store,
     /// and treats transient disposal as retryable (returns false).
     /// </summary>
-    /// <param name="instance">The Akavache instance.</param>
     /// <param name="getViewSettings">Gets the view settings.</param>
     /// <param name="action">The action to execute against the fresh store.</param>
     /// <returns>
     /// True if the action completes successfully; false if a transient disposal occurred and the caller should retry.
     /// </returns>
     internal static async Task<bool> WithFreshStoreAsync(
-        IAkavacheInstance instance,
         Func<ViewSettings?> getViewSettings,
         Func<ViewSettings, Task<bool>> action)
     {

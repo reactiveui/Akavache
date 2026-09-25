@@ -238,9 +238,6 @@
     <PackageReference Include="StyleSharp.Analyzers" PrivateAssets="all" />
     <PackageReference Include="PerformanceSharp.Analyzers" PrivateAssets="all" />
     <PackageReference Include="SecuritySharp.Analyzers" PrivateAssets="all" />
-    <PackageReference Include="Roslynator.Analyzers" PrivateAssets="All" />
-    <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all" />
-    <PackageReference Include="Blazor.Common.Analyzers" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- Public-API tracking (PAS0001-PAS0005): one baseline per TFM at

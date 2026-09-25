@@ -169,7 +169,7 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
     /// <param name="observerSlot">The observer field.</param>
     /// <param name="observer">The subscribing observer.</param>
     /// <returns>The captured state, value, and error at the time of subscription.</returns>
-    /// <exception cref="InvalidOperationException">The observable has already been subscribed to.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when <c>subscribed</c>.</exception>
     internal static (int State, T? Value, Exception? Error) CaptureAndSubscribe(
         ref bool subscribed,
         ref int state,

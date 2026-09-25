@@ -16,7 +16,7 @@ namespace Akavache.Integration.Tests;
 /// Uses a local test server instead of external dependencies for reliable offline testing.
 /// Also covers argument validation, static helper branches, and nested-class construction paths.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("HttpServiceTests: {_testServer}")]
 [Category("Akavache")]
 public class HttpServiceTests
 {

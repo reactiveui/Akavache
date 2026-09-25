@@ -24,17 +24,17 @@ namespace Akavache;
 /// <remarks>
 /// Initializes a new instance of the <see cref="InMemoryBlobCacheBase"/> class.
 /// </remarks>
-[System.Diagnostics.DebuggerDisplay("{Scheduler}")]
+[System.Diagnostics.DebuggerDisplay("InMemoryBlobCacheBase: {Scheduler}")]
 public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer) : ISecureBlobCache
 {
     /// <summary>The in-memory key to cache entry mapping.</summary>
-    private readonly Dictionary<string, CacheEntry> _cache = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, CacheEntry> _cache = [with(StringComparer.Ordinal)];
 
     /// <summary>Per-type index of keys for fast type-scoped lookups.</summary>
     private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
 
     /// <summary>Reverse map from cache key to the <see cref="Type"/> bucket it currently lives in.</summary>
-    private readonly Dictionary<string, Type> _keyToType = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Type> _keyToType = [with(StringComparer.Ordinal)];
 
     /// <summary>Synchronization primitive guarding mutations.</summary>
     private readonly Lock _lock = new();
@@ -137,11 +137,11 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                 {
 #if NET6_0_OR_GREATER
                     ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(_typeIndex, type, out _);
-                    value ??= new(StringComparer.Ordinal);
+                    value ??= [with(StringComparer.Ordinal)];
 #else
                     if (!_typeIndex.TryGetValue(type, out var value))
                     {
-                        value = new(StringComparer.Ordinal);
+                        value = [with(StringComparer.Ordinal)];
                         _typeIndex[type] = value;
                     }
 #endif
@@ -184,11 +184,11 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                     {
 #if NET6_0_OR_GREATER
                         ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(_typeIndex, type, out _);
-                        value ??= new(StringComparer.Ordinal);
+                        value ??= [with(StringComparer.Ordinal)];
 #else
                         if (!_typeIndex.TryGetValue(type, out var value))
                         {
-                            value = new(StringComparer.Ordinal);
+                            value = [with(StringComparer.Ordinal)];
                             _typeIndex[type] = value;
                         }
 #endif
@@ -274,8 +274,8 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                         }
 
                         var now = Scheduler.Now;
-                        List<KeyValuePair<string, byte[]>> result = new(keys.Count);
-                        List<string> expiredKeys = new(keys.Count);
+                        List<KeyValuePair<string, byte[]>> result = [with(keys.Count)];
+                        List<string> expiredKeys = [with(keys.Count)];
 
                         foreach (var key in keys!)
                         {
@@ -314,8 +314,8 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                     lock (_lock)
                     {
                         var now = Scheduler.Now;
-                        List<string> expiredKeys = new(_cache.Count);
-                        List<string> validKeys = new(_cache.Count);
+                        List<string> expiredKeys = [with(_cache.Count)];
+                        List<string> validKeys = [with(_cache.Count)];
 
                         foreach (var kvp in _cache)
                         {
@@ -355,8 +355,8 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                         }
 
                         var now = Scheduler.Now;
-                        List<string> expiredKeys = new(keys.Count);
-                        List<string> validKeys = new(keys.Count);
+                        List<string> expiredKeys = [with(keys.Count)];
+                        List<string> validKeys = [with(keys.Count)];
 
                         foreach (var key in keys!)
                         {
@@ -835,7 +835,7 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
         Dictionary<string, CacheEntry> cache,
         DateTimeOffset now)
     {
-        List<string> expiredKeys = new(cache.Count);
+        List<string> expiredKeys = [with(cache.Count)];
         foreach (var kvp in cache)
         {
             if (kvp.Value.ExpiresAt <= now)

@@ -136,7 +136,7 @@ public class Sqlite3BuilderExtensionsTests
             .WithApplicationName("CreateSqliteCacheEmptyName")
             .WithSerializer<SystemJsonSerializer>();
 
-        await Assert.That(() => Sqlite3.SqliteCacheFactory.CreateSqliteCache(string.Empty, builder))
+        await Assert.That(() => Sqlite3.SqliteCacheNameExtensions.CreateSqliteCache(string.Empty, builder))
             .Throws<ArgumentException>();
     }
 
@@ -148,7 +148,7 @@ public class Sqlite3BuilderExtensionsTests
         var builder = CacheDatabase.CreateBuilder()
             .WithApplicationName("CreateSqliteCacheNoSerializer");
 
-        await Assert.That(() => Sqlite3.SqliteCacheFactory.CreateSqliteCache(UserAccountSlot, builder))
+        await Assert.That(() => Sqlite3.SqliteCacheNameExtensions.CreateSqliteCache(UserAccountSlot, builder))
             .Throws<InvalidOperationException>();
     }
 
@@ -160,7 +160,7 @@ public class Sqlite3BuilderExtensionsTests
         SystemJsonSerializer serializer = new();
         FakeAkavacheBuilder builder = new() { ApplicationName = string.Empty, Serializer = serializer, SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName, };
 
-        await Assert.That(() => Sqlite3.SqliteCacheFactory.CreateSqliteCache(UserAccountSlot, builder))
+        await Assert.That(() => Sqlite3.SqliteCacheNameExtensions.CreateSqliteCache(UserAccountSlot, builder))
             .Throws<ArgumentException>();
     }
 
@@ -178,7 +178,7 @@ public class Sqlite3BuilderExtensionsTests
 
         _ = builder.WithSqliteProvider();
 
-        var cache = Sqlite3.SqliteCacheFactory.CreateSqliteCache(UserAccountSlot, builder);
+        var cache = Sqlite3.SqliteCacheNameExtensions.CreateSqliteCache(UserAccountSlot, builder);
         try
         {
             await Assert.That(cache).IsNotNull();

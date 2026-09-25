@@ -27,7 +27,7 @@ public static class AkavacheBuilderExtensions
         public Akavache.IAkavacheBuilder WithV10FileNames() { }
     }
 }
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("V10MigrationOptions: {ToString(),nq}")]
 public record V10MigrationOptions : System.IEquatable<Akavache.V10toV11.V10MigrationOptions>
 {
     public V10MigrationOptions(bool DeleteOldFiles = false, bool ReserializeToCurrentFormat = true, bool MigrateLocalMachine = true, bool MigrateUserAccount = true, bool MigrateSecure = true, System.Action<string>? Logger = null) { }

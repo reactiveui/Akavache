@@ -21,7 +21,7 @@ namespace Akavache.Tests.Helpers;
 /// <see cref="NullReferenceException"/> from <c>HttpConnection.get_LocalEndPoint</c>
 /// on a ThreadPool worker, which is unhandled and terminates the process.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{BaseUrl}")]
+[System.Diagnostics.DebuggerDisplay("TestHttpServer: {BaseUrl}")]
 public sealed class TestHttpServer : IDisposable
 {
     /// <summary>Content type served when a caller does not name one.</summary>
@@ -111,8 +111,6 @@ public sealed class TestHttpServer : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        // Claimed up front so a second caller returns immediately rather than racing the first
-        // through the shutdown below.
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
         {
             return;

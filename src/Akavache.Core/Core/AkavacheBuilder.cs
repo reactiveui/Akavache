@@ -275,7 +275,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
 
     /// <summary>Creates a new <see cref="InMemoryBlobCache"/> using the registered serializer.</summary>
     /// <returns>The newly created in-memory cache instance.</returns>
-    /// <exception cref="InvalidOperationException">No serializer has been registered on the builder.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when <c>Serializer is null</c>.</exception>
     internal InMemoryBlobCache CreateInMemoryCache()
     {
         if (Serializer is null)

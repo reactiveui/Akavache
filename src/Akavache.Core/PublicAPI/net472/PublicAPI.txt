@@ -36,11 +36,8 @@ namespace Akavache
             public Splat.Builder.IAppBuilder WithAkavacheCacheDatabase<T>(System.Func<T> configureSerializer, string applicationName) where T : class, Akavache.ISerializer, new() { }
             public Splat.Builder.IAppBuilder WithAkavacheCacheDatabase<T>(System.Func<T> configureSerializer, System.Action<Akavache.IAkavacheBuilder> configure, string applicationName) where T : class, Akavache.ISerializer, new() { }
         }
-        extension(System.IO.DirectoryInfo directoryInfo)
-        {
-        }
     }
-    [System.Diagnostics.DebuggerDisplay("{ResultCode}")]
+    [System.Diagnostics.DebuggerDisplay("AkavacheSqliteException: {ResultCode}")]
     public sealed class AkavacheSqliteException : System.Exception
     {
         public AkavacheSqliteException() { }
@@ -85,7 +82,7 @@ namespace Akavache
         public static void Initialize<T>(System.Func<T> configureSerializer, System.Action<Akavache.IAkavacheBuilder> configure, string applicationName, Akavache.Core.FileLocationOption fileLocationOption) where T : class, Akavache.ISerializer, new() { }
         public static System.IObservable<ReactiveUI.Primitives.RxVoid> Shutdown() { }
     }
-    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    [System.Diagnostics.DebuggerDisplay("CacheEntry: {ToString(),nq}")]
     public record CacheEntry : System.IEquatable<Akavache.CacheEntry>
     {
         public CacheEntry(string? Id, string? TypeName, byte[]? Value, System.DateTimeOffset CreatedAt, System.DateTimeOffset? ExpiresAt) { }
@@ -219,14 +216,13 @@ namespace Akavache
     {
         Akavache.IBlobCache InnerCache { get; }
     }
-    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     public sealed class InMemoryBlobCache : Akavache.InMemoryBlobCacheBase
     {
         public InMemoryBlobCache(Akavache.ISerializer serializer) { }
         public InMemoryBlobCache(string serialzerType) { }
         public InMemoryBlobCache(ReactiveUI.Primitives.Concurrency.ISequencer scheduler, Akavache.ISerializer? serializer) { }
     }
-    [System.Diagnostics.DebuggerDisplay("{Scheduler}")]
+    [System.Diagnostics.DebuggerDisplay("InMemoryBlobCacheBase: {Scheduler}")]
     public class InMemoryBlobCacheBase : Akavache.ISecureBlobCache
     {
         public InMemoryBlobCacheBase(ReactiveUI.Primitives.Concurrency.ISequencer scheduler, Akavache.ISerializer? serializer) { }

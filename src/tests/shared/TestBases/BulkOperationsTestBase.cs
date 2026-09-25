@@ -9,7 +9,7 @@ namespace Akavache.Tests.TestBases;
 #endif
 
 /// <summary>A base class for tests about bulk operations.</summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("BulkOperationsTestBase: {_disposed}")]
 public abstract class BulkOperationsTestBase : IDisposable
 {
     /// <summary>A backing field which indicates if the class has been disposed.</summary>
@@ -170,15 +170,7 @@ public abstract class BulkOperationsTestBase : IDisposable
 
     /// <summary>Disposes resources.</summary>
     /// <param name="disposing">True to dispose managed resources.</param>
-    protected virtual void Dispose(bool disposing)
-    {
-        // Claimed up front so a second caller returns immediately rather than racing the first
-        // through the disposal below.
-        if (Interlocked.Exchange(ref _disposed, 1) != 0)
-        {
-            return;
-        }
-    }
+    protected virtual void Dispose(bool disposing) => _ = Interlocked.Exchange(ref _disposed, 1);
 
     /// <summary>Sets up the test with the specified serializer type.</summary>
     /// <param name="serializerType">The type of serializer to use for this test.</param>

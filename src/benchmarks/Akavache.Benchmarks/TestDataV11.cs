@@ -10,7 +10,7 @@ namespace Akavache.Benchmarks;
 /// of real cached data rather than of a single primitive. Kept settable because the
 /// mixed-operation benchmark reads an entry, mutates it and writes it back.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{Id}")]
+[System.Diagnostics.DebuggerDisplay("TestDataV11: {Id}")]
 public class TestDataV11
 {
     /// <summary> Gets or sets the identity the benchmarks compare after a round trip to prove the value came back intact. </summary>
