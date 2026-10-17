@@ -73,7 +73,7 @@
   </ItemGroup>
   <!-- Sample application packages -->
   <ItemGroup>
-    <PackageVersion Include="DynamicData" Version="9.4.33" />
+    <PackageVersion Include="DynamicData" Version="9.5.0" />
     <PackageVersion Include="ReactiveUI.SourceGenerators" Version="3.2.0" />
     <PackageVersion Include="ReactiveUI.WPF" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="ReactiveUI.WPF.Reactive" Version="$(ReactiveUIVersion)" />
