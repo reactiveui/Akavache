@@ -40,8 +40,8 @@ internal static class RequestCache
 
         var requestKey = $"{typeof(T).FullName}:{key}";
 
-#if NET462 || NET47 || NET471
-        // net462, net47 and net471 predate the state-passing GetOrAdd overload, so the factory closes over
+#if NET47 || NET471
+        // net47 and net471 predate the state-passing GetOrAdd overload, so the factory closes over
         // fetchFunc there. net472 and later do have it and take the branch below.
         return _inflightRequests.GetOrAdd(
             requestKey,

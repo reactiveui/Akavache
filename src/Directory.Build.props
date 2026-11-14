@@ -118,7 +118,7 @@
     <AkavacheBaseTargets>net10.0;net11.0</AkavacheBaseTargets>
 
     <!-- Windows-specific desktop TFMs (includes .NET Framework and Windows-specific .NET) -->
-    <AkavacheWindowsDesktopTargets>net462;net47;net471;net472;net48;net481;net10.0-windows10.0.19041.0;net11.0-windows10.0.19041.0</AkavacheWindowsDesktopTargets>
+    <AkavacheWindowsDesktopTargets>net47;net471;net472;net48;net481;net10.0-windows10.0.19041.0;net11.0-windows10.0.19041.0</AkavacheWindowsDesktopTargets>
 
     <!-- Mobile TFMs separated by platform. -->
     <AkavacheMobileAndroidTargets>net10.0-android;net11.0-android</AkavacheMobileAndroidTargets>

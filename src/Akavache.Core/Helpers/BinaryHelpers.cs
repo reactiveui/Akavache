@@ -89,7 +89,7 @@ internal static class BinaryHelpers
         var trimmed = data.AsSpan().TrimStart(AsciiWhitespace);
         return !trimmed.IsEmpty && (trimmed[0] is (byte)'{' or (byte)'[');
 #else
-        // Scalar fallback for net462 / netstandard2.0 targets without span TrimStart(span).
+        // Scalar fallback for net47 / netstandard2.0 targets without span TrimStart(span).
         foreach (var b in data)
         {
             if (b is (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r')

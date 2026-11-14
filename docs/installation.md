@@ -40,7 +40,7 @@ Akavache V11.1 uses a modular package structure. Choose the packages that match 
 
 Akavache V11.1 supports the following target frameworks:
 
-- **.NET Framework 4.6.2, 4.7.2** - Full support
+- **.NET Framework 4.7.2** - Full support
 - **.NET Standard 2.0** - Cross-platform compatibility  
 - **.NET 8.0, .NET 9.0** - Modern .NET support
 - **Mobile Targets**:
@@ -190,7 +190,7 @@ Ensure your UWP project targets a specific platform (x86, x64, ARM) rather than 
 
 | Framework Target | System.Text.Json | Newtonsoft.Json | Recommended |
 |------------------|-------------------|-----------------|-------------|
-| .NET Framework 4.6.2+ | ✅ (via NuGet) | ✅ | Either ✅ |
+| .NET Framework 4.7+ | ✅ (via NuGet) | ✅ | Either ✅ |
 | .NET Framework 4.7.2+ | ✅ (via NuGet) | ✅ | System.Text.Json ⭐ |
 | .NET Standard 2.0 | ✅ | ✅ | System.Text.Json ⭐ |
 | .NET 8.0+ | ✅ (built-in) | ✅ | System.Text.Json ⭐ |

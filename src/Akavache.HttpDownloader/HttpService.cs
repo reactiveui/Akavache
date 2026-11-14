@@ -5,7 +5,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Runtime.CompilerServices;
-#if NET462_OR_GREATER
+#if NET47_OR_GREATER
 using System.Net.Http;
 #endif
 

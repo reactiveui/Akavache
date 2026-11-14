@@ -55,7 +55,7 @@ Always reference these instructions first and fallback to search or bash command
   - All test assemblies (`dotnet test` from src/)
 - **What fails on Linux/macOS**:
   - Windows-specific projects (WPF samples, net9.0-windows)
-  - .NET Framework projects (net462, net472, net481)
+  - .NET Framework projects (net472, net481)
 - **Building individual projects**: Always use explicit targeting when needed:
   ```bash
   cd src
