@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
+using BenchmarkDotNet.Loggers;
 
 namespace Akavache.Benchmarks.V10;
 
@@ -39,8 +40,7 @@ internal static class Utility
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine("***** Failed to clean up!! *****");
-            Console.Error.WriteLine(ex);
+            ConsoleLogger.Default.WriteLine(LogKind.Error, $"Failed to clean up: {ex}");
         }
 
         static void Retry(Action block, int retries = 2)

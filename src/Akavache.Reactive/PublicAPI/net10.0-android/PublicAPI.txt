@@ -57,9 +57,6 @@ namespace Akavache.Reactive
             [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
             public Splat.Builder.IAppBuilder WithAkavacheCacheDatabase<T>(System.Func<T> configureSerializer, System.Action<Akavache.Reactive.IAkavacheBuilder> configure, string applicationName) where T : class, Akavache.Reactive.ISerializer, new() { }
         }
-        extension(System.IO.DirectoryInfo directoryInfo)
-        {
-        }
     }
     [System.Diagnostics.DebuggerDisplay("{ResultCode}")]
     public sealed class AkavacheSqliteException : System.Exception

@@ -16,7 +16,7 @@
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
-[assembly: System.Runtime.Versioning.SupportedOSPlatform("Android21.0")]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("Android24.0")]
 namespace Akavache.Reactive.Sqlite3;
 
 public static class AkavacheBuilderExtensions

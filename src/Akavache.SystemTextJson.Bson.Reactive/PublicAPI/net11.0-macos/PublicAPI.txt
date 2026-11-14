@@ -11,7 +11,7 @@
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
-[assembly: System.Runtime.Versioning.SupportedOSPlatform("macOS26.0")]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("macOS27.2")]
 namespace Akavache.Reactive.SystemTextJson
 {
     public static class SerializerExtensions

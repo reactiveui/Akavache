@@ -78,8 +78,11 @@ internal static class Utility
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine("***** Failed to clean up!! *****");
-            Console.Error.WriteLine(ex);
+            TestContext.Current?.GetDefaultLogger().Log(
+                TUnit.Core.Logging.LogLevel.Error,
+                "Failed to clean up the test directory.",
+                ex,
+                static (message, exception) => $"{message} {exception}");
         }
     }
 

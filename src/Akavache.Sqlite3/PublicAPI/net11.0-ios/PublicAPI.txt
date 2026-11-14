@@ -16,7 +16,7 @@
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
-[assembly: System.Runtime.Versioning.SupportedOSPlatform("iOS26.0")]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("iOS27.2")]
 namespace Akavache.Sqlite3;
 
 public static class AkavacheBuilderExtensions

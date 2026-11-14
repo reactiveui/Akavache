@@ -20,7 +20,7 @@
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
-[assembly: System.Runtime.Versioning.SupportedOSPlatform("macOS26.0")]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("macOS27.2")]
 namespace Akavache
 {
     public static class AkavacheBuilderExtensions
@@ -56,9 +56,6 @@ namespace Akavache
             public Splat.Builder.IAppBuilder WithAkavacheCacheDatabase<T>(System.Func<T> configureSerializer, string applicationName) where T : class, Akavache.ISerializer, new() { }
             [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
             public Splat.Builder.IAppBuilder WithAkavacheCacheDatabase<T>(System.Func<T> configureSerializer, System.Action<Akavache.IAkavacheBuilder> configure, string applicationName) where T : class, Akavache.ISerializer, new() { }
-        }
-        extension(System.IO.DirectoryInfo directoryInfo)
-        {
         }
     }
     [System.Diagnostics.DebuggerDisplay("{ResultCode}")]
