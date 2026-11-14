@@ -1,0 +1,56 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.MemberNotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.NotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.HashCode))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("macOS26.0")]
+namespace Akavache.NewtonsoftJson;
+
+public static class AkavacheBuilderExtensions
+{
+    extension(Akavache.IAkavacheBuilder builder)
+    {
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftBson() { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftBson(Newtonsoft.Json.JsonSerializerSettings settings) { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftBson(System.Action<Newtonsoft.Json.JsonSerializerSettings> configure) { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftJson() { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftJson(Newtonsoft.Json.JsonSerializerSettings settings) { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftJson(System.Action<Newtonsoft.Json.JsonSerializerSettings> configure) { }
+    }
+}
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+public class NewtonsoftBsonSerializer : Akavache.NewtonsoftJson.NewtonsoftSerializer
+{
+    public NewtonsoftBsonSerializer() { }
+}
+[System.Diagnostics.DebuggerDisplay("{Options}")]
+public class NewtonsoftSerializer : Akavache.ISerializer
+{
+    public NewtonsoftSerializer() { }
+    public System.DateTimeKind? ForcedDateTimeKind { get; set; }
+    public Newtonsoft.Json.JsonSerializerSettings? Options { get; set; }
+    public bool UseBsonFormat { get; set; }
+    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
+    public T? Deserialize<T>(byte[] bytes) { }
+    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
+    public byte[] Serialize<T>(T item) { }
+    public static bool IsPotentialBsonData(byte[] data) { }
+}

@@ -1,0 +1,563 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Core.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Core.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.EncryptedSqlite3.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.EncryptedSqlite3.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.HttpDownloader.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Sqlite3.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Sqlite3.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.MemberNotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.NotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.HashCode))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("iOS26.0")]
+namespace Akavache
+{
+    public static class AkavacheBuilderExtensions
+    {
+        extension(Akavache.IAkavacheBuilder builder)
+        {
+            public Akavache.IAkavacheBuilder WithInMemory() { }
+        }
+        extension(Akavache.IAkavacheInstance builder)
+        {
+            [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+            public string? GetIsolatedCacheDirectory(string cacheName) { }
+            [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+            public string? GetLegacyCacheDirectory(string cacheName) { }
+        }
+        extension(Foundation.NSSearchPathDirectory targetDir)
+        {
+        }
+        extension(Splat.Builder.IAppBuilder builder)
+        {
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+            public Splat.Builder.IAppBuilder WithAkavache<T>(string applicationName, System.Action<Akavache.IAkavacheInstance> instance) where T : class, Akavache.ISerializer, new() { }
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+            public Splat.Builder.IAppBuilder WithAkavache<T>(string applicationName, System.Action<Splat.IMutableDependencyResolver, Akavache.IAkavacheInstance> instance) where T : class, Akavache.ISerializer, new() { }
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+            public Splat.Builder.IAppBuilder WithAkavache<T>(string applicationName, System.Action<Akavache.IAkavacheBuilder> configure, System.Action<Akavache.IAkavacheInstance> instance) where T : class, Akavache.ISerializer, new() { }
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+            public Splat.Builder.IAppBuilder WithAkavache<T>(string applicationName, System.Action<Akavache.IAkavacheBuilder> configure, System.Action<Splat.IMutableDependencyResolver, Akavache.IAkavacheInstance> instance) where T : class, Akavache.ISerializer, new() { }
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+            public System.Threading.Tasks.Task<Splat.Builder.IAppBuilder> WithAkavacheAsync<T>(string applicationName, System.Func<Akavache.IAkavacheBuilder, System.Threading.Tasks.Task> configureAsync, System.Func<Akavache.IAkavacheInstance, System.Threading.Tasks.Task> instanceAsync) where T : class, Akavache.ISerializer, new() { }
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+            public Splat.Builder.IAppBuilder WithAkavacheCacheDatabase<T>(string applicationName) where T : class, Akavache.ISerializer, new() { }
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+            public Splat.Builder.IAppBuilder WithAkavacheCacheDatabase<T>(System.Action<Akavache.IAkavacheBuilder> configure, string applicationName) where T : class, Akavache.ISerializer, new() { }
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+            public Splat.Builder.IAppBuilder WithAkavacheCacheDatabase<T>(System.Func<T> configureSerializer, string applicationName) where T : class, Akavache.ISerializer, new() { }
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+            public Splat.Builder.IAppBuilder WithAkavacheCacheDatabase<T>(System.Func<T> configureSerializer, System.Action<Akavache.IAkavacheBuilder> configure, string applicationName) where T : class, Akavache.ISerializer, new() { }
+        }
+        extension(System.IO.DirectoryInfo directoryInfo)
+        {
+        }
+    }
+    [System.Diagnostics.DebuggerDisplay("{ResultCode}")]
+    public sealed class AkavacheSqliteException : System.Exception
+    {
+        public AkavacheSqliteException() { }
+        public AkavacheSqliteException(string message) { }
+        public AkavacheSqliteException(int resultCode, string message) { }
+        public AkavacheSqliteException(string message, System.Exception innerException) { }
+        public int ResultCode { get; }
+    }
+    public static class CacheDatabase
+    {
+        public static string ApplicationName { get; }
+        public static Akavache.IAkavacheInstance? CurrentInstance { get; }
+        public static System.DateTimeKind? ForcedDateTimeKind { get; }
+        public static Akavache.IBlobCache InMemory { get; }
+        public static bool IsInitialized { get; }
+        public static Akavache.IBlobCache LocalMachine { get; }
+        public static Akavache.ISecureBlobCache Secure { get; }
+        public static ReactiveUI.Primitives.Concurrency.ISequencer TaskpoolScheduler { get; set; }
+        public static Akavache.IBlobCache UserAccount { get; }
+        [System.Obsolete("Use CreateBuilder(string applicationName, ...) which requires an explicit application name.", false)]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static Akavache.IAkavacheBuilder CreateBuilder() { }
+        [System.Obsolete("Use CreateBuilder(string applicationName, ...) which requires an explicit application name.", false)]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static Akavache.IAkavacheBuilder CreateBuilder(Akavache.Core.FileLocationOption fileLocationOption) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static Akavache.IAkavacheBuilder CreateBuilder(string applicationName) { }
+        public static Akavache.IAkavacheBuilder CreateBuilder(string applicationName, Akavache.Core.FileLocationOption fileLocationOption) { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static void Initialize<T>(string applicationName) where T : class, Akavache.ISerializer, new() { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static void Initialize<T>(System.Action<Akavache.IAkavacheBuilder> configure, string applicationName) where T : class, Akavache.ISerializer, new() { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static void Initialize<T>(System.Func<T> configureSerializer, string applicationName) where T : class, Akavache.ISerializer, new() { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static void Initialize<T>(string applicationName, Akavache.Core.FileLocationOption fileLocationOption) where T : class, Akavache.ISerializer, new() { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        public static void Initialize<T>(System.Action<Akavache.IAkavacheBuilder> configure, string applicationName, Akavache.Core.FileLocationOption fileLocationOption) where T : class, Akavache.ISerializer, new() { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static void Initialize<T>(System.Func<T> configureSerializer, System.Action<Akavache.IAkavacheBuilder> configure, string applicationName) where T : class, Akavache.ISerializer, new() { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static void Initialize<T>(System.Func<T> configureSerializer, string applicationName, Akavache.Core.FileLocationOption fileLocationOption) where T : class, Akavache.ISerializer, new() { }
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        public static void Initialize<T>(System.Func<T> configureSerializer, System.Action<Akavache.IAkavacheBuilder> configure, string applicationName, Akavache.Core.FileLocationOption fileLocationOption) where T : class, Akavache.ISerializer, new() { }
+        public static System.IObservable<ReactiveUI.Primitives.RxVoid> Shutdown() { }
+    }
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    public record CacheEntry : System.IEquatable<Akavache.CacheEntry>
+    {
+        public CacheEntry(string? Id, string? TypeName, byte[]? Value, System.DateTimeOffset CreatedAt, System.DateTimeOffset? ExpiresAt) { }
+        public System.DateTimeOffset CreatedAt { get; init; }
+        public System.DateTimeOffset? ExpiresAt { get; init; }
+        public string? Id { get; init; }
+        public string? TypeName { get; init; }
+        public byte[]? Value { get; init; }
+        public bool Equals(Akavache.CacheEntry? other) { }
+        public override int GetHashCode() { }
+    }
+    public enum CheckpointMode
+    {
+        Passive = 0,
+        Full = 1,
+        Truncate = 2,
+    }
+    public interface IAkavacheBuilder : Akavache.IAkavacheInstance
+    {
+        Akavache.Core.FileLocationOption FileLocationOption { get; }
+        Akavache.IAkavacheInstance Build() { }
+        Akavache.IAkavacheBuilder UseForcedDateTimeKind(System.DateTimeKind kind) { }
+        Akavache.IAkavacheBuilder WithApplicationName(string? applicationName) { }
+        Akavache.IAkavacheBuilder WithExecutingAssembly(System.Reflection.Assembly assembly) { }
+        Akavache.IAkavacheBuilder WithInMemory(Akavache.IBlobCache cache) { }
+        Akavache.IAkavacheBuilder WithInMemoryDefaults() { }
+        Akavache.IAkavacheBuilder WithLegacyFileLocation() { }
+        Akavache.IAkavacheBuilder WithLocalMachine(Akavache.IBlobCache cache) { }
+        Akavache.IAkavacheBuilder WithSecure(Akavache.ISecureBlobCache cache) { }
+        Akavache.IAkavacheBuilder WithSerializer<T>() where T : class, Akavache.ISerializer, new() { }
+        Akavache.IAkavacheBuilder WithSerializer<T>(System.Func<T> configure) where T : class, Akavache.ISerializer { }
+        Akavache.IAkavacheBuilder WithUserAccount(Akavache.IBlobCache cache) { }
+    }
+    public interface IAkavacheConnection : System.IDisposable
+    {
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Checkpoint(Akavache.CheckpointMode mode) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Compact() { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> CreateSchema() { }
+        System.IObservable<Akavache.CacheEntry?> Get(string key, string? typeFullName, System.DateTimeOffset now) { }
+        System.IObservable<Akavache.CacheEntry> GetAll(string? typeFullName, System.DateTimeOffset now) { }
+        System.IObservable<string> GetAllKeys(string? typeFullName, System.DateTimeOffset now) { }
+        System.IObservable<Akavache.CacheEntry> GetMany(System.Collections.Generic.IReadOnlyList<string> keys, string? typeFullName, System.DateTimeOffset now) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(System.Collections.Generic.IReadOnlyList<string> keys, string? typeFullName) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateAll(string? typeFullName) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> SetExpiry(string key, string? typeFullName, System.DateTimeOffset? expiresAt) { }
+        System.IObservable<bool> TableExists(string tableName) { }
+        System.IObservable<byte[]?> TryReadLegacyV10Value(string key, System.DateTimeOffset now, System.Type? type) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Upsert(System.Collections.Generic.IReadOnlyList<Akavache.CacheEntry> entries) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> VacuumExpired(System.DateTimeOffset now) { }
+    }
+    public interface IAkavacheInstance
+    {
+        string ApplicationName { get; }
+        string? ApplicationRootPath { get; }
+        System.Collections.Generic.IDictionary<string, Akavache.IBlobCache> BlobCaches { get; }
+        [System.Obsolete("Hold your own Assembly reference directly, or call WithExecutingAssembly on the builder if you need Akavache to track it for you.", false)]
+        System.Reflection.Assembly ExecutingAssembly { get; }
+        [System.Obsolete("Hold your own Assembly reference and read Name off it, or call WithExecutingAssembly on the builder.", false)]
+        string? ExecutingAssemblyName { get; }
+        System.DateTimeKind? ForcedDateTimeKind { get; set; }
+        Akavache.IBlobCache? InMemory { get; }
+        Akavache.IBlobCache? LocalMachine { get; }
+        Akavache.ISecureBlobCache? Secure { get; }
+        Akavache.ISerializer? Serializer { get; }
+        string? SerializerTypeName { get; }
+        string? SettingsCachePath { get; set; }
+        System.Collections.Generic.IDictionary<string, Akavache.Settings.ISettingsStorage> SettingsStores { get; }
+        Akavache.IBlobCache? UserAccount { get; }
+        [System.Obsolete("Pass the value in via WithExecutingAssembly on the builder, or use your own versioning strategy.", false)]
+        System.Version? Version { get; }
+    }
+    public interface IBlobCache : System.IDisposable
+    {
+        System.DateTimeKind? ForcedDateTimeKind { get; set; }
+        ReactiveUI.Primitives.Concurrency.ISequencer Scheduler { get; }
+        Akavache.ISerializer Serializer { get; }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Flush() { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Flush(System.Type type) { }
+        System.IObservable<System.Collections.Generic.KeyValuePair<string, byte[]>> Get(System.Collections.Generic.IEnumerable<string> keys) { }
+        System.IObservable<byte[]?> Get(string key) { }
+        System.IObservable<System.Collections.Generic.KeyValuePair<string, byte[]>> Get(System.Collections.Generic.IEnumerable<string> keys, System.Type type) { }
+        System.IObservable<byte[]?> Get(string key, System.Type type) { }
+        System.IObservable<System.Collections.Generic.KeyValuePair<string, byte[]>> GetAll(System.Type type) { }
+        System.IObservable<string> GetAllKeys() { }
+        System.IObservable<string> GetAllKeys(System.Type type) { }
+        System.IObservable<(string Key, System.DateTimeOffset? Time)> GetCreatedAt(System.Collections.Generic.IEnumerable<string> keys) { }
+        System.IObservable<System.DateTimeOffset?> GetCreatedAt(string key) { }
+        System.IObservable<(string Key, System.DateTimeOffset? Time)> GetCreatedAt(System.Collections.Generic.IEnumerable<string> keys, System.Type type) { }
+        System.IObservable<System.DateTimeOffset?> GetCreatedAt(string key, System.Type type) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs, System.DateTimeOffset? absoluteExpiration) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs, System.Type type) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data, System.DateTimeOffset? absoluteExpiration) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data, System.Type type) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(System.Collections.Generic.IEnumerable<string> keys) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(string key) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(System.Collections.Generic.IEnumerable<string> keys, System.Type type) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(string key, System.Type type) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateAll() { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateAll(System.Type type) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(System.Collections.Generic.IEnumerable<string> keys, System.DateTimeOffset? absoluteExpiration) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(string key, System.DateTimeOffset? absoluteExpiration) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(System.Collections.Generic.IEnumerable<string> keys, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(string key, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Vacuum() { }
+        public static class ExceptionHelpers
+        {
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public static System.IObservable<T> ObservableThrowKeyNotFoundException<T>(string key) { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public static System.IObservable<T> ObservableThrowKeyNotFoundException<T>(string key, System.Exception? innerException) { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public static System.IObservable<T> ObservableThrowObjectDisposedException<T>(string obj) { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public static System.IObservable<T> ObservableThrowObjectDisposedException<T>(string obj, System.Exception? innerException) { }
+        }
+    }
+    public interface ISecureBlobCache : Akavache.IBlobCache
+    {
+    }
+    public interface ISerializer
+    {
+        System.DateTimeKind? ForcedDateTimeKind { get; set; }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Implementations may use reflection-based deserialization. For AOT, use the JsonTypeInfo extension in Akavache.SystemTextJson.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Implementations may use reflection-based deserialization. For AOT, use the JsonTypeInfo extension in Akavache.SystemTextJson.")]
+        T? Deserialize<T>(byte[] bytes) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Implementations may use reflection-based serialization. For AOT, use the JsonTypeInfo extension in Akavache.SystemTextJson.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Implementations may use reflection-based serialization. For AOT, use the JsonTypeInfo extension in Akavache.SystemTextJson.")]
+        byte[] Serialize<T>(T item) { }
+    }
+    public interface IWrappedBlobCache
+    {
+        Akavache.IBlobCache InnerCache { get; }
+    }
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    public sealed class InMemoryBlobCache : Akavache.InMemoryBlobCacheBase
+    {
+        public InMemoryBlobCache(Akavache.ISerializer serializer) { }
+        public InMemoryBlobCache(string serialzerType) { }
+        public InMemoryBlobCache(ReactiveUI.Primitives.Concurrency.ISequencer scheduler, Akavache.ISerializer? serializer) { }
+    }
+    [System.Diagnostics.DebuggerDisplay("{Scheduler}")]
+    public class InMemoryBlobCacheBase : Akavache.ISecureBlobCache
+    {
+        public InMemoryBlobCacheBase(ReactiveUI.Primitives.Concurrency.ISequencer scheduler, Akavache.ISerializer? serializer) { }
+        public System.DateTimeKind? ForcedDateTimeKind { get; set; }
+        public ReactiveUI.Primitives.Concurrency.ISequencer Scheduler { get; }
+        public Akavache.ISerializer Serializer { get; }
+        public void Dispose() { }
+        protected virtual void Dispose(bool disposing) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Flush() { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Flush(System.Type type) { }
+        public System.IObservable<System.Collections.Generic.KeyValuePair<string, byte[]>> Get(System.Collections.Generic.IEnumerable<string> keys) { }
+        public System.IObservable<byte[]?> Get(string key) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<System.Collections.Generic.KeyValuePair<string, byte[]>> Get(System.Collections.Generic.IEnumerable<string> keys, System.Type type) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<byte[]?> Get(string key, System.Type type) { }
+        public System.IObservable<System.Collections.Generic.KeyValuePair<string, byte[]>> GetAll(System.Type type) { }
+        public System.IObservable<string> GetAllKeys() { }
+        public System.IObservable<string> GetAllKeys(System.Type type) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAllObjects requires types to be preserved for deserialization")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAllObjects requires types to be preserved for deserialization")]
+        public System.IObservable<System.Collections.Generic.IEnumerable<T>> GetAllObjects<T>() { }
+        public System.IObservable<(string Key, System.DateTimeOffset? Time)> GetCreatedAt(System.Collections.Generic.IEnumerable<string> keys) { }
+        public System.IObservable<System.DateTimeOffset?> GetCreatedAt(string key) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<(string Key, System.DateTimeOffset? Time)> GetCreatedAt(System.Collections.Generic.IEnumerable<string> keys, System.Type type) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<System.DateTimeOffset?> GetCreatedAt(string key, System.Type type) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetObject requires types to be preserved for deserialization")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetObject requires types to be preserved for deserialization")]
+        public System.IObservable<T?> GetObject<T>(string key) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<System.DateTimeOffset?> GetObjectCreatedAt<T>(string key) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs, System.Type type) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> keyValuePairs, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data, System.Type type) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertObject<T>(string key, T value) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertObject<T>(string key, T value, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(System.Collections.Generic.IEnumerable<string> keys) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(string key) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(System.Collections.Generic.IEnumerable<string> keys, System.Type type) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Invalidate(string key, System.Type type) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateAll() { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateAll(System.Type type) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateAllObjects<T>() { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateObject<T>(string key) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(System.Collections.Generic.IEnumerable<string> keys, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(string key, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(System.Collections.Generic.IEnumerable<string> keys, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(string key, System.Type type, System.DateTimeOffset? absoluteExpiration) { }
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Vacuum() { }
+    }
+    public static class LoginExtensions
+    {
+        extension(Akavache.ISecureBlobCache blobCache)
+        {
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> EraseLogin() { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> EraseLogin(string host) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetLogin requires types to be preserved for serialization")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetLogin requires types to be preserved for serialization")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<Akavache.LoginInfo> GetLogin() { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetLogin requires types to be preserved for serialization")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetLogin requires types to be preserved for serialization")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<Akavache.LoginInfo> GetLogin(string host) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> SaveLogin(string user, string password) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> SaveLogin(string user, string password, string host) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> SaveLogin(string user, string password, string host, System.DateTimeOffset? absoluteExpiration) { }
+        }
+    }
+    [System.Diagnostics.DebuggerDisplay("UserName: {UserName}")]
+    public sealed class LoginInfo : System.IEquatable<Akavache.LoginInfo>
+    {
+        public LoginInfo(string username, string password) { }
+        public string Password { get; }
+        public string UserName { get; }
+        public bool Equals(Akavache.LoginInfo? other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+    }
+    public static class RelativeTimeExtensions
+    {
+        extension(Akavache.IBlobCache blobCache)
+        {
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> Insert(string key, byte[] data, System.TimeSpan expiration) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertObject<T>(string key, T value, System.TimeSpan expiration) { }
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(System.Collections.Generic.IEnumerable<string> keys, System.TimeSpan expiration) { }
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(string key, System.TimeSpan expiration) { }
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(System.Collections.Generic.IEnumerable<string> keys, System.Type type, System.TimeSpan expiration) { }
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> UpdateExpiration(string key, System.Type type, System.TimeSpan expiration) { }
+        }
+        extension(Akavache.ISecureBlobCache blobCache)
+        {
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> SaveLogin(string user, string password, string host, System.TimeSpan expiration) { }
+        }
+    }
+    public static class SerializerExtensions
+    {
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Deserialization requires types to be preserved.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Deserialization requires types to be preserved.")]
+        public static T? DeserializeWithContext<T>(byte[] data, Akavache.IBlobCache cache) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Serialization requires types to be preserved.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Serialization requires types to be preserved.")]
+        public static byte[] SerializeWithContext<T>(T value, Akavache.IBlobCache cache) { }
+        extension(Akavache.IBlobCache blobCache)
+        {
+            public System.IObservable<string> GetAllKeysSafe() { }
+            public System.IObservable<string> GetAllKeysSafe(System.Type type) { }
+            public System.IObservable<string> GetAllKeysSafe<T>() { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAllObjects requires types to be preserved for Deserialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAllObjects requires types to be preserved for Deserialization.")]
+            public System.IObservable<T> GetAllObjects<T>() { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetAndFetchLatest<T>(string key, System.Func<System.IObservable<T>> fetchFunc) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetAndFetchLatest<T>(string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetAndFetchLatest<T>(string key, System.Func<System.IObservable<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetAndFetchLatest<T>(string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetAndFetchLatest<T>(string key, System.Func<System.IObservable<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetAndFetchLatest<T>(string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetAndFetchLatest<T>(string key, System.Func<System.IObservable<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetAndFetchLatest<T>(string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            public System.IObservable<T?> GetAndFetchLatest<T>(string key, System.Func<System.IObservable<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError, System.Func<T, bool>? cacheValidationPredicate) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetAndFetchLatest<T>(string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate, System.DateTimeOffset? absoluteExpiration, bool shouldInvalidateOnError, System.Func<T, bool>? cacheValidationPredicate) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetObject requires types to be preserved for Deserialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetObject requires types to be preserved for Deserialization.")]
+            public System.IObservable<T?> GetObject<T>(string key) { }
+            public System.IObservable<System.DateTimeOffset?> GetObjectCreatedAt<T>(string key) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetObjects requires types to be preserved for Deserialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetObjects requires types to be preserved for Deserialization.")]
+            public System.IObservable<System.Collections.Generic.KeyValuePair<string, T>> GetObjects<T>(System.Collections.Generic.IEnumerable<string> keys) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetOrCreateObject requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetOrCreateObject requires types to be preserved for serialization.")]
+            public System.IObservable<T?> GetOrCreateObject<T>(string key, System.Func<T> fetchFunc) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetOrFetchObject<T>(string key, System.Func<System.IObservable<T>> fetchFunc) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetOrFetchObject<T>(string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+            public System.IObservable<T?> GetOrFetchObject<T>(string key, System.Func<System.IObservable<T>> fetchFunc, System.DateTimeOffset? absoluteExpiration) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<T?> GetOrFetchObject<T>(string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.DateTimeOffset? absoluteExpiration) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertAllObjects requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertAllObjects requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertAllObjects<T>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, T>> keyValuePairs) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertAllObjects requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertAllObjects requires types to be preserved for serialization.")]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertAllObjects<T>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, T>> keyValuePairs, System.DateTimeOffset? absoluteExpiration) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertObject<T>(string key, T value) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization.")]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertObject<T>(string key, T value, System.DateTimeOffset? absoluteExpiration) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertObjects(System.Collections.Generic.IDictionary<string, object> keyValuePairs) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertObjects(System.Collections.Generic.IDictionary<string, object> keyValuePairs, System.DateTimeOffset? absoluteExpiration) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertObjects<T>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, T>> keyValuePairs) { }
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InsertObjects<T>(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, T>> keyValuePairs, System.DateTimeOffset? absoluteExpiration) { }
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateAllObjects<T>() { }
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateObject<T>(string key) { }
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> InvalidateObjects<T>(System.Collections.Generic.IEnumerable<string> keys) { }
+        }
+    }
+}
+namespace Akavache.Core
+{
+    public enum FileLocationOption
+    {
+        Default = 0,
+        Legacy = 1,
+    }
+    public static class UniversalSerializer
+    {
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Universal deserialization requires types to be preserved.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Universal deserialization requires types to be preserved.")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static T? Deserialize<T>(byte[] data, Akavache.ISerializer primarySerializer) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Universal deserialization requires types to be preserved.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Universal deserialization requires types to be preserved.")]
+        public static T? Deserialize<T>(byte[] data, Akavache.ISerializer primarySerializer, System.DateTimeKind? forcedDateTimeKind) { }
+        public static void RegisterSerializer(System.Func<Akavache.ISerializer> factory) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Universal serialization requires types to be preserved.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Universal serialization requires types to be preserved.")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static byte[] Serialize<T>(T value, Akavache.ISerializer targetSerializer) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Universal serialization requires types to be preserved.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Universal serialization requires types to be preserved.")]
+        public static byte[] Serialize<T>(T value, Akavache.ISerializer targetSerializer, System.DateTimeKind? forcedDateTimeKind) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Universal key compatibility requires types to be preserved.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Universal key compatibility requires types to be preserved.")]
+        public static System.IObservable<T?> TryFindDataWithAlternativeKeys<T>(Akavache.IBlobCache cache, string requestedKey, Akavache.ISerializer primarySerializer) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Universal key compatibility requires types to be preserved.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Universal key compatibility requires types to be preserved.")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static System.Threading.Tasks.Task<T?> TryFindDataWithAlternativeKeysAsync<T>(Akavache.IBlobCache cache, string requestedKey, Akavache.ISerializer primarySerializer) { }
+    }
+}
+namespace Akavache.Settings
+{
+    public interface ISettingsStorage : System.ComponentModel.INotifyPropertyChanged, System.IDisposable
+    {
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
+        System.IObservable<ReactiveUI.Primitives.RxVoid> Initialize() { }
+    }
+    public static class SettingsStorageAsyncExtensions
+    {
+        extension(Akavache.Settings.ISettingsStorage storage)
+        {
+            [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
+            [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
+            public System.Threading.Tasks.Task InitializeAsync() { }
+        }
+    }
+}

@@ -111,19 +111,18 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
 
-    <!-- Enable building Windows-specific targets (net462/net472/net481 and netX.0-windows) on non-Windows platforms -->
+    <!-- Enable building Windows-specific targets (.NET Framework and netX.0-windows) on non-Windows platforms -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
 
     <!-- Base TFMs that build on any OS -->
-    <AkavacheBaseTargets>net8.0;net9.0;net10.0</AkavacheBaseTargets>
+    <AkavacheBaseTargets>net10.0;net11.0</AkavacheBaseTargets>
 
-    <!-- Windows-specific desktop TFMs (includes .NET Framework and Windows-specific .NET 9/10) -->
-    <AkavacheWindowsDesktopTargets>net462;net472;net481;net8.0-windows10.0.19041.0;net9.0-windows10.0.19041.0;net10.0-windows10.0.19041.0</AkavacheWindowsDesktopTargets>
+    <!-- Windows-specific desktop TFMs (includes .NET Framework and Windows-specific .NET) -->
+    <AkavacheWindowsDesktopTargets>net462;net47;net471;net472;net48;net481;net10.0-windows10.0.19041.0;net11.0-windows10.0.19041.0</AkavacheWindowsDesktopTargets>
 
-    <!-- Mobile TFMs separated by platform. net9 mobile TFMs dropped: the MAUI net9
-         (android/ios/maccatalyst) workloads are end of support (NETSDK1202). -->
-    <AkavacheMobileAndroidTargets>net10.0-android</AkavacheMobileAndroidTargets>
-    <AkavacheMobileAppleTargets>net10.0-ios;net10.0-macos;net10.0-maccatalyst</AkavacheMobileAppleTargets>
+    <!-- Mobile TFMs separated by platform. -->
+    <AkavacheMobileAndroidTargets>net10.0-android;net11.0-android</AkavacheMobileAndroidTargets>
+    <AkavacheMobileAppleTargets>net10.0-ios;net10.0-macos;net10.0-maccatalyst;net11.0-ios;net11.0-macos;net11.0-maccatalyst</AkavacheMobileAppleTargets>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -146,7 +145,7 @@
     <BuildInParallel>false</BuildInParallel>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsTestProject)' != 'true' and ($(TargetFramework.StartsWith('net8.0')) or $(TargetFramework.StartsWith('net9.0')) or $(TargetFramework.StartsWith('net10.0')))">
+  <PropertyGroup Condition="'$(IsTestProject)' != 'true' and $(TargetFramework.StartsWith('net10.0'))">
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
@@ -171,10 +170,10 @@
   <!-- Alias Lock to the dedicated System.Threading.Lock on .NET 9+ (faster EnterScope fast path),
        and to a plain object elsewhere (the lock statement falls back to Monitor). Declaration sites
        stay identical across TFMs; only the bound type changes. -->
-  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
     <Using Include="System.Threading.Lock" Alias="Lock" />
   </ItemGroup>
-  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
     <Using Include="System.Object" Alias="Lock" />
   </ItemGroup>
 
@@ -183,13 +182,13 @@
        older targets. Call sites stay identical across TFMs; only the bound symbol changes. Guards that
        ArgumentNullException does not carry (ThrowIfNullOrWhiteSpace/ThrowIf/EnsureNotNull/...) name
        ArgumentValidation directly; it forwards to the framework throw-helpers where they exist. -->
-  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
     <Using Include="System.ArgumentNullException" Alias="ArgumentExceptionHelper" />
   </ItemGroup>
-  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) and '$(RxReactiveSeam)' != 'true'">
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0')) and '$(RxReactiveSeam)' != 'true'">
     <Using Include="Akavache.Helpers.ArgumentValidation" Alias="ArgumentExceptionHelper" />
   </ItemGroup>
-  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) and '$(RxReactiveSeam)' == 'true'">
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0')) and '$(RxReactiveSeam)' == 'true'">
     <Using Include="Akavache.Reactive.Helpers.ArgumentValidation" Alias="ArgumentExceptionHelper" />
   </ItemGroup>
 
@@ -197,7 +196,7 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
-  <!-- TimeProvider ships in the framework from net8.0; .NET Framework needs the backport so the
+  <!-- TimeProvider ships in modern .NET; .NET Framework needs the backport so the
        cache can take an injectable clock instead of reading the machine clock directly. -->
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <PackageReference Include="Microsoft.Bcl.TimeProvider" />

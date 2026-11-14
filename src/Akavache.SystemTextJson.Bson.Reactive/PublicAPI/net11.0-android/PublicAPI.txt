@@ -1,0 +1,60 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel.Reactive")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Reactive")]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.MemberNotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.NotNullAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresDynamicCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.HashCode))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
+[assembly: System.Runtime.Versioning.SupportedOSPlatform("Android21.0")]
+namespace Akavache.Reactive.SystemTextJson
+{
+    public static class SerializerExtensions
+    {
+        extension(Akavache.Reactive.ISerializer serializer)
+        {
+            public T? Deserialize<T>(byte[] bytes, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+            public byte[] Serialize<T>(T item, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+        }
+    }
+    [System.Diagnostics.DebuggerDisplay("{Options}")]
+    public class SystemJsonBsonSerializer : Akavache.Reactive.ISerializer
+    {
+        public SystemJsonBsonSerializer() { }
+        public System.DateTimeKind? ForcedDateTimeKind { get; set; }
+        public System.Text.Json.JsonSerializerOptions? Options { get; set; }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Reflection-based BSON deserialization. For AOT-safe paths use the JsonTypeInfo overload (JSON only).")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Reflection-based BSON deserialization. For AOT-safe paths use the JsonTypeInfo overload (JSON only).")]
+        public T? Deserialize<T>(byte[] bytes) { }
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Reflection-based BSON serialization. For AOT-safe paths use the JsonTypeInfo overload (JSON only).")]
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Reflection-based BSON serialization. For AOT-safe paths use the JsonTypeInfo overload (JSON only).")]
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public byte[] Serialize<T>(T item) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static T? DeserializeAot<T>(byte[] bytes, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+        public static bool IsPotentialBsonData(byte[] data) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static byte[] SerializeAot<T>(T item, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+    }
+}
+namespace Akavache.Reactive.SystemTextJson.Bson
+{
+    public static class AkavacheBuilderExtensions
+    {
+        extension(Akavache.Reactive.IAkavacheBuilder builder)
+        {
+            public Akavache.Reactive.IAkavacheBuilder UseSystemJsonBsonSerializer() { }
+            public Akavache.Reactive.IAkavacheBuilder UseSystemJsonBsonSerializer(System.Action<System.Text.Json.JsonSerializerOptions> configure) { }
+            public Akavache.Reactive.IAkavacheBuilder UseSystemJsonBsonSerializer(System.Text.Json.JsonSerializerOptions settings) { }
+        }
+    }
+    public class Resource : _Microsoft.Android.Resource.Designer.Resource
+    {
+        public Resource() { }
+    }
+}

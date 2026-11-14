@@ -1,0 +1,40 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel")]
+namespace Akavache.SystemTextJson
+{
+    public static class SerializerExtensions
+    {
+        extension(Akavache.ISerializer serializer)
+        {
+            public T? Deserialize<T>(byte[] bytes, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+            public byte[] Serialize<T>(T item, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+        }
+    }
+    [System.Diagnostics.DebuggerDisplay("{Options}")]
+    public class SystemJsonBsonSerializer : Akavache.ISerializer
+    {
+        public SystemJsonBsonSerializer() { }
+        public System.DateTimeKind? ForcedDateTimeKind { get; set; }
+        public System.Text.Json.JsonSerializerOptions? Options { get; set; }
+        public T? Deserialize<T>(byte[] bytes) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public byte[] Serialize<T>(T item) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static T? DeserializeAot<T>(byte[] bytes, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+        public static bool IsPotentialBsonData(byte[] data) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public static byte[] SerializeAot<T>(T item, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+    }
+}
+namespace Akavache.SystemTextJson.Bson
+{
+    public static class AkavacheBuilderExtensions
+    {
+        extension(Akavache.IAkavacheBuilder builder)
+        {
+            public Akavache.IAkavacheBuilder UseSystemJsonBsonSerializer() { }
+            public Akavache.IAkavacheBuilder UseSystemJsonBsonSerializer(System.Action<System.Text.Json.JsonSerializerOptions> configure) { }
+            public Akavache.IAkavacheBuilder UseSystemJsonBsonSerializer(System.Text.Json.JsonSerializerOptions settings) { }
+        }
+    }
+}

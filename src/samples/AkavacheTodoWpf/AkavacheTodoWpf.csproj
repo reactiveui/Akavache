@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="ReactiveUI.SourceGenerators">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <IncludeAssets>compile; runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="DynamicData" />
     <PackageReference Include="ReactiveUI.WPF" />

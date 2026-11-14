@@ -1,0 +1,105 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests.Parallel")]
+namespace Akavache.Settings
+{
+    public static class AkavacheBuilderAsyncExtensions
+    {
+        extension(Akavache.IAkavacheInstance builder)
+        {
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.Threading.Tasks.Task DeleteSettingsStoreAsync<T>() { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.Threading.Tasks.Task DeleteSettingsStoreAsync<T>(string? overrideDatabaseName) { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.Threading.Tasks.Task DisposeSettingsStoreAsync<T>() { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.Threading.Tasks.Task DisposeSettingsStoreAsync<T>(string? overrideDatabaseName) { }
+        }
+    }
+    public static class AkavacheBuilderExtensions
+    {
+        extension(Akavache.IAkavacheBuilder builder)
+        {
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public Akavache.IAkavacheBuilder WithSecureSettingsStore<T>(string password, System.Action<T?> settings) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            public Akavache.IAkavacheBuilder WithSecureSettingsStore<T>(string password, System.Action<T?> settings, string? overrideDatabaseName) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            public Akavache.IAkavacheBuilder WithSettingsCachePath(string path) { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public Akavache.IAkavacheBuilder WithSettingsStore<T>(System.Action<T?> settings) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public Akavache.IAkavacheBuilder WithSettingsStore<T>(Akavache.IBlobCache cache, System.Action<T?> settings) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public Akavache.IAkavacheBuilder WithSettingsStore<T>(System.Action<T?> settings, string? overrideDatabaseName) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            public Akavache.IAkavacheBuilder WithSettingsStore<T>(Akavache.IBlobCache cache, System.Action<T?> settings, string? overrideDatabaseName) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            public Akavache.IAkavacheBuilder WithSettingsStore<T>(System.Action<T?> settings, string? overrideDatabaseName, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+        }
+        extension(Akavache.IAkavacheInstance builder)
+        {
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> DeleteSettingsStore<T>() { }
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> DeleteSettingsStore<T>(string? overrideDatabaseName) { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> DisposeSettingsStore<T>() { }
+            public System.IObservable<ReactiveUI.Primitives.RxVoid> DisposeSettingsStore<T>(string? overrideDatabaseName) { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public Akavache.Settings.ISettingsStorage? GetLoadedSettingsStore<T>() { }
+            public Akavache.Settings.ISettingsStorage? GetLoadedSettingsStore<T>(string? overrideDatabaseName) { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public T GetSecureSettingsStore<T>(string password) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public T GetSecureSettingsStore<T>(string password, string? overrideDatabaseName) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            public T GetSecureSettingsStore<T>(string password, string? overrideDatabaseName, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public T GetSettingsStore<T>() where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public T GetSettingsStore<T>(Akavache.IBlobCache cache) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+            public T GetSettingsStore<T>(string? overrideDatabaseName) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            public T GetSettingsStore<T>(Akavache.IBlobCache cache, string? overrideDatabaseName) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+            public T GetSettingsStore<T>(string? overrideDatabaseName, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler) where T : class, Akavache.Settings.ISettingsStorage, new() { }
+        }
+    }
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    public class SettingsBase : Akavache.Settings.Core.SettingsStorage
+    {
+        protected SettingsBase(string className) { }
+        protected SettingsBase(string className, System.Func<Akavache.IBlobCache> userAccountResolver, System.Func<Akavache.IBlobCache> localMachineResolver, System.Func<Akavache.IBlobCache> inMemoryResolver) { }
+    }
+}
+namespace Akavache.Settings.Core
+{
+    [System.Diagnostics.DebuggerDisplay("{Value}")]
+    public sealed class SettingsPropertyHelper<T> : System.ComponentModel.INotifyPropertyChanged, System.IDisposable, System.IObservable<T>
+    {
+        public T Value { get; }
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public void Dispose() { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Set(T value) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IDisposable Subscribe(System.IObserver<T> observer) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public T ToT() { }
+        public static implicit operator T(Akavache.Settings.Core.SettingsPropertyHelper<T> helper) { }
+    }
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    public class SettingsStorage : Akavache.Settings.ISettingsStorage
+    {
+        protected SettingsStorage(string keyPrefix, Akavache.IBlobCache cache) { }
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+        protected Akavache.Settings.Core.SettingsPropertyHelper<T> CreateProperty<T>(T defaultValue, string? propertyName = null) { }
+        public void Dispose() { }
+        protected virtual void Dispose(bool disposing) { }
+        protected System.IObservable<T> GetOrCreateObservable<T>(T defaultValue, string? key = null) { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public System.IObservable<ReactiveUI.Primitives.RxVoid> Initialize() { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        protected void OnPropertyChanged() { }
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        protected void OnPropertyChanged(string? propertyName) { }
+        protected System.IObservable<ReactiveUI.Primitives.RxVoid> SetObservable<T>(T value, string? key = null) { }
+    }
+}

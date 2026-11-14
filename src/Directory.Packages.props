@@ -5,41 +5,58 @@
   </PropertyGroup>
   <!-- Version groups for packages that share the same version -->
   <PropertyGroup>
-    <MicrosoftExtensionsVersion>10.0.10</MicrosoftExtensionsVersion>
     <SqlitePclRawVersion>3.0.5</SqlitePclRawVersion>
-    <Sqlite3MultipleCiphersVersion>2.4.0</Sqlite3MultipleCiphersVersion>
+    <Sqlite3MultipleCiphersVersion>2.7.0</Sqlite3MultipleCiphersVersion>
     <SplatVersion>21.0.0</SplatVersion>
-    <ReactiveUIVersion>24.1.0</ReactiveUIVersion>
-    <ReactiveUIPrimitivesVersion>7.1.0</ReactiveUIPrimitivesVersion>
-    <MauiVersion>10.0.90</MauiVersion>
-    <TUnitVersion>1.63.0</TUnitVersion>
+    <ReactiveUIVersion>26.0.1</ReactiveUIVersion>
+    <ReactiveUIPrimitivesVersion>9.0.0</ReactiveUIPrimitivesVersion>
+    <TUnitVersion>1.84.0</TUnitVersion>
     <!-- StyleSharp.Analyzers, PerformanceSharp.Analyzers and SecuritySharp.Analyzers ship from the
          same release pipeline and always share a version. -->
-    <RoslynCommonAnalyzersVersion>3.43.0</RoslynCommonAnalyzersVersion>
+    <RoslynCommonAnalyzersVersion>5.2.0</RoslynCommonAnalyzersVersion>
   </PropertyGroup>
+  <Choose>
+    <When Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0'))">
+      <PropertyGroup>
+        <MicrosoftExtensionsVersion>11.0.0</MicrosoftExtensionsVersion>
+        <MauiVersion>11.0.10</MauiVersion>
+      </PropertyGroup>
+    </When>
+    <When Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
+      <PropertyGroup>
+        <MicrosoftExtensionsVersion>10.0.15</MicrosoftExtensionsVersion>
+        <MauiVersion>10.0.130</MauiVersion>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <MicrosoftExtensionsVersion>10.0.15</MicrosoftExtensionsVersion>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
   <!-- All projects -->
   <ItemGroup>
-    <PackageVersion Include="MinVer" Version="7.0.0" />
+    <PackageVersion Include="MinVer" Version="8.0.0" />
     <PackageVersion Include="StyleSharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="PerformanceSharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="SecuritySharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
-    <PackageVersion Include="PublicApiSharp.Analyzers" Version="1.0.7" />
-    <PackageVersion Include="Roslynator.Analyzers" Version="4.16.1" />
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
+    <PackageVersion Include="PublicApiSharp.Analyzers" Version="2.2.0" />
+    <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.36.0.15337" />
     <PackageVersion Include="Blazor.Common.Analyzers" Version="2.1.0" />
   </ItemGroup>
   <!-- Non-test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.403" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="11.0.100" />
   </ItemGroup>
   <!-- Test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageVersion Include="TUnit" Version="$(TUnitVersion)" />
     <PackageVersion Include="TUnit.Core" Version="$(TUnitVersion)" />
     <PackageVersion Include="Verify.TUnit" Version="31.28.0" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0" />
-    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.3.3" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
+    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.5.3" />
   </ItemGroup>
   <!-- Core library packages -->
   <ItemGroup>
@@ -57,10 +74,10 @@
     <PackageVersion Include="Splat.Drawing" Version="$(SplatVersion)" />
   </ItemGroup>
   <!-- .NET Framework-specific packages -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net481'">
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <PackageVersion Include="System.Net.Http" Version="4.3.4" />
     <PackageVersion Include="System.Memory" Version="4.6.3" />
-    <!-- TimeProvider is built into net8.0 and later; .NET Framework needs the backport. Tracks the
+    <!-- TimeProvider is built into modern .NET; .NET Framework needs the backport. Tracks the
          shared Microsoft.Extensions version so it cannot drag in a newer Bcl.AsyncInterfaces than
          the one this repo pins. -->
     <PackageVersion Include="Microsoft.Bcl.TimeProvider" Version="$(MicrosoftExtensionsVersion)" />
@@ -73,8 +90,8 @@
   </ItemGroup>
   <!-- Sample application packages -->
   <ItemGroup>
-    <PackageVersion Include="DynamicData" Version="9.4.33" />
-    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="3.2.0" />
+    <PackageVersion Include="DynamicData" Version="9.5.0" />
+    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="4.2.0" />
     <PackageVersion Include="ReactiveUI.WPF" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="ReactiveUI.WPF.Reactive" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
@@ -91,7 +108,7 @@
   </ItemGroup>
   <!-- Windows-specific packages for MAUI -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.3.1" />
-    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2526" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.6.5" />
+    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2957" />
   </ItemGroup>
 </Project>
