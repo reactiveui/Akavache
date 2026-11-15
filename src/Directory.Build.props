@@ -226,4 +226,17 @@
     <PackageReference Include="SecuritySharp.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 
+  <!-- Track each shipped library's public surface independently for each target framework. -->
+  <PropertyGroup>
+    <TrackPublicApi Condition="'$(TrackPublicApi)' == ''">true</TrackPublicApi>
+    <TrackPublicApi Condition="'$(IsTestProject)' == 'true'">false</TrackPublicApi>
+    <TrackPublicApi Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)benchmarks$([System.IO.Path]::DirectorySeparatorChar)'))">false</TrackPublicApi>
+    <TrackPublicApi Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)samples$([System.IO.Path]::DirectorySeparatorChar)'))">false</TrackPublicApi>
+    <!-- WPF markup projects share the real project's directory and must not overwrite its baseline. -->
+    <TrackPublicApi Condition="$(MSBuildProjectName.EndsWith('_wpftmp'))">false</TrackPublicApi>
+    <EnablePublicApiBaseline>$(TrackPublicApi)</EnablePublicApiBaseline>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TrackPublicApi)' == 'true'">
+    <PackageReference Include="PublicApiSharp.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
 </Project>
