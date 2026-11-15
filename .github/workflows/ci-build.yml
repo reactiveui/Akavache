@@ -19,5 +19,6 @@ jobs:
       productNamespacePrefix: Akavache
       solutionFile: Akavache.slnx
       installWorkloads: true
+      testProjects: tests/**/*.csproj
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
