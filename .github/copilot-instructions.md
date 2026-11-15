@@ -209,12 +209,6 @@ Tests are split into **serial** and **parallel** assemblies:
   dotnet run -c Release -p benchmarks/Akavache.Benchmarks/Akavache.Benchmarks.csproj
   ```
 
-### Compatibility Testing
-- Cross-version compatibility via PowerShell script (Windows only):
-  ```powershell
-  .\src\RunCompatTest.ps1
-  ```
-
 ## Key Projects and Structure
 
 ### Core Libraries (Priority Order)

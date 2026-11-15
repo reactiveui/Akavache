@@ -33,7 +33,6 @@
   - `src/tests/shared/` — Shared test infrastructure (Helpers, Mocks, TestBases) compiled into each assembly via `<Compile Include>`
 - **Sample apps:** `src/samples/`
 - **Benchmarks:** `src/benchmarks/`
-- **Compatibility writers/readers:** `src/compat/`
 
 ## Build
 

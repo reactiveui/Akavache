@@ -464,12 +464,6 @@ Benchmark reproduction requires **Windows hosts**. Linux/macOS are not supported
 - Windows operating system
 - PowerShell 5.0+ (for automation script)
 
-### Running Compatibility Tests
-```powershell
-# From the solution root directory
-.\src\RunCompatTest.ps1
-```
-
 ### Running Performance Benchmarks
 ```bash
 # V11 benchmarks (current)
@@ -831,13 +825,6 @@ dotnet run -c Release -p Akavache.Benchmarks/Akavache.Benchmarks.csproj
 
 # V10 comparison benchmarks  
 dotnet run -c Release -p Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj
-```
-
-### Running Compatibility Tests
-
-```powershell
-# From the solution root directory
-.\src\RunCompatTest.ps1
 ```
 
 ## Performance Best Practices Summary
