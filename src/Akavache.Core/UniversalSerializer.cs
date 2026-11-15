@@ -850,18 +850,25 @@ public static class UniversalSerializer
     {
         var jsonString = Encoding.UTF8.GetString(data).Trim();
 
-        // Basic JSON structure validation.
-        return string.IsNullOrWhiteSpace(jsonString)
-            ? default
-            : typeof(T) switch
-            {
-                var t when t == typeof(string) => (T)(object)(jsonString.Length >= JsonStringQuoteCount && jsonString[0] == '"' && jsonString[^1] == '"'
-                    ? jsonString.Substring(1, jsonString.Length - JsonStringQuoteCount)
-                    : jsonString),
-                var t when t == typeof(int) && int.TryParse(jsonString, out var intValue) => (T)(object)intValue,
-                var t when t == typeof(bool) && bool.TryParse(jsonString, out var boolValue) => (T)(object)boolValue,
-                _ => default
-            };
+        if (string.IsNullOrWhiteSpace(jsonString))
+        {
+            return default;
+        }
+
+        if (typeof(T) == typeof(string))
+        {
+            var value = jsonString.Length >= JsonStringQuoteCount && jsonString[0] == '"' && jsonString[^1] == '"'
+                ? jsonString.Substring(1, jsonString.Length - JsonStringQuoteCount)
+                : jsonString;
+            return (T)(object)value;
+        }
+
+        return typeof(T) switch
+        {
+            var t when t == typeof(int) && int.TryParse(jsonString, out var intValue) => (T)(object)intValue,
+            var t when t == typeof(bool) && bool.TryParse(jsonString, out var boolValue) => (T)(object)boolValue,
+            _ => default
+        };
     }
 
     /// <summary>Preprocesses a DateTime value before serialization.</summary>

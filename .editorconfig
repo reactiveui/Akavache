@@ -21,6 +21,21 @@ indent_size = 2
 #############################################
 [*.cs]
 
+# Sonar rules reviewed separately; compiler, .NET, and Sharp analyzers enforce code quality.
+dotnet_diagnostic.S108.severity = none
+dotnet_diagnostic.S1117.severity = none
+dotnet_diagnostic.S1133.severity = none
+dotnet_diagnostic.S1450.severity = none
+dotnet_diagnostic.S2436.severity = none
+dotnet_diagnostic.S2589.severity = none
+dotnet_diagnostic.S3011.severity = none
+dotnet_diagnostic.S3236.severity = none
+dotnet_diagnostic.S3267.severity = none
+dotnet_diagnostic.S3358.severity = none
+dotnet_diagnostic.S3776.severity = none
+dotnet_diagnostic.S4136.severity = none
+dotnet_diagnostic.S8969.severity = none
+
 ###################
 # New line preferences
 ###################

@@ -58,9 +58,9 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
 
             // Also update the global serializer to ensure extension methods use the same setting
             // This ensures GetOrFetchObject and other extension methods respect the cache's DateTime handling
-            var serializer = AppLocator.Current.GetService<ISerializer>();
+            var registeredSerializer = AppLocator.Current.GetService<ISerializer>();
 
-            serializer?.ForcedDateTimeKind = value;
+            registeredSerializer?.ForcedDateTimeKind = value;
         }
     }
 
@@ -277,19 +277,20 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                         List<KeyValuePair<string, byte[]>> result = [with(keys.Count)];
                         List<string> expiredKeys = [with(keys.Count)];
 
-                        foreach (var key in keys!)
+                        foreach (var key in keys)
                         {
-                            if (_cache.TryGetValue(key, out var entry))
+                            if (!_cache.TryGetValue(key, out var entry))
                             {
-                                if (entry.ExpiresAt <= now)
-                                {
-                                    expiredKeys.Add(key);
-                                }
-                                else
-                                {
-                                    result.Add(new(key, entry.Value!));
-                                }
+                                continue;
                             }
+
+                            if (entry.ExpiresAt <= now)
+                            {
+                                expiredKeys.Add(key);
+                                continue;
+                            }
+
+                            result.Add(new(key, entry.Value!));
                         }
 
                         // Clean up expired keys
@@ -358,19 +359,20 @@ public class InMemoryBlobCacheBase(ISequencer scheduler, ISerializer? serializer
                         List<string> expiredKeys = [with(keys.Count)];
                         List<string> validKeys = [with(keys.Count)];
 
-                        foreach (var key in keys!)
+                        foreach (var key in keys)
                         {
-                            if (_cache.TryGetValue(key, out var entry))
+                            if (!_cache.TryGetValue(key, out var entry))
                             {
-                                if (entry.ExpiresAt <= now)
-                                {
-                                    expiredKeys.Add(key);
-                                }
-                                else
-                                {
-                                    validKeys.Add(key);
-                                }
+                                continue;
                             }
+
+                            if (entry.ExpiresAt <= now)
+                            {
+                                expiredKeys.Add(key);
+                                continue;
+                            }
+
+                            validKeys.Add(key);
                         }
 
                         // Clean up expired keys
