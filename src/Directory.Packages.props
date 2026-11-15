@@ -7,9 +7,9 @@
   <PropertyGroup>
     <SqlitePclRawVersion>3.0.5</SqlitePclRawVersion>
     <Sqlite3MultipleCiphersVersion>2.7.0</Sqlite3MultipleCiphersVersion>
-    <SplatVersion>21.0.0</SplatVersion>
+    <SplatVersion>22.0.0</SplatVersion>
     <ReactiveUIVersion>26.0.1</ReactiveUIVersion>
-    <ReactiveUIPrimitivesVersion>9.0.0</ReactiveUIPrimitivesVersion>
+    <ReactiveUIPrimitivesVersion>10.0.0</ReactiveUIPrimitivesVersion>
     <TUnitVersion>1.84.0</TUnitVersion>
     <!-- StyleSharp.Analyzers, PerformanceSharp.Analyzers and SecuritySharp.Analyzers ship from the
          same release pipeline and always share a version. -->
