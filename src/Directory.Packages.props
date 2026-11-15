@@ -10,7 +10,7 @@
     <SplatVersion>22.0.0</SplatVersion>
     <ReactiveUIVersion>26.0.1</ReactiveUIVersion>
     <ReactiveUIPrimitivesVersion>10.0.0</ReactiveUIPrimitivesVersion>
-    <TUnitVersion>1.84.0</TUnitVersion>
+    <TUnitVersion>1.85.0</TUnitVersion>
     <!-- StyleSharp.Analyzers, PerformanceSharp.Analyzers and SecuritySharp.Analyzers ship from the
          same release pipeline and always share a version. -->
     <RoslynCommonAnalyzersVersion>5.2.0</RoslynCommonAnalyzersVersion>
@@ -51,7 +51,6 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageVersion Include="TUnit" Version="$(TUnitVersion)" />
     <PackageVersion Include="TUnit.Core" Version="$(TUnitVersion)" />
-    <PackageVersion Include="Verify.TUnit" Version="31.28.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
     <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.5.3" />
   </ItemGroup>
