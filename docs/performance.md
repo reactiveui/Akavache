@@ -2,6 +2,8 @@
 
 This comprehensive guide covers performance analysis, benchmarks, best practices, and optimization techniques for Akavache V11 vs V10.
 
+The V10 comparison results below are historical. The V10 benchmark project has been retired because its legacy SQLite dependency is vulnerable. Current benchmarks use the source-tree Akavache projects.
+
 ---
 
 # Akavache V10 vs V11 Performance Summary
@@ -469,9 +471,6 @@ Benchmark reproduction requires **Windows hosts**. Linux/macOS are not supported
 # V11 benchmarks (current)
 cd src
 dotnet run -c Release -p Akavache.Benchmarks/Akavache.Benchmarks.csproj
-
-# V10 comparison benchmarks  
-dotnet run -c Release -p Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj
 ```
 
 **Important Notes:**
@@ -822,9 +821,6 @@ Benchmark reproduction requires **Windows hosts**. Linux/macOS are not supported
 # V11 benchmarks (current)
 cd src
 dotnet run -c Release -p Akavache.Benchmarks/Akavache.Benchmarks.csproj
-
-# V10 comparison benchmarks  
-dotnet run -c Release -p Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj
 ```
 
 ## Performance Best Practices Summary

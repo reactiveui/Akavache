@@ -26,7 +26,6 @@
   <Folder Name="/Akavache.Core/" />
   <Folder Name="/Benchmarks/">
     <Project Path="benchmarks/Akavache.Benchmarks/Akavache.Benchmarks.csproj" />
-    <Project Path="benchmarks/Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj" />
   </Folder>
   <Folder Name="/Solution Items/Tests/">
     <File Path="tests\.editorconfig" />

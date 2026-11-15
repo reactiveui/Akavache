@@ -231,7 +231,6 @@ Tests are split into **serial** and **parallel** assemblies:
 - **11 test assemblies**: 5 serial + 5 parallel + 1 HTTP-isolated (see Test Architecture above)
 - **tests/shared/** - Shared test infrastructure (Helpers, Mocks, TestBases) compiled into each test assembly via `<Compile Include>`
 - **Akavache.Benchmarks** - V12 performance benchmarks
-- **Akavache.Benchmarks.V10** - V10 comparison benchmarks
 
 ## Common Development Tasks
 
