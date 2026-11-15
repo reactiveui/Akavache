@@ -20,7 +20,6 @@ namespace Akavache;
 /// Initializes a new instance of the <see cref="InMemoryBlobCache" /> class.
 /// </remarks>
 /// <seealso cref="InMemoryBlobCacheBase" />
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
 public sealed class InMemoryBlobCache(ISequencer scheduler, ISerializer? serializer) : InMemoryBlobCacheBase(scheduler, serializer)
 {
     /// <summary>Initializes a new instance of the <see cref="InMemoryBlobCache" /> class with default scheduler.</summary>

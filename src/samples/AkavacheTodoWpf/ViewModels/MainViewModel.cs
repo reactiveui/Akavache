@@ -16,7 +16,7 @@ using ReactiveUI.SourceGenerators;
 namespace AkavacheTodoWpf.ViewModels;
 
 /// <summary>Main view model for the WPF Todo application demonstrating ReactiveUI and Akavache integration.</summary>
-[System.Diagnostics.DebuggerDisplay("{IsLoading}")]
+[System.Diagnostics.DebuggerDisplay("MainViewModel: {IsLoading}")]
 [SupportedOSPlatform("windows10.0.19041.0")]
 public sealed partial class MainViewModel : ReactiveObject, IActivatableViewModel
 {
@@ -441,7 +441,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <returns>An observable that signals when the todos are saved.</returns>
     private IObservable<RxVoid> SaveCurrentTodos()
     {
-        List<TodoItem> todos = new(Todos.Count);
+        List<TodoItem> todos = [with(Todos.Count)];
         foreach (var todoViewModel in Todos)
         {
             todos.Add(todoViewModel.TodoItem);

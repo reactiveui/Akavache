@@ -144,7 +144,6 @@ Install the packages that match your needs. At minimum you need the core package
 | HTTP download and caching extensions | [Akavache.HttpDownloader][HttpDoc] | [![HttpBadge]][HttpNuGet] |
 | Image/bitmap caching | [Akavache.Drawing][DrawingDoc] | [![DrawingBadge]][DrawingNuGet] |
 | Application settings helpers | [Akavache.Settings][SettingsDoc] | [![SettingsBadge]][SettingsNuGet] |
-| V10 → V11 data migration | [Akavache.V10toV11][MigrationDoc] | [![MigrationBadge]][MigrationNuGet] |
 
 [AkavacheNuGet]: https://www.nuget.org/packages/Akavache/
 [AkavacheBadge]: https://img.shields.io/nuget/v/Akavache.svg
@@ -181,10 +180,6 @@ Install the packages that match your needs. At minimum you need the core package
 [SettingsNuGet]: https://www.nuget.org/packages/Akavache.Settings/
 [SettingsBadge]: https://img.shields.io/nuget/v/Akavache.Settings.svg
 [SettingsDoc]: https://github.com/reactiveui/Akavache
-
-[MigrationNuGet]: https://www.nuget.org/packages/Akavache.V10toV11/
-[MigrationBadge]: https://img.shields.io/nuget/v/Akavache.V10toV11.svg
-[MigrationDoc]: https://github.com/reactiveui/Akavache/blob/main/docs/migration-v10-to-v11.md
 
 ## Installation
 

@@ -407,7 +407,7 @@ public class SettingsStorageTests
     /// </summary>
     /// <param name="keyPrefix">The key prefix supplied to the base.</param>
     /// <param name="cache">The backing cache supplied to the base.</param>
-    [System.Diagnostics.DebuggerDisplay("{AlphaCount}")]
+    [System.Diagnostics.DebuggerDisplay("ProbeStorage: {AlphaCount}")]
     public class ProbeStorage(string keyPrefix, IBlobCache cache) : SettingsStorage(keyPrefix, cache)
     {
         /// <summary>Gets the number of times <see cref="Alpha"/> was read.</summary>

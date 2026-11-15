@@ -20,7 +20,7 @@ namespace Akavache.Benchmarks;
 /// <see cref="EncryptedSqliteBlobCache"/> in parallel so the before/after
 /// comparison captures both backends.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{BenchmarkSize}")]
+[System.Diagnostics.DebuggerDisplay("SqliteBackendBenchmarks: {BenchmarkSize}")]
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
@@ -76,7 +76,7 @@ public class SqliteBackendBenchmarks : IDisposable
 
         _keys = new string[BenchmarkSize];
         _values = new byte[BenchmarkSize][];
-        _bulkPayload = new(BenchmarkSize);
+        _bulkPayload = [with(BenchmarkSize)];
         for (var i = 0; i < BenchmarkSize; i++)
         {
             _keys[i] = $"bench_key_{i:D6}";
@@ -220,8 +220,6 @@ public class SqliteBackendBenchmarks : IDisposable
     /// <param name="disposing"><see langword="true"/> to release both managed and unmanaged resources; <see langword="false"/> to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        // Claimed up front so a second caller returns immediately rather than racing the first
-        // through the disposal below.
         if (Interlocked.Exchange(ref _disposedValue, 1) != 0)
         {
             return;

@@ -216,6 +216,54 @@ public class SizeTests
         }
     }
 
+    /// <summary>Verifies that distinct dimensions remain distinct dictionary keys without rounding.</summary>
+    /// <param name="width">The nearby width to compare with the reference width.</param>
+    /// <param name="height">The nearby height to compare with the reference height.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [Arguments(100.0004F, 200F)]
+    [Arguments(100.0006F, 200F)]
+    [Arguments(100F, 200.0004F)]
+    [Arguments(100F, 200.0006F)]
+    public async Task SizeEquality_NearbyDimensions_RemainDistinct(float width, float height)
+    {
+        Size reference = new(ReferenceWidth, ReferenceHeight);
+        Size nearby = new(width, height);
+        Dictionary<Size, string> values = new() { [reference] = "reference", [nearby] = "nearby" };
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(reference.Equals(nearby)).IsFalse();
+            await Assert.That(reference == nearby).IsFalse();
+            await Assert.That(reference != nearby).IsTrue();
+            await Assert.That(values[reference]).IsEqualTo("reference");
+            await Assert.That(values[nearby]).IsEqualTo("nearby");
+        }
+    }
+
+    /// <summary>Verifies that equal special dimensions share a hash and can retrieve a dictionary entry.</summary>
+    /// <param name="dimension">The special dimension used for both axes of the stored key.</param>
+    /// <param name="equalDimension">The equivalent dimension used for the lookup key.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [Arguments(float.NaN, float.NaN)]
+    [Arguments(float.PositiveInfinity, float.PositiveInfinity)]
+    [Arguments(float.NegativeInfinity, float.NegativeInfinity)]
+    [Arguments(-0F, 0F)]
+    public async Task SizeEquality_SpecialDimensions_SupportDictionaryLookup(float dimension, float equalDimension)
+    {
+        Size first = new(dimension, dimension);
+        Size second = new(equalDimension, equalDimension);
+        Dictionary<Size, string> values = new() { [first] = "value" };
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(first == second).IsTrue();
+            await Assert.That(first.GetHashCode()).IsEqualTo(second.GetHashCode());
+            await Assert.That(values[second]).IsEqualTo("value");
+        }
+    }
+
     /// <summary>Tests that Size.ToString works correctly.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]

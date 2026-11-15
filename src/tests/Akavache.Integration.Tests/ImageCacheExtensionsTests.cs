@@ -94,6 +94,20 @@ public partial class ImageCacheExtensionsTests
     /// <summary>Resolver named in the failure a host without image support produces.</summary>
     private const string DependencyResolverName = "dependency resolver";
 
+    /// <summary>A failed download is skipped and preloading still completes successfully.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task PreloadImagesFromUrls_DownloadFailure_Completes()
+    {
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
+        cache.SetHttpService(new ThrowingHttpService());
+
+        var result = await cache.PreloadImagesFromUrls(["https://example.com/unavailable.png"]).FirstAsync();
+
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
+        await Assert.That(await cache.GetAllKeys().ToList()).IsEmpty();
+    }
+
     /// <summary>Tests that LoadImages throws ArgumentNullException when cache is null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
@@ -1052,7 +1066,7 @@ public partial class ImageCacheExtensionsTests
             .Throws<ArgumentNullException>();
 
     /// <summary>
-    /// Verifies that <see cref="BitmapHelpers.BytesToImage"/> forwards the
+    /// Verifies that <see cref="BitmapBufferExtensions.BytesToImage"/> forwards the
     /// supplied bytes through the ambient <see cref="BitmapLoader"/> and returns
     /// whatever bitmap the loader produces.
     /// </summary>
@@ -1065,7 +1079,7 @@ public partial class ImageCacheExtensionsTests
         {
             BitmapLoader.Current = new MockBitmapLoader();
 
-            var bitmap = BitmapHelpers
+            var bitmap = BitmapBufferExtensions
                 .BytesToImage([0x89, 0x50, 0x4E, 0x47], desiredWidth: null, desiredHeight: null)
                 .SubscribeGetValue();
 
@@ -1078,7 +1092,10 @@ public partial class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>Verifies that <see cref="BitmapHelpers.BytesToImage"/> throws an <see cref="IOException"/> when the ambient <see cref="BitmapLoader"/> returns <see langword="null"/>.</summary>
+    /// <summary>
+    /// Verifies that <see cref="BitmapBufferExtensions.BytesToImage"/> throws an <see cref="IOException"/>
+    /// when the ambient <see cref="BitmapLoader"/> returns <see langword="null"/>.
+    /// </summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BytesToImageShouldThrowIOExceptionWhenLoaderReturnsNull()
@@ -1088,7 +1105,7 @@ public partial class ImageCacheExtensionsTests
         {
             BitmapLoader.Current = new NullBitmapLoader();
 
-            var error = BitmapHelpers.BytesToImage([0x00], desiredWidth: null, desiredHeight: null)
+            var error = BitmapBufferExtensions.BytesToImage([0x00], desiredWidth: null, desiredHeight: null)
                 .SubscribeGetError();
 
             await Assert.That(error).IsTypeOf<IOException>();
@@ -1100,7 +1117,7 @@ public partial class ImageCacheExtensionsTests
     }
 
     /// <summary>
-    /// Verifies that <see cref="BitmapHelpers.BytesToImage"/> forwards the
+    /// Verifies that <see cref="BitmapBufferExtensions.BytesToImage"/> forwards the
     /// caller-supplied <c>desiredWidth</c> and <c>desiredHeight</c> arguments to the
     /// ambient <see cref="BitmapLoader"/>.
     /// </summary>
@@ -1114,7 +1131,7 @@ public partial class ImageCacheExtensionsTests
             SizeCapturingBitmapLoader capturing = new();
             BitmapLoader.Current = capturing;
 
-            _ = BitmapHelpers
+            _ = BitmapBufferExtensions
                 .BytesToImage([0x01, 0x02], desiredWidth: ForwardedWidthPixels, desiredHeight: ForwardedHeightPixels)
                 .SubscribeGetValue();
 
@@ -1127,7 +1144,7 @@ public partial class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>Verifies that <see cref="BitmapHelpers.BytesToImage"/> reads the entire byte payload it was given before handing the stream to the loader.</summary>
+    /// <summary>Verifies that <see cref="BitmapBufferExtensions.BytesToImage"/> reads the entire byte payload it was given before handing the stream to the loader.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BytesToImageShouldHandToLoaderAStreamOverTheSuppliedBytes()
@@ -1139,7 +1156,7 @@ public partial class ImageCacheExtensionsTests
             BitmapLoader.Current = capturing;
             byte[] payload = [0xDE, 0xAD, 0xBE, 0xEF];
 
-            _ = BitmapHelpers.BytesToImage(payload, desiredWidth: null, desiredHeight: null)
+            _ = BitmapBufferExtensions.BytesToImage(payload, desiredWidth: null, desiredHeight: null)
                 .SubscribeGetValue();
 
             await Assert.That(capturing.LastStreamLength).IsEqualTo(payload.Length);

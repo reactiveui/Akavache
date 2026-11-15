@@ -76,10 +76,10 @@ public static class AkavacheBuilderExtensions
                 throw new InvalidOperationException("Application name must be set before configuring SQLite defaults. Call WithApplicationName() first.");
             }
 
-            _ = builder.WithUserAccount(EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(UserAccount, builder, password))
-                   .WithLocalMachine(EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(LocalMachine, builder, password))
+            _ = builder.WithUserAccount(UserAccount.CreateEncryptedSqliteCache(builder, password))
+                   .WithLocalMachine(LocalMachine.CreateEncryptedSqliteCache(builder, password))
                    .WithInMemory()
-                   .WithSecure(EncryptedSqliteCacheFactory.CreateEncryptedSqliteCache(Secure, builder, password));
+                   .WithSecure(Secure.CreateEncryptedSqliteCache(builder, password));
 
             return builder;
         }

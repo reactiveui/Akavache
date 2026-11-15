@@ -12,7 +12,7 @@ using ReactiveUI;
 namespace AkavacheTodoWpf.Services;
 
 /// <summary>Service for handling todo notifications and reminders in WPF.</summary>
-[System.Diagnostics.DebuggerDisplay("{CacheInfo}")]
+[System.Diagnostics.DebuggerDisplay("NotificationService: {CacheInfo}")]
 [SupportedOSPlatform("windows10.0.19041.0")]
 public class NotificationService : ReactiveObject, IDisposable
 {

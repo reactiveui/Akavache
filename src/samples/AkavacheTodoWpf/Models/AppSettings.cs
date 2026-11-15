@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 namespace AkavacheTodoWpf.Models;
 
 /// <summary>Represents application settings that will be cached using Akavache.</summary>
-[System.Diagnostics.DebuggerDisplay("{Theme}")]
+[System.Diagnostics.DebuggerDisplay("AppSettings: {Theme}")]
 public class AppSettings
 {
     /// <summary>Gets or sets the theme preference.</summary>

@@ -26,7 +26,7 @@ public static class AkavacheBuilderExtensions
         public Akavache.Reactive.IAkavacheBuilder WithSqliteProvider() { }
     }
 }
-[System.Diagnostics.DebuggerDisplay("{Connection}")]
+[System.Diagnostics.DebuggerDisplay("SqliteBlobCache: {Connection}")]
 public class SqliteBlobCache : Akavache.Reactive.IBlobCache
 {
     public SqliteBlobCache(Akavache.Reactive.IAkavacheConnection connection, Akavache.Reactive.ISerializer serializer) { }

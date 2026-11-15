@@ -13,7 +13,7 @@ namespace Akavache.Tests.Mocks;
 /// <remarks>
 /// Initializes a new instance of the <see cref="UserModel"/> class.
 /// </remarks>
-[System.Diagnostics.DebuggerDisplay("{Name}")]
+[System.Diagnostics.DebuggerDisplay("UserModel: {Name}")]
 public class UserModel(UserObject user)
 {
     /// <summary>Gets or sets the name.</summary>

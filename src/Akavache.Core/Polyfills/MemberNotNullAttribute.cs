@@ -16,10 +16,6 @@ namespace System.Diagnostics.CodeAnalysis;
 internal sealed class MemberNotNullAttribute : Attribute
 {
     /// <summary>Initializes a new instance of the <see cref="MemberNotNullAttribute"/> class.</summary>
-    /// <param name="member">The member that is not null after the method returns.</param>
-    public MemberNotNullAttribute(string member) => Members = [member];
-
-    /// <summary>Initializes a new instance of the <see cref="MemberNotNullAttribute"/> class.</summary>
     /// <param name="members">The members that are not null after the method returns.</param>
     public MemberNotNullAttribute(params string[] members) => Members = members;
 

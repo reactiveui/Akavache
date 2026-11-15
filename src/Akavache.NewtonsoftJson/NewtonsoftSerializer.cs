@@ -16,7 +16,7 @@ namespace Akavache.NewtonsoftJson;
 /// A unified serializer using Newtonsoft.Json with automatic format detection.
 /// Supports both JSON and BSON formats for maximum compatibility with Akavache.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{Options}")]
+[System.Diagnostics.DebuggerDisplay("NewtonsoftSerializer: {Options}")]
 public class NewtonsoftSerializer : ISerializer
 {
     /// <summary>Byte width of the length field every BSON document opens with.</summary>
@@ -107,7 +107,7 @@ public class NewtonsoftSerializer : ISerializer
         // Try JSON format
         try
         {
-            using MemoryStream stream = new(bytes, writable: false);
+            using var stream = ReadOnlyMemoryStreamCompat.OpenRead(bytes);
             using StreamReader textReader = new(stream);
             var serializer = JsonSerializer.Create(GetEffectiveSettings());
             return (T?)serializer.Deserialize(textReader, typeof(T));
@@ -205,7 +205,7 @@ public class NewtonsoftSerializer : ISerializer
         try
         {
             var serializer = GetSerializer();
-            using BsonDataReader reader = new(new MemoryStream(bytes, writable: false));
+            using BsonDataReader reader = new(ReadOnlyMemoryStreamCompat.OpenRead(bytes));
 
             var forcedDateTimeKind = ForcedDateTimeKind;
             if (forcedDateTimeKind.HasValue)
@@ -220,7 +220,7 @@ public class NewtonsoftSerializer : ISerializer
             }
             catch
             {
-                using BsonDataReader reader2 = new(new MemoryStream(bytes, writable: false));
+                using BsonDataReader reader2 = new(ReadOnlyMemoryStreamCompat.OpenRead(bytes));
                 if (forcedDateTimeKind.HasValue)
                 {
                     reader2.DateTimeKindHandling = forcedDateTimeKind.Value;

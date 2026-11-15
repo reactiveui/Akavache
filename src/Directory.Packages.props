@@ -41,9 +41,6 @@
     <PackageVersion Include="PerformanceSharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="SecuritySharp.Analyzers" Version="$(RoslynCommonAnalyzersVersion)" />
     <PackageVersion Include="PublicApiSharp.Analyzers" Version="2.2.0" />
-    <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.36.0.15337" />
-    <PackageVersion Include="Blazor.Common.Analyzers" Version="2.1.0" />
   </ItemGroup>
   <!-- Non-test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
@@ -85,8 +82,6 @@
   <!-- Benchmark packages -->
   <ItemGroup>
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="Akavache.Sqlite3" Version="11.5.1" />
-    <PackageVersion Include="Akavache" Version="11.5.1" />
   </ItemGroup>
   <!-- Sample application packages -->
   <ItemGroup>

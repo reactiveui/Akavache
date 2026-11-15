@@ -8,7 +8,7 @@ using ReactiveUI.SourceGenerators;
 namespace AkavacheTodoWpf.Services;
 
 /// <summary>Represents information about cache usage.</summary>
-[System.Diagnostics.DebuggerDisplay("{UserAccountKeys}")]
+[System.Diagnostics.DebuggerDisplay("CacheInfo: {UserAccountKeys}")]
 public partial class CacheInfo : ReactiveObject
 {
     /// <summary>

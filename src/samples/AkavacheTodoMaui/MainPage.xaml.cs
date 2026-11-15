@@ -10,7 +10,7 @@ using ReactiveUI;
 namespace AkavacheTodoMaui;
 
 /// <summary>Main page demonstrating Akavache features with ReactiveUI MVVM.</summary>
-[System.Diagnostics.DebuggerDisplay("{ViewModel}")]
+[System.Diagnostics.DebuggerDisplay("MainPage: {ViewModel}")]
 public partial class MainPage : ContentPage, IViewFor<MainViewModel>
 {
     /// <summary>Initializes a new instance of the <see cref="MainPage"/> class.</summary>

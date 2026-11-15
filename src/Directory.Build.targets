@@ -1,6 +1,9 @@
 <Project>
   <PropertyGroup>  
     <Product>$(AssemblyName) ($(TargetFramework))</Product>
+    <!-- Compiler-generated async state machines are required for Mono / Blazor WebAssembly. -->
+    <UseRuntimeAsync>false</UseRuntimeAsync>
+    <Features>$(Features);runtime-async=off</Features>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.EndsWith('0-macos'))">

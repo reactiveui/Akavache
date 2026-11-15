@@ -177,7 +177,7 @@ public static class AkavacheBuilderExtensions
             using var isoStore = store;
 
             // Try to get a path within isolated storage for the settings cache using the application name
-            return isoStore is null ? null : IsolatedStorageHelpers.ResolveIsolatedCachePath(isoStore, validatedApplicationName, validatedCacheName);
+            return isoStore is null ? null : isoStore.ResolveIsolatedCachePath(validatedApplicationName, validatedCacheName);
         }
 
         /// <summary>Gets the legacy cache directory.</summary>
@@ -362,39 +362,6 @@ public static class AkavacheBuilderExtensions
             return builder;
         }
 
-        /// <summary>Initializes CacheDatabase with a required application name, awaiting asynchronous configuration and post-build work.</summary>
-        /// <typeparam name="T">The type of Serializer.</typeparam>
-        /// <param name="applicationName">The application name for cache directory paths. Must not be null or whitespace.</param>
-        /// <param name="configureAsync">Configures the CacheDatabase builder before it is built.</param>
-        /// <param name="instanceAsync">Runs against the built instance.</param>
-        /// <returns>A task producing the configured builder.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/>, <paramref name="configureAsync"/>, or <paramref name="instanceAsync"/> is null.</exception>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
-        /// <remarks>
-        /// The <see cref="Action{T}"/> overloads give a caller doing asynchronous work no await
-        /// point, leaving it to block inside the callback and park the calling thread. This form
-        /// awaits both callbacks instead, so the work stays asynchronous end to end.
-        /// </remarks>
-        [SuppressMessage(
-            "Design",
-            "SST2307:Type parameter appears in no parameter",
-            Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
-        [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-        public async Task<IAppBuilder> WithAkavacheAsync<T>(string applicationName, Func<IAkavacheBuilder, Task> configureAsync, Func<IAkavacheInstance, Task> instanceAsync)
-                where T : class, ISerializer, new()
-        {
-            ArgumentExceptionHelper.ThrowIfNull(builder);
-            ArgumentValidation.ThrowIfNullOrWhiteSpace(applicationName);
-            ArgumentExceptionHelper.ThrowIfNull(configureAsync);
-            ArgumentExceptionHelper.ThrowIfNull(instanceAsync);
-
-            var akavacheBuilder = CacheDatabase.CreateBuilder(applicationName)
-                .WithSerializer<T>();
-            await configureAsync(akavacheBuilder).ConfigureAwait(false);
-            await instanceAsync(akavacheBuilder.Build()).ConfigureAwait(false);
-            return builder;
-        }
-
         /// <summary>Initializes CacheDatabase with a custom builder configuration and a required application name.</summary>
         /// <typeparam name="T">The type of Serializer.</typeparam>
         /// <param name="applicationName">The application name for cache directory paths. Must not be null or whitespace.</param>
@@ -477,6 +444,39 @@ public static class AkavacheBuilderExtensions
             return builder.WithCustomRegistration(splat => instance(splat, CacheDatabase.CreateBuilder(applicationName)
                 .WithSerializer<T>()
                 .WithInMemoryDefaults().Build()));
+        }
+
+        /// <summary>Initializes CacheDatabase with a required application name, awaiting asynchronous configuration and post-build work.</summary>
+        /// <typeparam name="T">The type of Serializer.</typeparam>
+        /// <param name="applicationName">The application name for cache directory paths. Must not be null or whitespace.</param>
+        /// <param name="configureAsync">Configures the CacheDatabase builder before it is built.</param>
+        /// <param name="instanceAsync">Runs against the built instance.</param>
+        /// <returns>A task producing the configured builder.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/>, <paramref name="configureAsync"/>, or <paramref name="instanceAsync"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
+        /// <remarks>
+        /// The <see cref="Action{T}"/> overloads give a caller doing asynchronous work no await
+        /// point, leaving it to block inside the callback and park the calling thread. This form
+        /// awaits both callbacks instead, so the work stays asynchronous end to end.
+        /// </remarks>
+        [SuppressMessage(
+            "Design",
+            "SST2307:Type parameter appears in no parameter",
+            Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
+        [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+        public async Task<IAppBuilder> WithAkavacheAsync<T>(string applicationName, Func<IAkavacheBuilder, Task> configureAsync, Func<IAkavacheInstance, Task> instanceAsync)
+                where T : class, ISerializer, new()
+        {
+            ArgumentExceptionHelper.ThrowIfNull(builder);
+            ArgumentValidation.ThrowIfNullOrWhiteSpace(applicationName);
+            ArgumentExceptionHelper.ThrowIfNull(configureAsync);
+            ArgumentExceptionHelper.ThrowIfNull(instanceAsync);
+
+            var akavacheBuilder = CacheDatabase.CreateBuilder(applicationName)
+                .WithSerializer<T>();
+            await configureAsync(akavacheBuilder).ConfigureAwait(false);
+            await instanceAsync(akavacheBuilder.Build()).ConfigureAwait(false);
+            return builder;
         }
     }
 

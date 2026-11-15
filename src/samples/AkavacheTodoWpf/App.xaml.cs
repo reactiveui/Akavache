@@ -17,7 +17,7 @@ using ReactiveUI.Builder;
 namespace AkavacheTodoWpf;
 
 /// <summary>Interaction logic for App.xaml with Akavache and dependency injection setup.</summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("App: {_host}")]
 [SupportedOSPlatform("windows10.0.19041.0")]
 public partial class App
 {

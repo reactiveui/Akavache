@@ -11,9 +11,9 @@
             ],
             "groupName": "analyzers",
             "matchPackageNames": [
-                "/^Roslynator\\./",
-                "/^stylecop\\.analyzers$/i",
-                "/^Blazor\\.Common\\.Analyzers$/"
+                "StyleSharp.Analyzers",
+                "PerformanceSharp.Analyzers",
+                "SecuritySharp.Analyzers"
             ]
         },
         {

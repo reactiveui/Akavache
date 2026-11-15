@@ -15,7 +15,7 @@ namespace Akavache.Settings.Tests;
 /// the helper supports.
 /// </summary>
 /// <seealso cref="SettingsBase"/>
-[System.Diagnostics.DebuggerDisplay("{BoolTest}")]
+[System.Diagnostics.DebuggerDisplay("ViewSettings: {BoolTest}")]
 public class ViewSettings : SettingsBase
 {
     /// <summary>The seeded default for <see cref="ByteTest"/>.</summary>

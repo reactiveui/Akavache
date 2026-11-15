@@ -15,7 +15,7 @@ public static class AkavacheBuilderExtensions
         public Akavache.IAkavacheBuilder WithSqliteDefaults(string password) { }
     }
 }
-[System.Diagnostics.DebuggerDisplay("{Connection}")]
+[System.Diagnostics.DebuggerDisplay("EncryptedSqliteBlobCache: {Connection}")]
 public class EncryptedSqliteBlobCache : Akavache.ISecureBlobCache
 {
     public EncryptedSqliteBlobCache(Akavache.IAkavacheConnection connection, Akavache.ISerializer serializer) { }

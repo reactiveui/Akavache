@@ -10,7 +10,7 @@ using ReactiveUI;
 namespace AkavacheTodoWpf;
 
 /// <summary>Interaction logic for MainWindow.xaml with ReactiveUI integration.</summary>
-[System.Diagnostics.DebuggerDisplay("{ViewModel}")]
+[System.Diagnostics.DebuggerDisplay("MainWindow: {ViewModel}")]
 [SupportedOSPlatform("windows10.0.19041.0")]
 public partial class MainWindow : IViewFor<MainViewModel>
 {

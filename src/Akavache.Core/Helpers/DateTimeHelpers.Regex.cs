@@ -21,16 +21,20 @@ namespace Akavache.Helpers;
 /// </summary>
 internal static partial class DateTimeHelpers
 {
+    /// <summary>Upper bound on a single ISO 8601 match, so a hostile payload cannot stall the scan.</summary>
+    private const int Iso8601RegexTimeoutMilliseconds = 1000;
+
 #if NET7_0_OR_GREATER
     /// <summary>Source-generated regex matching ISO 8601 timestamps inside arbitrary payloads.</summary>
     /// <returns>The compiled regex.</returns>
-    [GeneratedRegex(@"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")]
+    [GeneratedRegex(@"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", RegexOptions.CultureInvariant, Iso8601RegexTimeoutMilliseconds)]
     private static partial Regex Iso8601Regex();
 #else
     /// <summary>Compiled fallback regex matching ISO 8601 timestamps inside arbitrary payloads.</summary>
     private static readonly Regex _iso8601Regex = new(
         @"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        RegexOptions.Compiled | RegexOptions.CultureInvariant,
+        TimeSpan.FromMilliseconds(Iso8601RegexTimeoutMilliseconds));
 
     /// <summary>Returns the compiled ISO 8601 regex.</summary>
     /// <returns>The compiled regex.</returns>

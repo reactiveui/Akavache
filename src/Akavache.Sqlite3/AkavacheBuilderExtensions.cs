@@ -49,7 +49,7 @@ public static class AkavacheBuilderExtensions
 
         /// <summary>Configures default SQLite-based caches for all cache types.</summary>
         /// <returns>The builder instance for fluent configuration.</returns>
-        /// <exception cref="InvalidOperationException">No serializer has been registered, or no application name has been set.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <c>builder.Serializer is null</c>.</exception>
         public IAkavacheBuilder WithSqliteDefaults()
         {
             ArgumentExceptionHelper.ThrowIfNull(builder);
@@ -71,10 +71,10 @@ public static class AkavacheBuilderExtensions
             }
 
             // Create SQLite caches for persistent storage
-            _ = builder.WithUserAccount(SqliteCacheFactory.CreateSqliteCache(UserAccount, builder))
-                   .WithLocalMachine(SqliteCacheFactory.CreateSqliteCache(LocalMachine, builder))
+            _ = builder.WithUserAccount(UserAccount.CreateSqliteCache(builder))
+                   .WithLocalMachine(LocalMachine.CreateSqliteCache(builder))
                    .WithInMemory()
-                   .WithSecure(new SecureBlobCacheWrapper(SqliteCacheFactory.CreateSqliteCache(Secure, builder)));
+                   .WithSecure(new SecureBlobCacheWrapper(Secure.CreateSqliteCache(builder)));
 
             return builder;
         }

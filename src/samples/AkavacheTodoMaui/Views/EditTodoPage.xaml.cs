@@ -7,7 +7,7 @@ using AkavacheTodoMaui.ViewModels;
 namespace AkavacheTodoMaui.Views;
 
 /// <summary>Edit Todo page for modifying existing todos.</summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("EditTodoPage: {ToString(),nq}")]
 public partial class EditTodoPage : ContentPage
 {
     /// <summary>Initializes a new instance of the <see cref="EditTodoPage"/> class.</summary>

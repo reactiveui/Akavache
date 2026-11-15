@@ -38,7 +38,7 @@ public class NewtonsoftBsonSerializer : Akavache.Reactive.NewtonsoftJson.Newtons
 {
     public NewtonsoftBsonSerializer() { }
 }
-[System.Diagnostics.DebuggerDisplay("{Options}")]
+[System.Diagnostics.DebuggerDisplay("NewtonsoftSerializer: {Options}")]
 public class NewtonsoftSerializer : Akavache.Reactive.ISerializer
 {
     public NewtonsoftSerializer() { }

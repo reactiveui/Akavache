@@ -254,7 +254,8 @@ public class CacheDatabaseTests
     /// <summary>Tests TaskpoolScheduler returns default when not overridden.</summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task TaskpoolSchedulerShouldReturnDefault() => await Assert.That(CacheDatabase.TaskpoolScheduler).IsNotNull();
+    public async Task TaskpoolSchedulerShouldReturnDefault() =>
+        await Assert.That(CacheDatabase.TaskpoolScheduler).IsNotNull();
 
     /// <summary>Tests TaskpoolScheduler can be overridden.</summary>
     /// <returns>A task.</returns>

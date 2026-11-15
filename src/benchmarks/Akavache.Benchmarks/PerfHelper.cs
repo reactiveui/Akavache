@@ -79,7 +79,7 @@ internal static class PerfHelper
     /// <returns>A dictionary of the contents.</returns>
     internal static Dictionary<string, byte[]> GenerateRandomDatabaseContents(int toWriteSize)
     {
-        Dictionary<string, byte[]> contents = new(toWriteSize, StringComparer.Ordinal);
+        Dictionary<string, byte[]> contents = [with(toWriteSize, StringComparer.Ordinal)];
 
         for (var i = 0; i < toWriteSize; i++)
         {

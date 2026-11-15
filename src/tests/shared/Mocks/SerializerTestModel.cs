@@ -9,7 +9,7 @@ namespace Akavache.Tests.Mocks;
 #endif
 
 /// <summary>Test model for serializer tests.</summary>
-[System.Diagnostics.DebuggerDisplay("{Name}")]
+[System.Diagnostics.DebuggerDisplay("SerializerTestModel: {Name}")]
 public class SerializerTestModel
 {
     /// <summary>Gets or sets the name.</summary>

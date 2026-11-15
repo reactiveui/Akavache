@@ -183,21 +183,22 @@ public class EncryptedSqliteBlobCacheDirectTests
     }
 
     /// <summary>Tests type-aware UpdateExpiration.</summary>
+    /// <param name="cancellationToken">The test cancellation token.</param>
     /// <returns>A task.</returns>
     [Test]
-    public async Task TypeAwareUpdateExpirationShouldUpdateEntries()
+    public async Task TypeAwareUpdateExpirationShouldUpdateEntries(CancellationToken cancellationToken)
     {
         using (Utility.WithEmptyDirectory(out var path))
         {
             using var cache = CreateCache(path);
-            cache.Insert("k1", [1], typeof(string)).WaitForCompletion();
+            await Signal.ToTask(cache.Insert("k1", [1], typeof(string)), cancellationToken).ConfigureAwait(false);
 
             var newExpiration = TimeProvider.System.GetLocalNow().AddHours(1);
 
-            cache.UpdateExpiration("k1", typeof(string), newExpiration).WaitForCompletion();
-            cache.UpdateExpiration(["k1"], typeof(string), newExpiration).WaitForCompletion();
+            await Signal.ToTask(cache.UpdateExpiration("k1", typeof(string), newExpiration), cancellationToken).ConfigureAwait(false);
+            await Signal.ToTask(cache.UpdateExpiration(["k1"], typeof(string), newExpiration), cancellationToken).ConfigureAwait(false);
 
-            var data = cache.Get("k1", typeof(string)).WaitForValue();
+            var data = await Signal.ToTask(cache.Get("k1", typeof(string)), cancellationToken).ConfigureAwait(false);
             await Assert.That(data).IsNotNull();
         }
     }

@@ -23,7 +23,6 @@
     <ProjectReference Include="..\..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />
     <ProjectReference Include="..\..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
     <ProjectReference Include="..\..\Akavache.Settings\Akavache.Settings.csproj" />
-    <ProjectReference Include="..\..\Akavache.V10toV11\Akavache.V10toV11.csproj" />
   </ItemGroup>
 
   <!-- Shared test infrastructure from tests/shared/. -->
@@ -54,7 +53,6 @@
     <AkavacheInternalUsing Include="Akavache.Tests.Helpers" />
     <AkavacheInternalUsing Include="Akavache.Tests.Mocks" />
     <AkavacheInternalUsing Include="Akavache.Tests.TestBases" />
-    <AkavacheInternalUsing Include="Akavache.V10toV11" />
   </ItemGroup>
 
 </Project>

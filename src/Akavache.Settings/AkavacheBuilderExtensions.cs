@@ -326,7 +326,7 @@ public static class AkavacheBuilderExtensions
         /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
         /// <param name="scheduler">Scheduler to use for the underlying blob cache, or <see langword="null"/> for the default task-pool scheduler.</param>
         /// <returns>The settings store instance configured for secure storage.</returns>
-        /// <exception cref="InvalidOperationException">No serializer has been registered on the builder.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <c>builder.Serializer is null</c>.</exception>
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -349,16 +349,7 @@ public static class AkavacheBuilderExtensions
             var cache = scheduler is not null
                 ? new EncryptedSqliteBlobCache(dbPath, password, builder.Serializer, scheduler)
                 : new EncryptedSqliteBlobCache(dbPath, password, builder.Serializer);
-            builder.BlobCaches[validatedKey] = cache;
-
-            T viewSettings;
-            using (SettingsBase.PushAmbientCache(cache))
-            {
-                viewSettings = new();
-            }
-
-            builder.SettingsStores[validatedKey] = viewSettings;
-            return viewSettings;
+            return SettingsStoreFactory.Create<T>(builder, validatedKey, cache);
         }
 
         /// <summary>Gets or creates a standard settings store using SQLite for persistence.</summary>
@@ -400,7 +391,7 @@ public static class AkavacheBuilderExtensions
         /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
         /// <param name="scheduler">Scheduler to use for the underlying blob cache, or <see langword="null"/> for the default task-pool scheduler.</param>
         /// <returns>The settings store instance configured for standard storage.</returns>
-        /// <exception cref="InvalidOperationException">No serializer has been registered on the builder.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when <c>builder.Serializer is null</c>.</exception>
         [SuppressMessage(
             "Design",
             "SST2307:Type parameter appears in no parameter",
@@ -423,20 +414,7 @@ public static class AkavacheBuilderExtensions
             var cache = scheduler is not null
                 ? new SqliteBlobCache(dbPath, builder.Serializer, scheduler)
                 : new SqliteBlobCache(dbPath, builder.Serializer);
-            builder.BlobCaches[validatedKey] = cache;
-
-            // Publish the just-created cache as the ambient cache while we construct the
-            // settings type. SettingsBase's parameterless ctor reads the ambient slot first
-            // so it doesn't have to hunt through CacheDatabase.CurrentInstance, which still
-            // points at the previous build while this builder is being configured.
-            T viewSettings;
-            using (SettingsBase.PushAmbientCache(cache))
-            {
-                viewSettings = new();
-            }
-
-            builder.SettingsStores[validatedKey] = viewSettings;
-            return viewSettings;
+            return SettingsStoreFactory.Create<T>(builder, validatedKey, cache);
         }
 
         /// <summary>
@@ -481,16 +459,7 @@ public static class AkavacheBuilderExtensions
             // Validate database name to prevent path traversal attacks
             var validatedKey = SecurityUtilities.ValidateDatabaseName(overrideDatabaseName ?? typeof(T).Name, nameof(overrideDatabaseName));
 
-            builder.BlobCaches[validatedKey] = cache;
-
-            T viewSettings;
-            using (SettingsBase.PushAmbientCache(cache))
-            {
-                viewSettings = new();
-            }
-
-            builder.SettingsStores[validatedKey] = viewSettings;
-            return viewSettings;
+            return SettingsStoreFactory.Create<T>(builder, validatedKey, cache);
         }
     }
 }

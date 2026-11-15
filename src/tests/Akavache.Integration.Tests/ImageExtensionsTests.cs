@@ -48,6 +48,37 @@ public class ImageExtensionsTests
     /// <summary>A buffer far below the image guard's minimum size.</summary>
     private static readonly byte[] UndersizedImageBuffer = [1, 2, 3];
 
+    /// <summary>Repeated image-byte requests reuse the cached payload for each URL overload.</summary>
+    /// <param name="overload">The URL overload to exercise.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [Arguments(0)]
+    [Arguments(1)]
+    [Arguments(2)]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Exercises the public string URL overload alongside the Uri overload.")]
+    public async Task LoadImageBytesFromUrl_RepeatedLoads_ReturnCachedBytes(int overload)
+    {
+        const int RequestCount = 2;
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
+        Uri url = new("https://example.com/repeated-bytes.png");
+        var bytes = CreateImageData(SampleImageByteCount);
+        _ = await cache.Insert(url.AbsoluteUri, bytes).FirstAsync();
+
+        for (var iteration = 0; iteration < RequestCount; iteration++)
+        {
+            var request = overload switch
+            {
+                0 => cache.LoadImageBytesFromUrl(url.AbsoluteUri),
+                1 => cache.LoadImageBytesFromUrl(url),
+                _ => cache.LoadImageBytesFromUrl(url.AbsoluteUri, url.AbsoluteUri),
+            };
+            await Assert.That(await request.FirstAsync()).IsEquivalentTo(bytes);
+        }
+    }
+
     /// <summary>Tests that IsValidImageFormat correctly identifies PNG images.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
@@ -123,7 +154,7 @@ public class ImageExtensionsTests
     public async Task IsWebPShouldIdentifyWebPCorrectly()
     {
         // Act - WebP header: 52 49 46 46 ... 57 45 42 50
-        var isWebP = ImageBufferHelpers.IsWebP(WebPRiffHeader);
+        var isWebP = ImageExtensions.IsWebP(WebPRiffHeader);
 
         // Assert
         await Assert.That(isWebP).IsTrue();
@@ -138,7 +169,7 @@ public class ImageExtensionsTests
         byte[] pngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 
         // Act
-        var isWebP = ImageBufferHelpers.IsWebP(pngHeader);
+        var isWebP = ImageExtensions.IsWebP(pngHeader);
 
         // Assert
         await Assert.That(isWebP).IsFalse();
@@ -195,7 +226,7 @@ public class ImageExtensionsTests
     public async Task ThrowOnBadImageBufferShouldThrowForNullData()
     {
         // Act & Assert
-        var error = ImageBufferHelpers.ThrowOnBadImageBuffer(null).SubscribeGetError();
+        var error = ImageBufferExtensions.ThrowOnBadImageBuffer(null).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
@@ -208,7 +239,7 @@ public class ImageExtensionsTests
         var tooSmallData = new byte[32]; // Less than 64 bytes
 
         // Act & Assert
-        var error = ImageBufferHelpers.ThrowOnBadImageBuffer(tooSmallData).SubscribeGetError();
+        var error = ImageBufferExtensions.ThrowOnBadImageBuffer(tooSmallData).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
@@ -225,7 +256,7 @@ public class ImageExtensionsTests
         }
 
         // Act
-        var result = ImageBufferHelpers.ThrowOnBadImageBuffer(validImageData).SubscribeGetValue();
+        var result = ImageBufferExtensions.ThrowOnBadImageBuffer(validImageData).SubscribeGetValue();
 
         // Assert
         await Assert.That(result).IsEqualTo(validImageData);
@@ -570,7 +601,7 @@ public class ImageExtensionsTests
         if (shouldSucceed)
         {
             // Act
-            var result = ImageBufferHelpers.ThrowOnBadImageBuffer(buffer).SubscribeGetValue();
+            var result = ImageBufferExtensions.ThrowOnBadImageBuffer(buffer).SubscribeGetValue();
 
             // Assert
             await Assert.That(result).IsEqualTo(buffer);
@@ -578,7 +609,7 @@ public class ImageExtensionsTests
         else
         {
             // Act & Assert
-            var error = ImageBufferHelpers.ThrowOnBadImageBuffer(buffer).SubscribeGetError();
+            var error = ImageBufferExtensions.ThrowOnBadImageBuffer(buffer).SubscribeGetError();
             await Assert.That(error).IsTypeOf<InvalidOperationException>();
         }
     }
@@ -758,13 +789,13 @@ public class ImageExtensionsTests
     {
         var buffer = CreateImageData(MinimumValidImageByteCount);
 
-        var result = ImageBufferHelpers.ThrowOnBadImageBuffer(buffer).SubscribeGetValue();
+        var result = ImageBufferExtensions.ThrowOnBadImageBuffer(buffer).SubscribeGetValue();
 
         await Assert.That(result).IsEqualTo(buffer);
     }
 
     /// <summary>
-    /// Tests <see cref="ImageBufferHelpers.ThrowOnNullOrBadImageBuffer"/> throws an
+    /// Tests <see cref="ImageBufferExtensions.ThrowOnNullOrBadImageBuffer"/> throws an
     /// "Image data is null" error when handed a <see langword="null"/> buffer. The
     /// in-line ternary that used to live inside <c>LoadImageBytes</c>' <c>SelectMany</c>
     /// could not reach this branch because no real <see cref="IBlobCache"/> emits
@@ -774,28 +805,28 @@ public class ImageExtensionsTests
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldThrowForNullInput()
     {
-        var error = ImageBufferHelpers.ThrowOnNullOrBadImageBuffer(null).SubscribeGetError();
+        var error = ImageBufferExtensions.ThrowOnNullOrBadImageBuffer(null).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
-    /// <summary>Tests <see cref="ImageBufferHelpers.ThrowOnNullOrBadImageBuffer"/> routes a valid buffer through the bad-image guard and returns it.</summary>
+    /// <summary>Tests <see cref="ImageBufferExtensions.ThrowOnNullOrBadImageBuffer"/> routes a valid buffer through the bad-image guard and returns it.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldReturnValidBuffer()
     {
         var buffer = new byte[128];
 
-        var result = ImageBufferHelpers.ThrowOnNullOrBadImageBuffer(buffer).SubscribeGetValue();
+        var result = ImageBufferExtensions.ThrowOnNullOrBadImageBuffer(buffer).SubscribeGetValue();
 
         await Assert.That(result).IsSameReferenceAs(buffer);
     }
 
-    /// <summary>Tests <see cref="ImageBufferHelpers.ThrowOnNullOrBadImageBuffer"/> forwards the short-buffer error from <see cref="ImageBufferHelpers.ThrowOnBadImageBuffer"/>.</summary>
+    /// <summary>Tests <see cref="ImageBufferExtensions.ThrowOnNullOrBadImageBuffer"/> forwards the short-buffer error from <see cref="ImageBufferExtensions.ThrowOnBadImageBuffer"/>.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldThrowForShortBuffer()
     {
-        var error = ImageBufferHelpers.ThrowOnNullOrBadImageBuffer(UndersizedImageBuffer).SubscribeGetError();
+        var error = ImageBufferExtensions.ThrowOnNullOrBadImageBuffer(UndersizedImageBuffer).SubscribeGetError();
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 

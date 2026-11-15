@@ -384,7 +384,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         entry.ExpiresAt is null || entry.ExpiresAt > now;
 
     /// <summary>Throws <see cref="ObjectDisposedException"/> if <see cref="SimulateDisposed"/> is set.</summary>
-    /// <exception cref="ObjectDisposedException"><see cref="SimulateDisposed"/> is set.</exception>
+    /// <exception cref="ObjectDisposedException">Thrown when <see cref="SimulateDisposed"/> is set.</exception>
     private void ThrowIfDisposed()
     {
         if (!SimulateDisposed)

@@ -27,7 +27,7 @@ public class Resource : _Microsoft.Android.Resource.Designer.Resource
 {
     public Resource() { }
 }
-[System.Diagnostics.DebuggerDisplay("{Options}")]
+[System.Diagnostics.DebuggerDisplay("SystemJsonSerializer: {Options}")]
 public class SystemJsonSerializer : Akavache.Reactive.ISerializer
 {
     public SystemJsonSerializer() { }

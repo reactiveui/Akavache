@@ -86,7 +86,7 @@ namespace Akavache.Reactive.Settings
 }
 namespace Akavache.Reactive.Settings.Core
 {
-    [System.Diagnostics.DebuggerDisplay("{Value}")]
+    [System.Diagnostics.DebuggerDisplay("SettingsPropertyHelper: {Value}")]
     public sealed class SettingsPropertyHelper<T> : System.ComponentModel.INotifyPropertyChanged, System.IDisposable, System.IObservable<T>
     {
         public T Value { get; }
@@ -101,7 +101,7 @@ namespace Akavache.Reactive.Settings.Core
         public T ToT() { }
         public static implicit operator T(Akavache.Reactive.Settings.Core.SettingsPropertyHelper<T> helper) { }
     }
-    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    [System.Diagnostics.DebuggerDisplay("SettingsStorage: {_blobCache}")]
     public class SettingsStorage : Akavache.Reactive.Settings.ISettingsStorage
     {
         protected SettingsStorage(string keyPrefix, Akavache.Reactive.IBlobCache cache) { }

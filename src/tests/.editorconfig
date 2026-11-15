@@ -1,4 +1,4 @@
-# Inherits from ../../.editorconfig — no `root = true` here on purpose so the
+# Inherits from ../../.editorconfig - no `root = true` here on purpose so the
 # rules in the repo-level config still apply. This file only lists overrides
 # that are tests-specific.
 
@@ -27,10 +27,8 @@ dotnet_diagnostic.PSH1102.severity = error # In tests, simplify LINQ type filter
 # Akavache test-suite specifics
 ###################
 
-dotnet_diagnostic.RCS1223.severity = none # Mark publicly visible type with DebuggerDisplay attribute — not useful for test fixtures
-dotnet_diagnostic.RCS1079.severity = none # Implement the functionality instead of throwing new NotImplementedException — deliberate in test fakes
-dotnet_diagnostic.SST2485.severity = none # 'throw new NotImplementedException' marks unfinished code — the same deliberate test-fake shape RCS1079 is disabled for
-dotnet_diagnostic.SES1202.severity = none # A string literal is passed where a credential is expected — test fixtures supply their own throwaway passwords
-dotnet_diagnostic.IDE0200.severity = none # Lambda expression can be removed — the method-group overload of Assert.That never invokes the delegate, so throw-matchers silently pass
+dotnet_diagnostic.SST2485.severity = none # Test fakes deliberately throw NotImplementedException
+dotnet_diagnostic.SES1202.severity = none # A string literal is passed where a credential is expected - test fixtures supply their own throwaway passwords
+dotnet_diagnostic.IDE0200.severity = none # Lambda expression can be removed - the method-group overload of Assert.That never invokes the delegate, so throw-matchers silently pass
 
-dotnet_diagnostic.SST2209.severity = none # A null-forgiving operator has no local effect — test fixtures are deliberately nullable, so they are load-bearing
+dotnet_diagnostic.SST2209.severity = none # A null-forgiving operator has no local effect - test fixtures are deliberately nullable, so they are load-bearing

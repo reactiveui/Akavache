@@ -13,7 +13,7 @@ namespace Akavache;
 /// sqlite3 return code so callers can distinguish specific failures (missing-table /
 /// missing-column errors, bad encryption key, etc.) from generic ones.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{ResultCode}")]
+[System.Diagnostics.DebuggerDisplay("AkavacheSqliteException: {ResultCode}")]
 public sealed class AkavacheSqliteException : Exception
 {
     /// <summary>Initializes a new instance of the <see cref="AkavacheSqliteException"/> class.</summary>

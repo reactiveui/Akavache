@@ -12,7 +12,7 @@ using ReactiveUI;
 namespace AkavacheTodoMaui.ViewModels;
 
 /// <summary>View model for individual todo items with reactive behaviors.</summary>
-[System.Diagnostics.DebuggerDisplay("{Activator}")]
+[System.Diagnostics.DebuggerDisplay("TodoItemViewModel: {Activator}")]
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel

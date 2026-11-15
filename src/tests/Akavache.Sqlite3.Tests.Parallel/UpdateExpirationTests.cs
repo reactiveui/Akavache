@@ -9,7 +9,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>Tests for the UpdateExpiration functionality across all IBlobCache implementations.</summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("UpdateExpirationTests: {_disposed}")]
 public class UpdateExpirationTests : IDisposable
 {
     /// <summary>How far ahead a value's expiration is stamped when it is first inserted.</summary>

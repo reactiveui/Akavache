@@ -8,7 +8,7 @@ using ReactiveUI.SourceGenerators;
 namespace AkavacheTodoWpf.Services;
 
 /// <summary>Represents todo statistics for dashboard display.</summary>
-[System.Diagnostics.DebuggerDisplay("{TotalTodos}")]
+[System.Diagnostics.DebuggerDisplay("TodoStats: {TotalTodos}")]
 public partial class TodoStats : ReactiveObject
 {
     /// <summary>

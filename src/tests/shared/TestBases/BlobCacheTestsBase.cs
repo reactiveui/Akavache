@@ -11,7 +11,7 @@ namespace Akavache.Tests;
 #endif
 
 /// <summary>A base class for tests about bulk operations.</summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("BlobCacheTestsBase: {_disposed}")]
 public abstract class BlobCacheTestsBase : IDisposable
 {
     /// <summary>How long a fetch-backed observable is given to produce its value.</summary>
@@ -209,7 +209,7 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <param name="serializerType">The serializer type to check.</param>
     /// <param name="cacheType">The cache type to check against.</param>
     /// <returns>True if the serializer is compatible with the cache type.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="serializerType"/> or <paramref name="cacheType"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="serializerType"/> or <paramref name="cacheType"/> is <see langword="null"/>.</exception>
     protected virtual bool IsSerializerCompatibleWithCache(Type serializerType, Type cacheType)
     {
         // With the universal shim, most combinations should now work
@@ -224,15 +224,7 @@ public abstract class BlobCacheTestsBase : IDisposable
 
     /// <summary>Disposes the specified disposing.</summary>
     /// <param name="disposing">if set to <c>true</c> [disposing].</param>
-    protected virtual void Dispose(bool disposing)
-    {
-        // Claimed up front so a second caller returns immediately rather than racing the first
-        // through the disposal below.
-        if (Interlocked.Exchange(ref _disposed, 1) != 0)
-        {
-            return;
-        }
-    }
+    protected virtual void Dispose(bool disposing) => _ = Interlocked.Exchange(ref _disposed, 1);
 
     /// <summary>Sets up the test with the specified serializer type.</summary>
     /// <param name="serializerType">The type of serializer to use for this test.</param>

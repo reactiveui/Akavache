@@ -9,7 +9,7 @@ using ReactiveUI;
 namespace AkavacheTodoWpf.Models;
 
 /// <summary>Represents a Todo item with all necessary properties for demonstration.</summary>
-[System.Diagnostics.DebuggerDisplay("{Id}")]
+[System.Diagnostics.DebuggerDisplay("TodoItem: {Id}")]
 [SupportedOSPlatform("windows10.0.19041.0")]
 public class TodoItem : ReactiveObject
 {

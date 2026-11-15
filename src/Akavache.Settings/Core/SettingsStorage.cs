@@ -47,7 +47,7 @@ namespace Akavache.Settings.Core;
 /// updates, or call <c>await settings.Enabled.FirstAsync()</c> for a one-shot read.
 /// </para>
 /// </remarks>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("SettingsStorage: {_blobCache}")]
 public class SettingsStorage : ISettingsStorage
 {
     /// <summary>The underlying blob cache used for persistent storage of settings values.</summary>
@@ -104,7 +104,7 @@ public class SettingsStorage : ISettingsStorage
         {
             EagerCreateStreams(this, GetType().GetRuntimeProperties());
 
-            List<IObservable<RxVoid>> loaders = new(_streams.Count);
+            List<IObservable<RxVoid>> loaders = [with(_streams.Count)];
             foreach (var entry in _streams)
             {
                 loaders.Add(entry.Value.EnsureLoaded());
@@ -253,8 +253,6 @@ public class SettingsStorage : ISettingsStorage
     /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        // Claimed up front so a second caller returns immediately rather than racing the first
-        // through the disposal below.
         if (Interlocked.Exchange(ref _disposedValue, 1) != 0)
         {
             return;

@@ -9,7 +9,7 @@ namespace Akavache.Tests.Mocks;
 #endif
 
 /// <summary>Test object for doing DateTimeOffset tests.</summary>
-[System.Diagnostics.DebuggerDisplay("{Timestamp}")]
+[System.Diagnostics.DebuggerDisplay("TestObjectDateTimeOffset: {Timestamp}")]
 public class TestObjectDateTimeOffset
 {
     /// <summary>Gets or sets a timestamp.</summary>

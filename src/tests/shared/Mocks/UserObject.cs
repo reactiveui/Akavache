@@ -9,7 +9,7 @@ namespace Akavache.Tests.Mocks;
 #endif
 
 /// <summary>A fixture of a user object.</summary>
-[System.Diagnostics.DebuggerDisplay("{Bio}")]
+[System.Diagnostics.DebuggerDisplay("UserObject: {Bio}")]
 public class UserObject
 {
     /// <summary>Gets or sets the bio.</summary>

@@ -13,6 +13,43 @@ namespace Akavache.Tests;
 [Category("Akavache")]
 public class SqliteRowObservableTests
 {
+    /// <summary>Rows arriving during replay cannot complete ahead of a buffered row.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task Subscribe_GapReplay_PreservesRowsBeforeCompletion()
+    {
+        const int firstRow = 1;
+        const int gapRow = 2;
+        const int lastRow = 3;
+        var sut = new SqliteRowObservable<int>();
+        var values = new List<int>();
+        int[]? completedRows = null;
+        sut.OnNext(firstRow);
+
+        using var subscription = sut.Subscribe(Witness.Create<int>(
+            value =>
+            {
+                if (value == firstRow)
+                {
+                    sut.OnNext(gapRow);
+                }
+                else if (value == gapRow)
+                {
+                    sut.OnNext(lastRow);
+                    sut.OnCompleted();
+                }
+
+                values.Add(value);
+            },
+            static _ => { },
+            () => completedRows = [.. values]));
+
+        int[] expected = [firstRow, gapRow, lastRow];
+        await Assert.That(values.SequenceEqual(expected)).IsTrue();
+        await Assert.That(completedRows).IsNotNull();
+        await Assert.That(completedRows!.SequenceEqual(expected)).IsTrue();
+    }
+
     /// <summary>Calling OnNext after OnCompleted is a silent no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
@@ -469,7 +506,7 @@ public class SqliteRowObservableTests
         await Assert.That(observerSlot).IsSameReferenceAs(observer);
     }
 
-    /// <summary>CaptureGapAndSetObserver with pending state and buffered rows — sets observer, returns gap.</summary>
+    /// <summary>Buffered rows must be replayed before publishing the observer.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task CaptureGapAndSetObserver_Pending_WithBuffer_ReturnsGap()
@@ -490,7 +527,7 @@ public class SqliteRowObservableTests
         await Assert.That(gap).IsNotNull();
         await Assert.That(gap!.Length).IsEqualTo(BufferedRowCount);
         await Assert.That(buffer).IsNull();
-        await Assert.That(observerSlot).IsSameReferenceAs(observer);
+        await Assert.That(observerSlot).IsNull();
     }
 
     /// <summary>CaptureGapAndSetObserver with pending state and empty buffer — sets observer, returns null gap.</summary>

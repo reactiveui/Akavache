@@ -52,7 +52,9 @@ internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
         }
 
         // Fallback for legacy integer-only format (assume UTC)
-        return (objectType != typeof(DateTimeOffset) && objectType != typeof(DateTimeOffset?)) || reader.Value is null ? null : new DateTimeOffset((long)reader.Value, TimeSpan.Zero);
+        return (objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?)) && reader.Value is not null
+            ? new DateTimeOffset((long)reader.Value, TimeSpan.Zero)
+            : null;
     }
 
     /// <inheritdoc/>

@@ -379,16 +379,14 @@ public class HttpService : IHttpService, IDisposable
             _retries = retries;
             _timeout = timeout;
 
-            // Also bound the client itself so it honors the same timeout. The client is the one the
-            // base constructor just created, so it can neither have issued a request nor been
-            // disposed; the only way the assignment fails is the value itself being out of range,
-            // and then the timeout enforced in MakeWebRequest still holds.
+            // Also bound the client itself so it honors the same timeout.
             try
             {
                 HttpClient.Timeout = _timeout;
             }
             catch (ArgumentOutOfRangeException)
             {
+                // MakeWebRequest still enforces timeouts outside HttpClient's supported range.
             }
         }
 

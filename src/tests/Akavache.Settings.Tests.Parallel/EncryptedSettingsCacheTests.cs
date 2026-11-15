@@ -15,7 +15,7 @@ namespace Akavache.EncryptedSettings.Tests;
 /// Tests for the encrypted settings cache, isolated per test to avoid static state leakage.
 /// Uses eventually-consistent polling and treats transient disposal as retryable.
 /// </summary>
-[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+[System.Diagnostics.DebuggerDisplay("EncryptedSettingsCacheTests: {_appBuilder}")]
 [Category("Akavache")]
 public class EncryptedSettingsCacheTests
 {

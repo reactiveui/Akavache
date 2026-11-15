@@ -77,8 +77,8 @@ public static class BitmapImageExtensions
 
             return blobCache.Get(key)
                 .SelectManyThen(
-                    BitmapHelpers.ThrowOnNullOrBadImageBuffer,
-                    x => BitmapHelpers.BytesToImage(x, desiredWidth, desiredHeight));
+                    BitmapBufferExtensions.ThrowOnNullOrBadImageBuffer,
+                    x => x.BytesToImage(desiredWidth, desiredHeight));
         }
 
         /// <summary>
@@ -152,7 +152,7 @@ public static class BitmapImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectManyThen(BitmapHelpers.ThrowOnBadImageBuffer, x => BitmapHelpers.BytesToImage(x, desiredWidth, desiredHeight));
+                .SelectManyThen(BitmapBufferExtensions.ThrowOnBadImageBuffer, x => x.BytesToImage(desiredWidth, desiredHeight));
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ public static class BitmapImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectManyThen(BitmapHelpers.ThrowOnBadImageBuffer, x => BitmapHelpers.BytesToImage(x, desiredWidth, desiredHeight));
+                .SelectManyThen(BitmapBufferExtensions.ThrowOnBadImageBuffer, x => x.BytesToImage(desiredWidth, desiredHeight));
         }
 
         /// <summary>
@@ -305,7 +305,7 @@ public static class BitmapImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectManyThen(BitmapHelpers.ThrowOnBadImageBuffer, x => BitmapHelpers.BytesToImage(x, desiredWidth, desiredHeight));
+                .SelectManyThen(BitmapBufferExtensions.ThrowOnBadImageBuffer, x => x.BytesToImage(desiredWidth, desiredHeight));
         }
 
         /// <summary>
@@ -384,7 +384,7 @@ public static class BitmapImageExtensions
             ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
             return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-                .SelectManyThen(BitmapHelpers.ThrowOnBadImageBuffer, x => BitmapHelpers.BytesToImage(x, desiredWidth, desiredHeight));
+                .SelectManyThen(BitmapBufferExtensions.ThrowOnBadImageBuffer, x => x.BytesToImage(desiredWidth, desiredHeight));
         }
 
         /// <summary>Save an image to the blob cache.</summary>

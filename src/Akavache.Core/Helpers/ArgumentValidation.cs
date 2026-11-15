@@ -23,7 +23,7 @@ internal static class ArgumentValidation
     /// <summary>Throws an <see cref="ArgumentNullException"/> if <paramref name="argument"/> is null.</summary>
     /// <param name="argument">The reference type argument to validate as non-null.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="argument"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="argument"/> is null.</exception>
 #if NET8_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ThrowIfNull(
@@ -48,7 +48,7 @@ internal static class ArgumentValidation
     /// <param name="argument">The reference type argument to validate as non-null.</param>
     /// <param name="message">The exception message.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="argument"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="argument"/> is null.</exception>
     internal static void ThrowIfNullWithMessage(
         [NotNull] object? argument,
         string message,
@@ -142,7 +142,7 @@ internal static class ArgumentValidation
     /// <param name="condition">The condition to evaluate.</param>
     /// <param name="message">The exception message.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="condition"/> corresponds.</param>
-    /// <exception cref="ArgumentException"><paramref name="condition"/> is <see langword="true"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="condition"/> is true.</exception>
     internal static void ThrowIf(
         [DoesNotReturnIf(true)] bool condition,
         string message,
@@ -191,7 +191,7 @@ internal static class ArgumentValidation
     /// <param name="value">The argument to validate.</param>
     /// <param name="other">The value to compare with.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> equals <paramref name="other"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is equal to <paramref name="other"/>.</exception>
     internal static void ThrowIfEqual<T>(
         T value,
         T other,
@@ -211,7 +211,7 @@ internal static class ArgumentValidation
     /// <param name="value">The argument to validate.</param>
     /// <param name="other">The value to compare with.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> does not equal <paramref name="other"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is not equal to <paramref name="other"/>.</exception>
     internal static void ThrowIfNotEqual<T>(
         T value,
         T other,
@@ -345,7 +345,7 @@ internal static class ArgumentValidation
     /// <typeparam name="T">The struct type.</typeparam>
     /// <param name="argument">The argument to validate.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="argument"/> is the default value for <typeparamref name="T"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="argument"/> is the default value.</exception>
     internal static void ThrowIfDefault<T>(
         T argument,
         [CallerArgumentExpression(nameof(argument))] string? paramName = null)
@@ -367,7 +367,7 @@ internal static class ArgumentValidation
     /// <param name="argument">The argument to validate.</param>
     /// <param name="paramName">The name of the parameter.</param>
     /// <returns>The validated non-null argument.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="argument"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <c>argument</c> is <see langword="null"/>.</exception>
     [return: NotNull]
     internal static T EnsureNotNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         where T : class =>
@@ -379,7 +379,7 @@ internal static class ArgumentValidation
     /// <param name="message">The error message.</param>
     /// <param name="paramName">The name of the parameter.</param>
     /// <returns>The validated non-null argument.</returns>
-    /// <exception cref="InvalidOperationException"><paramref name="argument"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when <c>argument</c> is <see langword="null"/>.</exception>
     [return: NotNull]
     internal static T EnsureNotNull<T>([NotNull] T? argument, string message, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         where T : class =>

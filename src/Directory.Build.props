@@ -20,27 +20,14 @@
   -->
   <PropertyGroup>
     <RxReactiveSeam Condition="$(MSBuildProjectName.EndsWith('Reactive')) or $(MSBuildProjectName.Contains('Reactive_'))">true</RxReactiveSeam>
-    <!-- Projects that build against a published Akavache rather than this source tree (the v10/v11
-         compatibility writers and the v10 comparison benchmark) set this to false: they resolve
-         System.Reactive through those packages and must not get the seam's imports. -->
-    <UsesAkavacheSeam Condition="'$(UsesAkavacheSeam)' == ''">true</UsesAkavacheSeam>
   </PropertyGroup>
 
   <!-- Disposables are the same package and namespace on both sides of the seam. -->
-  <ItemGroup Condition="'$(UsesAkavacheSeam)' == 'true'">
+  <ItemGroup>
     <Using Include="ReactiveUI.Primitives.Disposables" />
   </ItemGroup>
 
-  <!-- Seam-exempt projects consume a published Akavache and so speak System.Reactive throughout. -->
-  <ItemGroup Condition="'$(UsesAkavacheSeam)' != 'true'">
-    <Using Include="System.Reactive" />
-    <Using Include="System.Reactive.Concurrency" />
-    <Using Include="System.Reactive.Disposables" />
-    <Using Include="System.Reactive.Linq" />
-    <Using Include="System.Reactive.Subjects" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(UsesAkavacheSeam)' == 'true' and '$(RxReactiveSeam)' != 'true'">
+  <ItemGroup Condition="'$(RxReactiveSeam)' != 'true'">
     <Using Include="ReactiveUI.Primitives" />
     <Using Include="ReactiveUI.Primitives.Advanced" />
     <Using Include="ReactiveUI.Primitives.Concurrency" />
@@ -54,7 +41,7 @@
   <PropertyGroup Condition="'$(RxReactiveSeam)' == 'true'">
     <DefineConstants>$(DefineConstants);REACTIVE_SHIM</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(UsesAkavacheSeam)' == 'true' and '$(RxReactiveSeam)' == 'true'">
+  <ItemGroup Condition="'$(RxReactiveSeam)' == 'true'">
     <!-- Deliberately no bare ReactiveUI.Primitives import here. Its SubscribeExtensions would tie
          with System.Reactive's ObservableExtensions.Subscribe on every call site; each leaf should
          bind Subscribe to its own stack. The types the source needs from that namespace all have a
@@ -237,30 +224,16 @@
     <PackageReference Include="StyleSharp.Analyzers" PrivateAssets="all" />
     <PackageReference Include="PerformanceSharp.Analyzers" PrivateAssets="all" />
     <PackageReference Include="SecuritySharp.Analyzers" PrivateAssets="all" />
-    <PackageReference Include="Roslynator.Analyzers" PrivateAssets="All" />
-    <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all" />
-    <PackageReference Include="Blazor.Common.Analyzers" PrivateAssets="All" />
   </ItemGroup>
 
-  <!-- Public-API tracking (PAS0001-PAS0005): one baseline per TFM at
-       <Project>/PublicAPI/<tfm>/PublicAPI.txt, rendered as nested C# so a reviewer reads an API
-       change the way they read code. There is no shipped/unshipped split — the baseline states the
-       current surface and is updated in the same commit that changes it. Both leaves of the seam are
-       tracked, so a change to the shared source shows up as a diff on the lean and the .Reactive
-       surface alike. Regenerate with tools/generate-publicapi.sh (or the .ps1 sibling on Windows,
-       which reaches the Apple TFMs). -->
+  <!-- Track each shipped library's public surface independently for each target framework. -->
   <PropertyGroup>
     <TrackPublicApi Condition="'$(TrackPublicApi)' == ''">true</TrackPublicApi>
     <TrackPublicApi Condition="'$(IsTestProject)' == 'true'">false</TrackPublicApi>
-    <!-- Nothing under these trees ships, so none of it has a public surface worth pinning. -->
     <TrackPublicApi Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)benchmarks$([System.IO.Path]::DirectorySeparatorChar)'))">false</TrackPublicApi>
     <TrackPublicApi Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)samples$([System.IO.Path]::DirectorySeparatorChar)'))">false</TrackPublicApi>
-    <TrackPublicApi Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)compat$([System.IO.Path]::DirectorySeparatorChar)'))">false</TrackPublicApi>
-    <!-- The WPF markup pass generates '<Project>_<hash>_wpftmp.csproj' in the real project's
-         directory, so it resolves the same baseline path and would overwrite it. -->
+    <!-- WPF markup projects share the real project's directory and must not overwrite its baseline. -->
     <TrackPublicApi Condition="$(MSBuildProjectName.EndsWith('_wpftmp'))">false</TrackPublicApi>
-    <!-- The analyzer's own targets resolve <Project>/PublicAPI/<tfm>/PublicAPI.txt and add it to
-         AdditionalFiles, so the baseline path needs no wiring here. -->
     <EnablePublicApiBaseline>$(TrackPublicApi)</EnablePublicApiBaseline>
   </PropertyGroup>
   <ItemGroup Condition="'$(TrackPublicApi)' == 'true'">

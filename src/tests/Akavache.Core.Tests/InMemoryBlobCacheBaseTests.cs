@@ -1294,7 +1294,7 @@ public class InMemoryBlobCacheBaseTests
             [ExpiredKey] = new(ExpiredKey, "System.String", Value: null, default, now.AddMinutes(-1).UtcDateTime),
             [ValidKey] = new(ValidKey, "System.String", Value: null, default, now.AddHours(1).UtcDateTime),
         };
-        Dictionary<Type, HashSet<string>> typeIndex = new() { [typeof(string)] = new(StringComparer.Ordinal) { ExpiredKey, ValidKey }, };
+        Dictionary<Type, HashSet<string>> typeIndex = new() { [typeof(string)] = [with(StringComparer.Ordinal), ExpiredKey, ValidKey], };
         Dictionary<string, Type> keyToType = new(StringComparer.Ordinal) { [ExpiredKey] = typeof(string), [ValidKey] = typeof(string), };
 
         InMemoryBlobCacheBase.VacuumExpiredEntriesFast(cache, typeIndex, keyToType, now);
@@ -1314,7 +1314,7 @@ public class InMemoryBlobCacheBaseTests
     {
         DateTimeOffset now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
         Dictionary<string, CacheEntry> cache = new(StringComparer.Ordinal) { [ValidKey] = new(ValidKey, TypeName: null, Value: null, default, now.AddHours(1).UtcDateTime), };
-        Dictionary<Type, HashSet<string>> typeIndex = new() { [typeof(string)] = new(StringComparer.Ordinal) { ValidKey }, };
+        Dictionary<Type, HashSet<string>> typeIndex = new() { [typeof(string)] = [with(StringComparer.Ordinal), ValidKey], };
         Dictionary<string, Type> keyToType = new(StringComparer.Ordinal) { [ValidKey] = typeof(string), };
 
         InMemoryBlobCacheBase.VacuumExpiredEntriesFast(cache, typeIndex, keyToType, now);
@@ -1336,7 +1336,7 @@ public class InMemoryBlobCacheBaseTests
         DateTimeOffset now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
         Dictionary<string, CacheEntry> cache = new(StringComparer.Ordinal) { [UntypedExpiredKey] = new(UntypedExpiredKey, TypeName: null, Value: null, default, now.AddMinutes(-1).UtcDateTime), };
         Dictionary<Type, HashSet<string>> typeIndex = [];
-        Dictionary<string, Type> keyToType = new(StringComparer.Ordinal);
+        Dictionary<string, Type> keyToType = [with(StringComparer.Ordinal)];
 
         InMemoryBlobCacheBase.VacuumExpiredEntriesFast(cache, typeIndex, keyToType, now);
 

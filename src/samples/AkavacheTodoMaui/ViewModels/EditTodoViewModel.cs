@@ -10,7 +10,7 @@ using ReactiveUI.SourceGenerators;
 namespace AkavacheTodoMaui.ViewModels;
 
 /// <summary>View model for editing existing todo items.</summary>
-[System.Diagnostics.DebuggerDisplay("{PriorityOptions}")]
+[System.Diagnostics.DebuggerDisplay("EditTodoViewModel: {PriorityOptions}")]
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public partial class EditTodoViewModel : ReactiveObject
@@ -44,7 +44,7 @@ public partial class EditTodoViewModel : ReactiveObject
 
     /// <summary>Initializes a new instance of the <see cref="EditTodoViewModel"/> class.</summary>
     /// <param name="todoItem">The todo item to edit.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="todoItem"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <c>todoItem</c> is <see langword="null"/>.</exception>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public EditTodoViewModel(TodoItem todoItem)

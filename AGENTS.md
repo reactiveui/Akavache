@@ -14,7 +14,6 @@
   - `src/Akavache.HttpDownloader/` — HTTP download extensions (`HttpService`, `HttpExtensions`, `RelativeTimeDownloadExtensions`)
   - `src/Akavache.Drawing/` — Image/bitmap caching support
   - `src/Akavache.Settings/` — Typed settings storage built on top of blob caches
-  - `src/Akavache.V10toV11/` — V10-to-V11 data migration utilities
 - **Test projects (11 assemblies):**
   - Serial assemblies (use `[assembly: NotInParallel]` + custom `TestExecutor`):
     - `src/tests/Akavache.Core.Tests/` — Tests touching global state (`CacheDatabase`, `AppLocator`, `UniversalSerializer`)
@@ -33,7 +32,6 @@
   - `src/tests/shared/` — Shared test infrastructure (Helpers, Mocks, TestBases) compiled into each assembly via `<Compile Include>`
 - **Sample apps:** `src/samples/`
 - **Benchmarks:** `src/benchmarks/`
-- **Compatibility writers/readers:** `src/compat/`
 
 ## Build
 
@@ -155,7 +153,7 @@ find src -name "*.cobertura.xml" -path "*/TestResults/*"
 
 - Follow ReactiveUI contribution guidelines
 - `.editorconfig` formatting/naming conventions enforced
-- StyleCop and Roslynator analyzers active
+- StyleSharp, PerformanceSharp, SecuritySharp, PublicApiSharp and built-in .NET analyzers active
 - Public APIs require XML documentation
 - No `#pragma warning disable` in production code — use `[SuppressMessage]` attribute instead
 - All production methods must be `internal` (not `private`) so they can be tested
