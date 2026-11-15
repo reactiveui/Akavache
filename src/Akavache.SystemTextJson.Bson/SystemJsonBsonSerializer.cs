@@ -249,7 +249,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
     {
         try
         {
-            using BsonDataReader reader = new(new MemoryStream(bytes, writable: false));
+            using BsonDataReader reader = new(ReadOnlyMemoryStreamCompat.OpenRead(bytes));
 
             if (ForcedDateTimeKind.HasValue)
             {

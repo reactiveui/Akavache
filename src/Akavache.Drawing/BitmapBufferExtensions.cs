@@ -32,9 +32,9 @@ internal static class BitmapBufferExtensions
             Signal.FromAsync(async () =>
             {
 #if NETFRAMEWORK
-                using var ms = new MemoryStream(compressedImage, writable: false);
+                using var ms = ReadOnlyMemoryStreamCompat.OpenRead(compressedImage);
 #else
-                await using MemoryStream ms = new(compressedImage, writable: false);
+                await using var ms = ReadOnlyMemoryStreamCompat.OpenRead(compressedImage);
 #endif
                 var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight).ConfigureAwait(false);
                 return bitmap ?? throw new IOException("Failed to load the bitmap!");
@@ -47,9 +47,9 @@ internal static class BitmapBufferExtensions
             Signal.FromAsync(async () =>
             {
 #if NETFRAMEWORK
-                using var ms = new MemoryStream(compressedImage, writable: false);
+                using var ms = ReadOnlyMemoryStreamCompat.OpenRead(compressedImage);
 #else
-                await using MemoryStream ms = new(compressedImage, writable: false);
+                await using var ms = ReadOnlyMemoryStreamCompat.OpenRead(compressedImage);
 #endif
                 var bitmap = await BitmapLoader.Current.Load(ms, null, null).ConfigureAwait(false);
                 return bitmap is not null ? new Size(bitmap.Width, bitmap.Height) : throw new InvalidOperationException("Failed to load image for size detection");
