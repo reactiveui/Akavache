@@ -94,6 +94,20 @@ public partial class ImageCacheExtensionsTests
     /// <summary>Resolver named in the failure a host without image support produces.</summary>
     private const string DependencyResolverName = "dependency resolver";
 
+    /// <summary>A failed download is skipped and preloading still completes successfully.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task PreloadImagesFromUrls_DownloadFailure_Completes()
+    {
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
+        cache.SetHttpService(new ThrowingHttpService());
+
+        var result = await cache.PreloadImagesFromUrls(["https://example.com/unavailable.png"]).FirstAsync();
+
+        await Assert.That(result).IsEqualTo(RxVoid.Default);
+        await Assert.That(await cache.GetAllKeys().ToList()).IsEmpty();
+    }
+
     /// <summary>Tests that LoadImages throws ArgumentNullException when cache is null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]

@@ -194,7 +194,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
     /// <param name="predicate">Decides whether a transformed result counts as a match.</param>
     /// <param name="fallback">The value emitted when no candidate matches.</param>
     /// <param name="startIndex">The index in <paramref name="candidates"/> to resume walking from.</param>
-    private sealed class AsyncSink(
+    internal sealed class AsyncSink(
         IObserver<TResult> downstream,
         IReadOnlyList<TKey> candidates,
         Func<TKey, IObservable<TRaw>> project,

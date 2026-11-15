@@ -43,6 +43,64 @@ public class FirstMatchFromCandidatesObservableTests
     /// <summary>The pending candidate's raw value after the transform — what its predicate accepts.</summary>
     private const string PendingCandidateMatchValue = "pending!";
 
+    /// <summary>Disposal during a transform wins before the matching value can be published.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task OnNext_DisposedDuringTransform_DoesNotPublish()
+    {
+        List<int> values = [];
+        var completions = 0;
+        Action cancel = static () => { };
+        using FirstMatchFromCandidatesObservable<int, int, int>.AsyncSink sink = new(
+            Witness.Create<int>(values.Add, static _ => { }, () => completions++),
+            [1],
+            Signal.Return,
+            value =>
+            {
+                cancel();
+                return value;
+            },
+            static _ => true,
+            -1,
+            0);
+        cancel = sink.Dispose;
+
+        sink.OnNext(1);
+
+        await Assert.That(values).IsEmpty();
+        await Assert.That(completions).IsEqualTo(0);
+    }
+
+    /// <summary>A disposed walker neither subscribes to another candidate nor publishes its fallback.</summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    public async Task TryNext_AfterDisposal_DoesNotSubscribeOrPublish()
+    {
+        List<int> values = [];
+        var subscriptions = 0;
+        var completions = 0;
+        FirstMatchFromCandidatesObservable<int, int, int>.AsyncSink sink = new(
+            Witness.Create<int>(values.Add, static _ => { }, () => completions++),
+            [1],
+            value =>
+            {
+                subscriptions++;
+                return Signal.Return(value);
+            },
+            static value => value,
+            static _ => true,
+            -1,
+            0);
+
+        sink.Dispose();
+        sink.TryNext();
+        sink.Dispose();
+
+        await Assert.That(subscriptions).IsEqualTo(0);
+        await Assert.That(values).IsEmpty();
+        await Assert.That(completions).IsEqualTo(0);
+    }
+
     /// <summary>Empty candidate list emits the fallback value immediately.</summary>
     /// <returns>A task.</returns>
     [Test]

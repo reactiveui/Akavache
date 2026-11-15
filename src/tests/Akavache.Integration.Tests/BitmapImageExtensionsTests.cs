@@ -48,6 +48,39 @@ public class BitmapImageExtensionsTests
     /// <summary>The bitmap loader captured prior to each test so it can be restored during teardown.</summary>
     private IBitmapLoader? _originalLoader;
 
+    /// <summary>Repeated URL loads decode the cached bytes for each URL overload.</summary>
+    /// <param name="overload">The URL overload to exercise.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [Arguments(0)]
+    [Arguments(1)]
+    [Arguments(2)]
+    [SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Exercises the public string URL overload alongside the Uri overloads.")]
+    public async Task LoadImageFromUrl_RepeatedLoads_DecodeCachedBytes(int overload)
+    {
+        const int RequestCount = 2;
+        Uri url = new("https://example.com/repeated-bitmap.png");
+        using var fixture = CreateSeededImageFixture(url.AbsoluteUri);
+
+        for (var iteration = 0; iteration < RequestCount; iteration++)
+        {
+            var request = overload switch
+            {
+                0 => fixture.Cache.LoadImageFromUrl(url),
+                1 => fixture.Cache.LoadImageFromUrl(url.AbsoluteUri, url.AbsoluteUri),
+                _ => fixture.Cache.LoadImageFromUrl(url.AbsoluteUri, url),
+            };
+            using var bitmap = await request.FirstAsync();
+            await Assert.That(bitmap).IsNotNull();
+            await Assert.That(fixture.Loader.LastStreamLength).IsEqualTo(SeededImageByteLength);
+        }
+
+        await Assert.That(fixture.HttpService.DownloadCount).IsEqualTo(0);
+    }
+
     /// <summary>Performs per-test-class initialization.</summary>
     [Before(Test)]
     public void Initialize()

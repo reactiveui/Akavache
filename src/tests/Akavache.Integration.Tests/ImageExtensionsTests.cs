@@ -48,6 +48,37 @@ public class ImageExtensionsTests
     /// <summary>A buffer far below the image guard's minimum size.</summary>
     private static readonly byte[] UndersizedImageBuffer = [1, 2, 3];
 
+    /// <summary>Repeated image-byte requests reuse the cached payload for each URL overload.</summary>
+    /// <param name="overload">The URL overload to exercise.</param>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Test]
+    [Arguments(0)]
+    [Arguments(1)]
+    [Arguments(2)]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Exercises the public string URL overload alongside the Uri overload.")]
+    public async Task LoadImageBytesFromUrl_RepeatedLoads_ReturnCachedBytes(int overload)
+    {
+        const int RequestCount = 2;
+        using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
+        Uri url = new("https://example.com/repeated-bytes.png");
+        var bytes = CreateImageData(SampleImageByteCount);
+        _ = await cache.Insert(url.AbsoluteUri, bytes).FirstAsync();
+
+        for (var iteration = 0; iteration < RequestCount; iteration++)
+        {
+            var request = overload switch
+            {
+                0 => cache.LoadImageBytesFromUrl(url.AbsoluteUri),
+                1 => cache.LoadImageBytesFromUrl(url),
+                _ => cache.LoadImageBytesFromUrl(url.AbsoluteUri, url.AbsoluteUri),
+            };
+            await Assert.That(await request.FirstAsync()).IsEquivalentTo(bytes);
+        }
+    }
+
     /// <summary>Tests that IsValidImageFormat correctly identifies PNG images.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
