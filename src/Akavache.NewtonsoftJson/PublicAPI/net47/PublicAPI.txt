@@ -1,0 +1,34 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Settings.Tests.Parallel")]
+namespace Akavache.NewtonsoftJson;
+
+public static class AkavacheBuilderExtensions
+{
+    extension(Akavache.IAkavacheBuilder builder)
+    {
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftBson() { }
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftBson(Newtonsoft.Json.JsonSerializerSettings settings) { }
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftBson(System.Action<Newtonsoft.Json.JsonSerializerSettings> configure) { }
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftJson() { }
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftJson(Newtonsoft.Json.JsonSerializerSettings settings) { }
+        public Akavache.IAkavacheBuilder WithSerializerNewtonsoftJson(System.Action<Newtonsoft.Json.JsonSerializerSettings> configure) { }
+    }
+}
+[System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+public class NewtonsoftBsonSerializer : Akavache.NewtonsoftJson.NewtonsoftSerializer
+{
+    public NewtonsoftBsonSerializer() { }
+}
+[System.Diagnostics.DebuggerDisplay("{Options}")]
+public class NewtonsoftSerializer : Akavache.ISerializer
+{
+    public NewtonsoftSerializer() { }
+    public System.DateTimeKind? ForcedDateTimeKind { get; set; }
+    public Newtonsoft.Json.JsonSerializerSettings? Options { get; set; }
+    public bool UseBsonFormat { get; set; }
+    public T? Deserialize<T>(byte[] bytes) { }
+    public byte[] Serialize<T>(T item) { }
+    public static bool IsPotentialBsonData(byte[] data) { }
+}

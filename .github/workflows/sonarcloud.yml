@@ -19,6 +19,7 @@ jobs:
             sonarProjectKey: reactiveui_Akavache
             sonarOrganization: reactiveui
             installWorkloads: true
+            testProjects: tests/**/*.csproj
             sonarExclusions: '**/tests/**,**/benchmarks/**,**/samples/**,**/compat/**,**/TestResults/**'
             # The compat writer/reader are standalone executables run outside the test harness, so no collector instruments them.
             sonarCoverageExclusions: '**/tests/**,**/benchmarks/**,**/samples/**,**/compat/**,**/*Tests/**,**/*Tests.cs,**/Generated/**,**/*.g.cs'

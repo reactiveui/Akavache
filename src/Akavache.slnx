@@ -27,7 +27,6 @@
     <File Path="../docs/migration-v10-to-v11.md" />
     <File Path="../docs/migration-v11-to-v12.md" />
     <File Path="RunCompatTest.ps1" />
-    <File Path="stylecop.json" />
     <File Path="tests.runsettings" />
   </Folder>
   <Folder Name="/Akavache.Core/" />

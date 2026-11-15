@@ -78,7 +78,11 @@ internal static class Utility
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Trace.TraceWarning($"Failed to clean up '{directoryPath}': {ex}");
+            TestContext.Current?.GetDefaultLogger().Log(
+                TUnit.Core.Logging.LogLevel.Error,
+                "Failed to clean up the test directory.",
+                ex,
+                static (message, exception) => $"{message} {exception}");
         }
     }
 

@@ -51,7 +51,7 @@ public class NotificationService : ReactiveObject, IDisposable
     {
         // Subscribe to settings changes
         _ = TodoCacheService.GetSettings()
-            .Subscribe(settings => _currentSettings = settings ?? new AppSettings());
+            .Subscribe(settings => _currentSettings = settings ?? new());
 
         // Start reminder timer
         _reminderTimer = new(_ => CheckForReminders(), null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
@@ -60,7 +60,7 @@ public class NotificationService : ReactiveObject, IDisposable
         _cacheInfo = Signal.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(CacheInfoRefreshSeconds))
             .SelectMany(static _ => TodoCacheService.GetCacheInfo())
             .ObserveOn(RxSchedulers.MainThreadScheduler)
-            .ToProperty(this, x => x.CacheInfo, new CacheInfo());
+            .ToProperty(this, static x => x.CacheInfo, new());
     }
 
     /// <summary>Gets the cache information.</summary>

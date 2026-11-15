@@ -155,7 +155,7 @@ find src -name "*.cobertura.xml" -path "*/TestResults/*"
 
 - Follow ReactiveUI contribution guidelines
 - `.editorconfig` formatting/naming conventions enforced
-- StyleCop and Roslynator analyzers active
+- StyleSharp, PerformanceSharp, SecuritySharp and built-in .NET analyzers active
 - Public APIs require XML documentation
 - No `#pragma warning disable` in production code — use `[SuppressMessage]` attribute instead
 - All production methods must be `internal` (not `private`) so they can be tested

@@ -396,7 +396,7 @@ public class PlatformCacheDebugger
 
 ### Supported Versions
 
-Akavache V11.1 supports **.NET Framework 4.6.2** and **.NET Framework 4.7.2**.
+Akavache V11.1 supports **.NET Framework 4.7.2**.
 
 ### Configuration
 
@@ -415,7 +415,7 @@ public void ConfigureAkavache()
 ### .NET Framework Considerations
 
 #### System.Text.Json Support
-- **Package Installation**: System.Text.Json is available via NuGet package for .NET Framework 4.6.2+
+- **Package Installation**: System.Text.Json is available via NuGet package for .NET Framework 4.7+
 - **Performance**: Full performance benefits available on .NET Framework
 - **Compatibility**: All serialization features work identically to .NET Core/.NET 5+
 

@@ -55,7 +55,7 @@ Always reference these instructions first and fallback to search or bash command
   - All test assemblies (`dotnet test` from src/)
 - **What fails on Linux/macOS**:
   - Windows-specific projects (WPF samples, net9.0-windows)
-  - .NET Framework projects (net462, net472, net481)
+  - .NET Framework projects (net472, net481)
 - **Building individual projects**: Always use explicit targeting when needed:
   ```bash
   cd src
@@ -107,8 +107,7 @@ Tests are split into **serial** and **parallel** assemblies:
 
 ### Code Style and Analysis Enforcement
 - **EditorConfig Compliance**: Repository uses a comprehensive `.editorconfig` with detailed rules for C# formatting, naming conventions, and code analysis.
-- **StyleCop Analyzers**: Enforces consistent C# code style with `stylecop.analyzers`.
-- **Roslynator Analyzers**: Additional code quality rules with `Roslynator.Analyzers`.
+- **Analyzer packages**: Use only `StyleSharp.Analyzers`, `PerformanceSharp.Analyzers` and `SecuritySharp.Analyzers` alongside built-in .NET analyzers.
 - **Analysis Level**: Set to `latest` with enhanced .NET analyzers enabled.
 - **CRITICAL**: All code must comply with ReactiveUI contribution guidelines: [https://www.reactiveui.net/contribute/index.html](https://www.reactiveui.net/contribute/index.html).
 
@@ -178,7 +177,7 @@ Tests are split into **serial** and **parallel** assemblies:
 
 ### Documentation Requirements
 - **XML comments**: All publicly exposed methods and properties must have .NET XML comments, including protected methods of public classes.
-- **Documentation culture**: Use `en-US` as specified in `src/stylecop.json`.
+- **Documentation culture**: Use `en-US`.
 
 ### File Style Precedence
 - **Existing style**: If a file differs from these guidelines (e.g., private members named `m_member` instead of `_member`), the existing style in that file takes precedence.
@@ -193,14 +192,13 @@ Tests are split into **serial** and **parallel** assemblies:
   ```
 
 ### Code Analysis Validation
-- **Run analyzers** to check StyleCop and code quality compliance:
+- **Run analyzers** to check style and code quality compliance:
   ```bash
   cd src
   dotnet build Akavache.slnx
   ```
-  This runs all analyzers (StyleCop SA*, Roslynator RCS*, .NET CA*) and treats warnings as errors.
+  This runs StyleSharp (SST*), PerformanceSharp (PSH*), SecuritySharp (SES*) and built-in .NET analyzers with the severities in `.editorconfig`.
 - **Analyzer Configuration**:
-  - StyleCop settings in `src/stylecop.json`
   - EditorConfig rules in `.editorconfig` (root level)
   - Analyzer packages in `src/Directory.Build.props`
 
@@ -251,7 +249,7 @@ Tests are split into **serial** and **parallel** assemblies:
 
 ### Adding New Features
 1. **Follow coding standards** - see ReactiveUI guidelines: https://www.reactiveui.net/contribute/index.html
-2. **Ensure StyleCop compliance** - all code must pass StyleCop analyzers (SA* rules)
+2. **Ensure analyzer compliance** - all code must pass the configured StyleSharp, PerformanceSharp, SecuritySharp and built-in .NET checks
 3. **Run code analysis** - `dotnet build` must complete without analyzer warnings
 4. **Add unit tests** - all features require test coverage
 5. **Update documentation** - especially for public APIs with XML doc comments

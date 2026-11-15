@@ -229,7 +229,7 @@ Akavache uses a modular package structure. Choose the packages that match your n
 
 Akavache supports:
 
-- ✅ **.NET Framework 4.6.2/4.7.2** - Windows desktop applications
+- ✅ **.NET Framework 4.7.2** - Windows desktop applications
 - ✅ **.NET Standard 2.0** - Cross-platform libraries
 - ✅ **.NET 8.0** - Modern .NET applications
 - ✅ **.NET 9.0** - Latest .NET applications
@@ -239,7 +239,7 @@ Akavache supports:
 
 ### Serializer Compatibility
 
-| Serializer | .NET Framework 4.6.2+ | .NET 8.0+ | Mobile | Performance |
+| Serializer | .NET Framework 4.7+ | .NET 8.0+ | Mobile | Performance |
 |------------|------------------------|-------------------|------------|--------|
 | **System.Text.Json** | ✅ Via NuGet | ✅ | ✅ | **Fastest** |
 | **Newtonsoft.Json** | ✅ Built-in | ✅ | ✅ | Compatible |

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <!-- Builds against a published Akavache, not this source tree, so the lean/.Reactive seam does not apply. -->
     <UsesAkavacheSeam>false</UsesAkavacheSeam>

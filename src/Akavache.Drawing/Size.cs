@@ -20,12 +20,6 @@ namespace Akavache.Drawing;
 [DebuggerDisplay("Width: {Width}, Height: {Height}")]
 public readonly struct Size(float width, float height) : IEquatable<Size>
 {
-    /// <summary>Largest per-dimension difference, in pixels, at which two sizes still compare equal.</summary>
-    private const float DimensionTolerance = 0.001F;
-
-    /// <summary>Decimal places the dimensions are rounded to before hashing, matching <see cref="DimensionTolerance"/>.</summary>
-    private const int HashRoundingDigits = 3;
-
     /// <summary>Gets the width dimension in pixels.</summary>
     public float Width { get; } = width;
 
@@ -56,10 +50,9 @@ public readonly struct Size(float width, float height) : IEquatable<Size>
 
     /// <inheritdoc/>
     public bool Equals(Size other) =>
-        Math.Abs(Width - other.Width) <= DimensionTolerance
-        && Math.Abs(Height - other.Height) <= DimensionTolerance;
+        EqualityComparer<float>.Default.Equals(Width, other.Width)
+        && EqualityComparer<float>.Default.Equals(Height, other.Height);
 
     /// <inheritdoc/>
-    public override int GetHashCode() =>
-        HashCode.Combine(Math.Round(Width, HashRoundingDigits), Math.Round(Height, HashRoundingDigits));
+    public override int GetHashCode() => HashCode.Combine(Width, Height);
 }

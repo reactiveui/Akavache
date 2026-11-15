@@ -1,0 +1,26 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Parallel.Reactive")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Integration.Tests.Reactive")]
+namespace Akavache.Reactive.SystemTextJson;
+
+public static class AkavacheBuilderExtensions
+{
+    extension(Akavache.Reactive.IAkavacheBuilder builder)
+    {
+        public Akavache.Reactive.IAkavacheBuilder UseSystemTextJsonSerializer(System.Action<System.Text.Json.JsonSerializerOptions> configure) { }
+        public Akavache.Reactive.IAkavacheBuilder WithSerializerSystemTextJson() { }
+        public Akavache.Reactive.IAkavacheBuilder WithSerializerSystemTextJson(System.Text.Json.JsonSerializerOptions settings) { }
+    }
+}
+[System.Diagnostics.DebuggerDisplay("{Options}")]
+public class SystemJsonSerializer : Akavache.Reactive.ISerializer
+{
+    public SystemJsonSerializer() { }
+    public System.DateTimeKind? ForcedDateTimeKind { get; set; }
+    public System.Text.Json.JsonSerializerOptions? Options { get; set; }
+    public T? Deserialize<T>(byte[] bytes) { }
+    public System.Text.Json.JsonSerializerOptions GetEffectiveOptions() { }
+    public byte[] Serialize<T>(T item) { }
+    public static T? DeserializeAot<T>(byte[] bytes, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public static byte[] SerializeAot<T>(T item, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> jsonTypeInfo) { }
+}
