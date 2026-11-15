@@ -7,7 +7,7 @@
   <PropertyGroup>
     <SqlitePclRawVersion>3.0.5</SqlitePclRawVersion>
     <Sqlite3MultipleCiphersVersion>2.7.0</Sqlite3MultipleCiphersVersion>
-    <SplatVersion>22.0.0</SplatVersion>
+    <SplatVersion>22.0.1</SplatVersion>
     <ReactiveUIVersion>26.0.1</ReactiveUIVersion>
     <ReactiveUIPrimitivesVersion>10.0.0</ReactiveUIPrimitivesVersion>
     <TUnitVersion>1.85.0</TUnitVersion>
