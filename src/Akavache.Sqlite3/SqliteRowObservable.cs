@@ -133,20 +133,23 @@ internal sealed class SqliteRowObservable<T> : IObservable<T>
         var snapshot = TakeBufferSnapshot();
         DrainBuffer(observer, snapshot);
 
-        // Phase 2: set the observer so the worker forwards directly from now on.
-        // Grab any rows that arrived during Phase 1 drain.
+        // Keep the worker buffering until replay finishes, so completion cannot overtake a gap row.
         bool terminal;
         T[]? gap;
-        lock (_gate)
+        do
         {
-            (terminal, gap) = CaptureGapAndSetObserver(
-                ref _state,
-                ref _buffer,
-                ref _observer,
-                observer);
-        }
+            lock (_gate)
+            {
+                (terminal, gap) = CaptureGapAndSetObserver(
+                    ref _state,
+                    ref _buffer,
+                    ref _observer,
+                    observer);
+            }
 
-        DrainBuffer(observer, gap);
+            DrainBuffer(observer, gap);
+        }
+        while (gap is not null);
 
         if (terminal)
         {
@@ -157,14 +160,10 @@ internal sealed class SqliteRowObservable<T> : IObservable<T>
         return new CancellationDisposable(this);
     }
 
-    /// <summary>
-    /// Captures any gap rows buffered during Phase 1 drain and sets the observer
-    /// if the stream is still pending. Extracted from the lock body in Subscribe
-    /// so the pattern-match branches are directly testable.
-    /// </summary>
+    /// <summary>Captures buffered rows and publishes the observer only after the buffer is empty.</summary>
     /// <param name="state">The state field.</param>
     /// <param name="buffer">The buffer field (cleared on exit).</param>
-    /// <param name="observerSlot">The observer field (set if not terminal).</param>
+    /// <param name="observerSlot">The observer field, published when pending with no buffered rows.</param>
     /// <param name="observer">The subscribing observer.</param>
     /// <returns>Whether the stream is terminal, and the gap snapshot.</returns>
     internal static (bool Terminal, T[]? Gap) CaptureGapAndSetObserver(
@@ -177,7 +176,7 @@ internal sealed class SqliteRowObservable<T> : IObservable<T>
         var gap = buffer is { Count: > 0 } ? buffer.ToArray() : null;
         buffer = null;
 
-        if (!terminal)
+        if (!terminal && gap is null)
         {
             observerSlot = observer;
         }
