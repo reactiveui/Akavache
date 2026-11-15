@@ -326,9 +326,8 @@ public class HttpService : IHttpService, IDisposable
 
         var timedRequest = request.Timeout(timeout ?? DefaultTimeout, CacheDatabase.TaskpoolScheduler);
 
-        // retries is the total number of attempts, but Retry counts re-subscriptions after the
-        // first one, so the initial attempt has to come off the top.
-        return retries > 0 ? timedRequest.Retry(retries - 1) : timedRequest;
+        // Retry counts total attempts. A zero count here still makes the initial request.
+        return retries > 0 ? timedRequest.Retry(retries) : timedRequest;
     }
 
     /// <summary>Releases the resources used by the <see cref="HttpService"/>.</summary>

@@ -4,7 +4,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
 #if REACTIVE_SHIM
@@ -31,7 +30,7 @@ public class ISerializerDefaultMethodTests
     public async Task DeserializeWithJsonTypeInfoShouldThrowNotSupportedException()
     {
         MinimalSerializer serializer = new();
-        var jsonTypeInfo = (JsonTypeInfo<string>)JsonSerializerOptions.Default.GetTypeInfo(typeof(string));
+        var jsonTypeInfo = SerializerTestContext.Default.String;
 
         await Assert.That(() => serializer.Deserialize([], jsonTypeInfo))
             .Throws<NotSupportedException>();
@@ -43,7 +42,7 @@ public class ISerializerDefaultMethodTests
     public async Task SerializeWithJsonTypeInfoShouldThrowNotSupportedException()
     {
         MinimalSerializer serializer = new();
-        var jsonTypeInfo = (JsonTypeInfo<string>)JsonSerializerOptions.Default.GetTypeInfo(typeof(string));
+        var jsonTypeInfo = SerializerTestContext.Default.String;
 
         await Assert.That(() => serializer.Serialize("test", jsonTypeInfo))
             .Throws<NotSupportedException>();
@@ -58,7 +57,7 @@ public class ISerializerDefaultMethodTests
     public async Task ExtensionExceptionsShouldIncludeTypeName()
     {
         MinimalSerializer serializer = new();
-        var jsonTypeInfo = (JsonTypeInfo<string>)JsonSerializerOptions.Default.GetTypeInfo(typeof(string));
+        var jsonTypeInfo = SerializerTestContext.Default.String;
 
         var deserializeFailure = CaptureUnsupported(() => _ = serializer.Deserialize([], jsonTypeInfo));
         var serializeFailure = CaptureUnsupported(() => _ = serializer.Serialize("test", jsonTypeInfo));
@@ -79,7 +78,7 @@ public class ISerializerDefaultMethodTests
     public async Task ExtensionShouldRoundTripThroughSystemJsonSerializer()
     {
         SystemJsonSerializer serializer = new();
-        var jsonTypeInfo = (JsonTypeInfo<string>)JsonSerializerOptions.Default.GetTypeInfo(typeof(string));
+        var jsonTypeInfo = SerializerTestContext.Default.String;
 
         var bytes = serializer.Serialize(RoundTripPayload, jsonTypeInfo);
         var value = serializer.Deserialize(bytes, jsonTypeInfo);
@@ -97,7 +96,7 @@ public class ISerializerDefaultMethodTests
     public async Task ExtensionShouldRoundTripThroughSystemJsonBsonSerializer()
     {
         SystemJsonBsonSerializer serializer = new();
-        var jsonTypeInfo = (JsonTypeInfo<string>)JsonSerializerOptions.Default.GetTypeInfo(typeof(string));
+        var jsonTypeInfo = SerializerTestContext.Default.String;
 
         var bytes = serializer.Serialize(RoundTripPayload, jsonTypeInfo);
         var value = serializer.Deserialize(bytes, jsonTypeInfo);

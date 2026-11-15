@@ -80,42 +80,42 @@ public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         ScheduleReminderCommand = ReactiveCommand.CreateFromObservable(ExecuteScheduleReminder);
 
         // Setup computed properties
-        _dueDateDisplay = this.WhenAnyValue(x => x.TodoItem.DueDate)
+        _dueDateDisplay = this.WhenAnyValue(static x => x.TodoItem.DueDate)
             .Select(static dueDate => dueDate?.ToString("MMM dd, yyyy HH:mm") ?? "No due date")
-            .ToProperty(this, x => x.DueDateDisplay);
+            .ToProperty(this, static x => x.DueDateDisplay);
 
-        _priorityDisplay = this.WhenAnyValue(x => x.TodoItem.Priority)
+        _priorityDisplay = this.WhenAnyValue(static x => x.TodoItem.Priority)
             .Select(static priority => priority.ToString())
-            .ToProperty(this, x => x.PriorityDisplay);
+            .ToProperty(this, static x => x.PriorityDisplay);
 
-        _isOverdue = this.WhenAnyValue(x => x.TodoItem.DueDate, x => x.TodoItem.IsCompleted)
+        _isOverdue = this.WhenAnyValue(static x => x.TodoItem.DueDate, static x => x.TodoItem.IsCompleted)
             .Select(_ => TodoItem.IsOverdue)
-            .ToProperty(this, x => x.IsOverdue);
+            .ToProperty(this, static x => x.IsOverdue);
 
-        _isDueSoon = this.WhenAnyValue(x => x.TodoItem.DueDate, x => x.TodoItem.IsCompleted)
+        _isDueSoon = this.WhenAnyValue(static x => x.TodoItem.DueDate, static x => x.TodoItem.IsCompleted)
             .Select(_ => TodoItem.IsDueSoon)
-            .ToProperty(this, x => x.IsDueSoon);
+            .ToProperty(this, static x => x.IsDueSoon);
 
         // Setup WPF-specific brush properties
         _backgroundBrush = this.WhenAnyValue(
-                x => x.TodoItem.IsCompleted,
-                x => x.IsOverdue,
-                x => x.IsDueSoon)
+                static x => x.TodoItem.IsCompleted,
+                static x => x.IsOverdue,
+                static x => x.IsDueSoon)
             .Select(_ => GetBackgroundBrush())
-            .ToProperty(this, x => x.BackgroundBrush);
+            .ToProperty(this, static x => x.BackgroundBrush);
 
         _foregroundBrush = this.WhenAnyValue(
-                x => x.TodoItem.IsCompleted,
-                x => x.IsOverdue,
-                x => x.IsDueSoon)
+                static x => x.TodoItem.IsCompleted,
+                static x => x.IsOverdue,
+                static x => x.IsDueSoon)
             .Select(_ => GetForegroundBrush())
-            .ToProperty(this, x => x.ForegroundBrush);
+            .ToProperty(this, static x => x.ForegroundBrush);
 
         // Setup activator
         Activator = new();
 
         this.WhenActivated(disposables =>
-            _ = this.WhenAnyValue(x => x.TodoItem.IsCompleted)
+            _ = this.WhenAnyValue(static x => x.TodoItem.IsCompleted)
                 .Skip(1) // Skip initial value
                 .Throttle(TimeSpan.FromMilliseconds(AutoSaveThrottleMilliseconds))
                 .SelectMany(_ => SaveTodoItem())

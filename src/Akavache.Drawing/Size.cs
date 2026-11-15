@@ -49,7 +49,9 @@ public readonly struct Size(float width, float height) : IEquatable<Size>
     public override bool Equals(object? obj) => obj is Size other && Equals(other);
 
     /// <inheritdoc/>
-    public bool Equals(Size other) => Width.Equals(other.Width) && Height.Equals(other.Height);
+    public bool Equals(Size other) =>
+        EqualityComparer<float>.Default.Equals(Width, other.Width)
+        && EqualityComparer<float>.Default.Equals(Height, other.Height);
 
     /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(Width, Height);

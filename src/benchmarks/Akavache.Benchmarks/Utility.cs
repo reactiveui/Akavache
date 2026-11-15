@@ -2,6 +2,8 @@
 // ReactiveUI and Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using BenchmarkDotNet.Loggers;
+
 namespace Akavache.Benchmarks;
 
 /// <summary> A set of utility helper methods for use throughout the benchmarks. </summary>
@@ -37,8 +39,7 @@ internal static class Utility
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine("***** Failed to clean up!! *****");
-            Console.Error.WriteLine(ex);
+            ConsoleLogger.Default.WriteLine(LogKind.Error, $"Failed to clean up: {ex}");
         }
 
         static void Retry(Action block, int retries = 2)
