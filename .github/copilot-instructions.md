@@ -221,7 +221,6 @@ Tests are split into **serial** and **parallel** assemblies:
 7. **Akavache.HttpDownloader** - HTTP download extensions (`HttpService`, `HttpExtensions`, `RelativeTimeDownloadExtensions`)
 8. **Akavache.Settings** - Configuration and settings management (typed settings storage on blob caches)
 9. **Akavache.Drawing** - Image/bitmap caching support
-10. **Akavache.V10toV11** - V10-to-V11 data migration utilities
 
 ### Sample Applications
 - **AkavacheTodoWpf** - Windows WPF desktop application (Windows only)
@@ -252,7 +251,7 @@ Tests are split into **serial** and **parallel** assemblies:
 ### From V10 to V11
 - **Breaking Changes**: Yes - new builder pattern required
 - **Data Compatibility**: Full backward compatibility with cross-serializer support
-- **Migration Path**: Available via `Akavache.V10toV11` package
+- **Migration Path**: Complete V10 migrations with an earlier release before upgrading; the standalone migration packages are retired.
 
 ### Serializer Selection
 - **System.Text.Json**: Recommended for new projects (better performance, AOT-compatible)

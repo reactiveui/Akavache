@@ -14,7 +14,6 @@
   - `src/Akavache.HttpDownloader/` — HTTP download extensions (`HttpService`, `HttpExtensions`, `RelativeTimeDownloadExtensions`)
   - `src/Akavache.Drawing/` — Image/bitmap caching support
   - `src/Akavache.Settings/` — Typed settings storage built on top of blob caches
-  - `src/Akavache.V10toV11/` — V10-to-V11 data migration utilities
 - **Test projects (11 assemblies):**
   - Serial assemblies (use `[assembly: NotInParallel]` + custom `TestExecutor`):
     - `src/tests/Akavache.Core.Tests/` — Tests touching global state (`CacheDatabase`, `AppLocator`, `UniversalSerializer`)

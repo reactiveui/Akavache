@@ -88,6 +88,6 @@ var result = serializer.Deserialize(bytes, AppJsonContext.Default.MyModel);
 UniversalSerializer.RegisterSerializer(() => new SystemJsonSerializer());
 ```
 
-### V10 to V11 migration shim
+### V10 databases
 
-The `Akavache.V10toV11` package provides a one-time migration path from V10 databases. This is a compatibility-only package — new applications should use `Akavache.Sqlite3` directly.
+Complete any V10 database migration with an earlier release before upgrading. The standalone V10-to-V11 migration packages are no longer shipped. New applications should use `Akavache.Sqlite3` directly.

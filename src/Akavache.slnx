@@ -63,7 +63,6 @@
   <Project Path="Akavache.Sqlite3/Akavache.Sqlite3.csproj" />
   <Project Path="Akavache.SystemTextJson/Akavache.SystemTextJson.csproj" />
   <Project Path="Akavache.SystemTextJson.Bson/Akavache.SystemTextJson.Bson.csproj" />
-  <Project Path="Akavache.V10toV11/Akavache.V10toV11.csproj" />
   <Project Path="Akavache.Reactive/Akavache.Reactive.csproj" />
   <Project Path="Akavache.HttpDownloader.Reactive/Akavache.HttpDownloader.Reactive.csproj" />
   <Project Path="Akavache.Drawing.Reactive/Akavache.Drawing.Reactive.csproj" />
@@ -73,5 +72,4 @@
   <Project Path="Akavache.Sqlite3.Reactive/Akavache.Sqlite3.Reactive.csproj" />
   <Project Path="Akavache.SystemTextJson.Reactive/Akavache.SystemTextJson.Reactive.csproj" />
   <Project Path="Akavache.SystemTextJson.Bson.Reactive/Akavache.SystemTextJson.Bson.Reactive.csproj" />
-  <Project Path="Akavache.V10toV11.Reactive/Akavache.V10toV11.Reactive.csproj" />
 </Solution>

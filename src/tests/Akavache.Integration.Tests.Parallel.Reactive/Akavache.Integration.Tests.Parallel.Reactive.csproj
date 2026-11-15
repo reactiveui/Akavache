@@ -18,7 +18,6 @@
     <ProjectReference Include="..\..\Akavache.NewtonsoftJson.Reactive\Akavache.NewtonsoftJson.Reactive.csproj" />
     <ProjectReference Include="..\..\Akavache.Sqlite3.Reactive\Akavache.Sqlite3.Reactive.csproj" />
     <ProjectReference Include="..\..\Akavache.Settings.Reactive\Akavache.Settings.Reactive.csproj" />
-    <ProjectReference Include="..\..\Akavache.V10toV11.Reactive\Akavache.V10toV11.Reactive.csproj" />
   </ItemGroup>
 
   <!-- The same tests the lean Akavache.Integration.Tests.Parallel assembly runs, recompiled here under REACTIVE_SHIM. -->
@@ -49,7 +48,6 @@
     <AkavacheInternalUsing Include="Akavache.Tests.Helpers" />
     <AkavacheInternalUsing Include="Akavache.Tests.Mocks" />
     <AkavacheInternalUsing Include="Akavache.Tests.TestBases" />
-    <AkavacheInternalUsing Include="Akavache.V10toV11" />
   </ItemGroup>
 
 </Project>
