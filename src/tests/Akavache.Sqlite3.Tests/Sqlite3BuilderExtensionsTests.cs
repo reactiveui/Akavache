@@ -214,7 +214,7 @@ public class Sqlite3BuilderExtensionsTests
     /// Minimal fake IAkavacheBuilder used to force empty-ApplicationName scenarios that
     /// cannot be produced through the real builder (which coerces empty names to no-ops).
     /// </summary>
-    private sealed class FakeAkavacheBuilder : IAkavacheBuilder
+    internal sealed class FakeAkavacheBuilder : IAkavacheBuilder
     {
         /// <inheritdoc/>
         public Assembly ExecutingAssembly { get; } = typeof(FakeAkavacheBuilder).Assembly;

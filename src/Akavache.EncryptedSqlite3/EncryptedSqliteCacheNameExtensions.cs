@@ -22,33 +22,8 @@ internal static class EncryptedSqliteCacheNameExtensions
         /// <exception cref="InvalidOperationException">Thrown when <c>builder.Serializer</c> is <see langword="null"/>.</exception>
         internal EncryptedSqliteBlobCache CreateEncryptedSqliteCache(IAkavacheBuilder builder, string password)
         {
-            var serializer = builder.Serializer
-                ?? throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using SQLite caches.");
-
-            ArgumentValidation.ThrowIfNullOrWhiteSpace(name);
-            ArgumentValidation.ThrowIfNullOrWhiteSpace(builder.ApplicationName);
-
-            var validatedName = SecurityUtilities.ValidateCacheName(name, nameof(name));
-
-            var directory = builder.FileLocationOption switch
-            {
-                FileLocationOption.Legacy => builder.GetLegacyCacheDirectory(validatedName),
-                _ => builder.GetIsolatedCacheDirectory(validatedName),
-            };
-
-            if (!Directory.Exists(directory))
-            {
-                _ = Directory.CreateDirectory(directory!);
-            }
-
-            var filePath = Path.Combine(directory!, $"{validatedName}.db");
-            var cache = new EncryptedSqliteBlobCache(filePath, password, serializer);
-            if (builder.ForcedDateTimeKind.HasValue)
-            {
-                cache.ForcedDateTimeKind = builder.ForcedDateTimeKind.Value;
-            }
-
-            return cache;
+            var options = SqliteCacheConfiguration.Prepare(name, builder);
+            return new(options.FilePath, password, options.Serializer) { ForcedDateTimeKind = options.ForcedDateTimeKind };
         }
     }
 }

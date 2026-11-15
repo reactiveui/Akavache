@@ -349,16 +349,7 @@ public static class AkavacheBuilderExtensions
             var cache = scheduler is not null
                 ? new EncryptedSqliteBlobCache(dbPath, password, builder.Serializer, scheduler)
                 : new EncryptedSqliteBlobCache(dbPath, password, builder.Serializer);
-            builder.BlobCaches[validatedKey] = cache;
-
-            T viewSettings;
-            using (SettingsBase.PushAmbientCache(cache))
-            {
-                viewSettings = new();
-            }
-
-            builder.SettingsStores[validatedKey] = viewSettings;
-            return viewSettings;
+            return SettingsStoreFactory.Create<T>(builder, validatedKey, cache);
         }
 
         /// <summary>Gets or creates a standard settings store using SQLite for persistence.</summary>
@@ -423,20 +414,7 @@ public static class AkavacheBuilderExtensions
             var cache = scheduler is not null
                 ? new SqliteBlobCache(dbPath, builder.Serializer, scheduler)
                 : new SqliteBlobCache(dbPath, builder.Serializer);
-            builder.BlobCaches[validatedKey] = cache;
-
-            // Publish the just-created cache as the ambient cache while we construct the
-            // settings type. SettingsBase's parameterless ctor reads the ambient slot first
-            // so it doesn't have to hunt through CacheDatabase.CurrentInstance, which still
-            // points at the previous build while this builder is being configured.
-            T viewSettings;
-            using (SettingsBase.PushAmbientCache(cache))
-            {
-                viewSettings = new();
-            }
-
-            builder.SettingsStores[validatedKey] = viewSettings;
-            return viewSettings;
+            return SettingsStoreFactory.Create<T>(builder, validatedKey, cache);
         }
 
         /// <summary>
@@ -481,16 +459,7 @@ public static class AkavacheBuilderExtensions
             // Validate database name to prevent path traversal attacks
             var validatedKey = SecurityUtilities.ValidateDatabaseName(overrideDatabaseName ?? typeof(T).Name, nameof(overrideDatabaseName));
 
-            builder.BlobCaches[validatedKey] = cache;
-
-            T viewSettings;
-            using (SettingsBase.PushAmbientCache(cache))
-            {
-                viewSettings = new();
-            }
-
-            builder.SettingsStores[validatedKey] = viewSettings;
-            return viewSettings;
+            return SettingsStoreFactory.Create<T>(builder, validatedKey, cache);
         }
     }
 }
