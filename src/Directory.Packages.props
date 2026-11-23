@@ -6,11 +6,11 @@
   <!-- Version groups for packages that share the same version -->
   <PropertyGroup>
     <SqlitePclRawVersion>3.0.5</SqlitePclRawVersion>
-    <Sqlite3MultipleCiphersVersion>2.7.0</Sqlite3MultipleCiphersVersion>
+    <Sqlite3MultipleCiphersVersion>2.7.1</Sqlite3MultipleCiphersVersion>
     <SplatVersion>22.0.1</SplatVersion>
-    <ReactiveUIVersion>26.0.1</ReactiveUIVersion>
-    <ReactiveUIPrimitivesVersion>10.0.0</ReactiveUIPrimitivesVersion>
-    <TUnitVersion>1.85.0</TUnitVersion>
+    <ReactiveUIVersion>28.0.0</ReactiveUIVersion>
+    <ReactiveUIPrimitivesVersion>10.2.3</ReactiveUIPrimitivesVersion>
+    <TUnitVersion>1.87.12</TUnitVersion>
     <!-- StyleSharp.Analyzers, PerformanceSharp.Analyzers and SecuritySharp.Analyzers ship from the
          same release pipeline and always share a version. -->
     <RoslynCommonAnalyzersVersion>5.2.0</RoslynCommonAnalyzersVersion>
@@ -85,7 +85,7 @@
   <!-- Sample application packages -->
   <ItemGroup>
     <PackageVersion Include="DynamicData" Version="9.5.0" />
-    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="4.2.0" />
+    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="7.1.0" />
     <PackageVersion Include="ReactiveUI.WPF" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="ReactiveUI.WPF.Reactive" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
@@ -102,7 +102,7 @@
   </ItemGroup>
   <!-- Windows-specific packages for MAUI -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.6.5" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="2.7.0" />
     <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2957" />
   </ItemGroup>
 </Project>
