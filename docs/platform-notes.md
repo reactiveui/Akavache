@@ -251,6 +251,28 @@ private async void OnSuspending(object sender, SuspendingEventArgs e)
 </Package>
 ```
 
+## Windows Store (MSIX) Apps
+
+A Windows Store or other MSIX app loses its cached data on each update unless it calls `WithLegacyFileLocation()`.
+
+By default, Akavache keeps its databases in isolated storage. On Windows, the UserAccount, Secure and settings caches use `IsolatedStorageFile.GetUserStoreForAssembly()`, and LocalMachine uses `GetMachineStoreForAssembly()`. .NET picks those folders from the app assembly's identity. For an assembly without a strong name, that identity includes where the assembly is installed. An MSIX update installs the app into a new versioned folder, such as `C:\Program Files\WindowsApps\MyPublisher.MyApp_1.0.1.0_x64__abc123`, so the next version gets a new, empty store.
+
+`WithLegacyFileLocation()` keeps the databases in a folder under `%LOCALAPPDATA%` or `%APPDATA%` named after your application name. That folder does not depend on the install folder, so it stays the same across updates:
+
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(
+        builder => builder
+            .WithLegacyFileLocation()
+            .WithSqliteProvider()
+            .WithSqliteDefaults(),
+        "MyApp");
+```
+
+Despite its name, `WithLegacyFileLocation()` is the right choice for new Windows apps that update in place. Set it before the first release. An app that already shipped with the default location keeps each version's data in that version's own isolated store, and switching starts from an empty cache.
+
+The same applies to any Windows app whose install folder changes on update, such as an app that installs each version into its own versioned folder.
+
 ## Cross-Platform Considerations
 
 ### DateTime Handling
@@ -367,6 +389,7 @@ public class CrossPlatformTests
 - **"Architecture mismatch"** - Set specific platform target (x86/x64/ARM)
 - **"Access denied to cache directory"** - Check Windows permissions
 - **"App suspension data loss"** - Implement proper suspension handling
+- **"Cache data missing after a Store update"** - Call `WithLegacyFileLocation()`; see [Windows Store (MSIX) Apps](#windows-store-msix-apps)
 
 ### Platform-Specific Debugging
 ```csharp
