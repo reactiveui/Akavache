@@ -389,7 +389,7 @@ builder.WithApplicationName("SameAsV10App")
        .WithSqliteDefaults();
 ```
 
-V11 automatically reads data from V10's `CacheElement` table when a key is not found in the new `CacheEntry` table. This backward-compatible read happens transparently — no manual data migration is needed. Just ensure V11 can find the database files by using `WithLegacyFileLocation()`.
+V11 automatically reads data from V10's `CacheElement` table when a key is not found in the new `CacheEntry` table. It does this inside the database file it opens, so it can only read V10 data that sits in that file.
 
 You can also pass `FileLocationOption.Legacy` directly when using `CacheDatabase.Initialize`:
 
@@ -400,12 +400,78 @@ CacheDatabase.Initialize<NewtonsoftBsonSerializer>(
     fileLocationOption: FileLocationOption.Legacy);
 ```
 
+#### 4. V10 database files have different names
+
+`WithLegacyFileLocation()` finds the right folder, but V10 and V11 name the database files differently. V11 and later open `<cache name>.db`:
+
+| Cache | V10 file | V11 and later file |
+|---|---|---|
+| LocalMachine | `blobs.db` | `LocalMachine.db` |
+| UserAccount | `userblobs.db` | `UserAccount.db` |
+| Secure | `secret.db` | `Secure.db` |
+
+Copy each V10 file to its new name before the cache opens for the first time. The copy keeps V10's `CacheElement` table, so the read described above finds your data:
+
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<NewtonsoftBsonSerializer>(
+        builder =>
+        {
+            _ = builder.WithLegacyFileLocation();
+            CopyV10Database(builder, "blobs.db", "LocalMachine");
+            CopyV10Database(builder, "userblobs.db", "UserAccount");
+            _ = builder.WithSqliteProvider().WithSqliteDefaults();
+        },
+        "SameAsV10App");
+
+static void CopyV10Database(IAkavacheBuilder builder, string v10FileName, string cacheName)
+{
+    var directory = builder.GetLegacyCacheDirectory(cacheName);
+    if (directory is null)
+    {
+        return;
+    }
+
+    var v10Path = Path.Combine(directory, v10FileName);
+    var currentPath = Path.Combine(directory, $"{cacheName}.db");
+    if (File.Exists(v10Path) && !File.Exists(currentPath))
+    {
+        File.Copy(v10Path, currentPath);
+    }
+}
+```
+
+The Secure cache is not covered by this copy. Use the `MigrateFromV10()` step from the `Akavache.V10toV11` package for it, as described in [Upgrading to 14.0](#upgrading-to-140).
+
+#### 5. Xamarin apps keep V10 files in other folders
+
+A Xamarin app that used Akavache 10 or earlier may have its files under the personal folder (`Environment.SpecialFolder.Personal`) instead of the legacy folder. These paths were reported for Xamarin.iOS apps moving to .NET MAUI:
+
+| Cache | Xamarin-era path |
+|---|---|
+| LocalMachine | `<personal>/<app name>/BlobCache/blobs.db` |
+| UserAccount | `<personal>/.config/<app name>/BlobCache/userblobs.db` |
+| Secure | `<personal>/.config/<app name>/SecretCache/secret.db` |
+
+`GetLegacyCacheDirectory` does not look there, and neither does `MigrateFromV10()`. If your files are in these folders, copy each one into the folder `GetLegacyCacheDirectory(cacheName)` returns before the cache opens. Keep the V10 file name if you run `MigrateFromV10()` next. Use the V11 file name from the table in the previous section if you rely on the automatic read.
+
+### Upgrading to 14.0
+
+Akavache 14.0 removed the `Akavache.V10toV11` and `Akavache.V10toV11.Reactive` packages, with `WithV10FileNames()`, `MigrateFromV10()` and `V10MigrationOptions`. To move data out of V10 databases with those APIs:
+
+1. Ship a version of your app on Akavache 13.x that references `Akavache.V10toV11` and calls `MigrateFromV10()`.
+2. Let your users run that version once, so the migration copies their data into the current files.
+3. Upgrade the app to Akavache 14.0 or later.
+
+The automatic `CacheElement` read still works in 14.0, so the copy steps above still apply to the LocalMachine and UserAccount caches.
+
 ### Migration Checklist
 
 - [ ] Updated package references
 - [ ] Replaced initialization code
 - [ ] Added explicit provider initialization
 - [ ] **Used `WithLegacyFileLocation()` to find existing V10 databases**
+- [ ] **Copied V10 files to their V11 names, or ran `MigrateFromV10()` on Akavache 13.x**
 - [ ] Tested existing data access
 - [ ] Verified new data storage
 - [ ] Updated DI container registration (if applicable)
