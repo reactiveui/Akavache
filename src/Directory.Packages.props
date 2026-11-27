@@ -29,8 +29,10 @@
       </PropertyGroup>
     </When>
     <Otherwise>
+      <!-- .NET Framework: ReactiveUI.Primitives 10.2 brings System.Threading.Channels 11.0.0, which needs
+           Microsoft.Bcl.AsyncInterfaces 11.0.0, so these targets cannot stay on 10.0.x. -->
       <PropertyGroup>
-        <MicrosoftExtensionsVersion>10.0.15</MicrosoftExtensionsVersion>
+        <MicrosoftExtensionsVersion>11.0.0</MicrosoftExtensionsVersion>
       </PropertyGroup>
     </Otherwise>
   </Choose>
