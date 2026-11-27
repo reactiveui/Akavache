@@ -12,9 +12,7 @@ using AkavacheTodoMaui.ViewModels;
 #if DEBUG
 using Microsoft.Extensions.Logging;
 #endif
-using ReactiveUI;
 using ReactiveUI.Builder;
-using Splat;
 using Splat.Builder;
 
 namespace AkavacheTodoMaui;
@@ -43,9 +41,6 @@ public static class MauiProgram
 
         // Configure Akavache
         _ = ConfigureAkavache();
-
-        // Configure ReactiveUI
-        Locator.CurrentMutable.RegisterViewsForViewModels(typeof(MauiProgram).Assembly);
 
 #if DEBUG
         _ = builder.Logging.AddDebug();

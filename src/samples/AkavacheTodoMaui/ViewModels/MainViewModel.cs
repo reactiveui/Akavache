@@ -297,7 +297,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
             .DisposeWith(disposables);
 
         // Auto-save when todos change and refresh statistics
-        _ = this.WhenAnyValue(x => x.Todos.Count)
+        _ = this.WhenAnyValue(static x => x.Todos.Count)
             .Skip(1) // Skip initial load
             .Throttle(TimeSpan.FromSeconds(AutoSaveThrottleSeconds))
             .SelectMany(_ => SaveCurrentTodos())
@@ -369,7 +369,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
                 foreach (TodoItemViewModel todoVm in args.EventArgs.NewItems)
                 {
                     // Subscribe to completion status changes with immediate response
-                    _ = todoVm.WhenAnyValue(x => x.TodoItem.IsCompleted)
+                    _ = todoVm.WhenAnyValue(static x => x.TodoItem.IsCompleted)
                         .Skip(1) // Skip initial value
                         .ObserveOn(RxSchedulers.MainThreadScheduler)
                         .Subscribe(isCompleted => SaveCompletionChange(todoVm, isCompleted))
