@@ -264,7 +264,7 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
             .DisposeWith(disposables);
 
         // Auto-save when todos change
-        _ = this.WhenAnyValue(x => x.Todos.Count)
+        _ = this.WhenAnyValue(static x => x.Todos.Count)
             .Skip(1) // Skip initial load
             .Throttle(TimeSpan.FromSeconds(AutoSaveThrottleSeconds))
             .SelectMany(_ => SaveCurrentTodos())
