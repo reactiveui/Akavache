@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\examples\OrderCache.Reactive\OrderCache.Reactive.csproj" />
     <ProjectReference Include="..\..\Akavache.Drawing.Reactive\Akavache.Drawing.Reactive.csproj" />
     <ProjectReference Include="..\..\Akavache.SystemTextJson.Reactive\Akavache.SystemTextJson.Reactive.csproj" />
     <ProjectReference Include="..\..\Akavache.SystemTextJson.Bson.Reactive\Akavache.SystemTextJson.Bson.Reactive.csproj" />

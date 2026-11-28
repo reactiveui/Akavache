@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Reactive" />
+    <ProjectReference Include="../../Akavache.SystemTextJson.Reactive/Akavache.SystemTextJson.Reactive.csproj" />
+    <ProjectReference Include="../../Akavache.SystemTextJson.Bson.Reactive/Akavache.SystemTextJson.Bson.Reactive.csproj" />
+    <ProjectReference Include="../../Akavache.EncryptedSqlite3.Reactive/Akavache.EncryptedSqlite3.Reactive.csproj" />
+    <ProjectReference Include="../../Akavache.NewtonsoftJson.Reactive/Akavache.NewtonsoftJson.Reactive.csproj" />
+    <ProjectReference Include="../../Akavache.Sqlite3.Reactive/Akavache.Sqlite3.Reactive.csproj" />
+    <ProjectReference Include="../../Akavache.HttpDownloader.Reactive/Akavache.HttpDownloader.Reactive.csproj" />
+    <ProjectReference Include="../../Akavache.Drawing.Reactive/Akavache.Drawing.Reactive.csproj" />
+    <ProjectReference Include="../../Akavache.Settings.Reactive/Akavache.Settings.Reactive.csproj" />
+    <Compile Include="../OrderCache/*.cs" Link="%(Filename)%(Extension)" />
+    <AkavacheInternalUsing Include="Akavache" />
+    <AkavacheInternalUsing Include="Akavache.Drawing" />
+    <AkavacheInternalUsing Include="Akavache.NewtonsoftJson" />
+    <AkavacheInternalUsing Include="Akavache.Sqlite3" />
+    <AkavacheInternalUsing Include="Akavache.Settings.Core" />
+    <AkavacheInternalUsing Include="Akavache.EncryptedSqlite3" />
+    <AkavacheInternalUsing Include="Akavache.SystemTextJson" />
+  </ItemGroup>
+</Project>

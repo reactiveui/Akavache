@@ -94,6 +94,24 @@ public partial class ImageCacheExtensionsTests
     /// <summary>Resolver named in the failure a host without image support produces.</summary>
     private const string DependencyResolverName = "dependency resolver";
 
+    /// <summary>Runs the delivery-photo example and checks that the list preview has its own cache entry.</summary>
+    /// <param name="cancellationToken">Cancels the cache operations.</param>
+    /// <returns>Completion after checking the preview and both image keys.</returns>
+    [Test]
+    public async Task DeliveryPhotoExampleStoresOriginalAndPreview(CancellationToken cancellationToken)
+    {
+        using var restorer = new LoaderRestorer(GetCurrentBitmapLoader());
+        BitmapLoader.Current = new MockBitmapLoader();
+        using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        using var photo = new MockBitmap();
+        using var preview = await OrderCache.DeliveryPhoto.SavePreviewAsync(cache, 1, photo, cancellationToken);
+        var keys = await cache.GetAllKeys().ToList().ToTask(cancellationToken);
+
+        await Assert.That(preview).IsTypeOf<MockBitmap>();
+        await Assert.That(keys).Contains("delivery/1/photo");
+        await Assert.That(keys).Contains("delivery/1/photo/preview");
+    }
+
     /// <summary>A failed download is skipped and preloading still completes successfully.</summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Test]

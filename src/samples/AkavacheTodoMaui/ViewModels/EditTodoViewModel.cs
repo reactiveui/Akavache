@@ -18,30 +18,6 @@ public partial class EditTodoViewModel : ReactiveObject
     /// <summary>The original todo item being edited.</summary>
     private readonly TodoItem _originalTodo;
 
-    /// <summary>Backing field for the reactive Title property.</summary>
-    [Reactive]
-    private string _title;
-
-    /// <summary>Backing field for the reactive Description property.</summary>
-    [Reactive]
-    private string _description;
-
-    /// <summary>Backing field for the reactive TagsString property.</summary>
-    [Reactive]
-    private string _tagsString;
-
-    /// <summary>Backing field for the reactive DueDate property.</summary>
-    [Reactive]
-    private DateTime _dueDate = DateOnly.FromDateTime(TimeProvider.System.GetUtcNow().UtcDateTime).ToDateTime(TimeOnly.MinValue);
-
-    /// <summary>Backing field for the reactive DueTime property.</summary>
-    [Reactive]
-    private string _dueTime = string.Empty;
-
-    /// <summary>Backing field for the reactive Priority property.</summary>
-    [Reactive]
-    private TodoPriority _priority;
-
     /// <summary>Initializes a new instance of the <see cref="EditTodoViewModel"/> class.</summary>
     /// <param name="todoItem">The todo item to edit.</param>
     /// <exception cref="ArgumentNullException">Thrown when <c>todoItem</c> is <see langword="null"/>.</exception>
@@ -52,15 +28,15 @@ public partial class EditTodoViewModel : ReactiveObject
         _originalTodo = todoItem ?? throw new ArgumentNullException(nameof(todoItem));
 
         // Initialize with current values
-        _title = todoItem.Title;
-        _description = todoItem.Description;
-        _tagsString = string.Join(", ", todoItem.Tags);
-        _priority = todoItem.Priority;
+        Title = todoItem.Title;
+        Description = todoItem.Description;
+        TagsString = string.Join(", ", todoItem.Tags);
+        Priority = todoItem.Priority;
 
         if (todoItem.DueDate.HasValue)
         {
-            _dueDate = todoItem.DueDate.Value.DateTime;
-            _dueTime = todoItem.DueDate.Value.ToString("HH:mm");
+            DueDate = todoItem.DueDate.Value.DateTime;
+            DueTime = todoItem.DueDate.Value.ToString("HH:mm");
         }
 
         // Initialize commands
@@ -70,6 +46,30 @@ public partial class EditTodoViewModel : ReactiveObject
         // Initialize priority options
         PriorityOptions = Enum.GetValues<TodoPriority>();
     }
+
+    /// <summary>Gets or sets the task title.</summary>
+    [Reactive]
+    public partial string Title { get; set; }
+
+    /// <summary>Gets or sets the task description.</summary>
+    [Reactive]
+    public partial string Description { get; set; }
+
+    /// <summary>Gets or sets the comma-separated task tags.</summary>
+    [Reactive]
+    public partial string TagsString { get; set; }
+
+    /// <summary>Gets or sets the task's due date.</summary>
+    [Reactive]
+    public partial DateTime DueDate { get; set; } = DateOnly.FromDateTime(TimeProvider.System.GetUtcNow().UtcDateTime).ToDateTime(TimeOnly.MinValue);
+
+    /// <summary>Gets or sets the task's due time.</summary>
+    [Reactive]
+    public partial string DueTime { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the task priority.</summary>
+    [Reactive]
+    public partial TodoPriority Priority { get; set; }
 
     /// <summary>Gets the priority options.</summary>
     public TodoPriority[] PriorityOptions { get; }

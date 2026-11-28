@@ -1,14 +1,13 @@
 # Akavache Sample Applications
 
-This directory contains three comprehensive sample applications demonstrating the capabilities of Akavache, the reactive caching library for .NET.
+Use the WPF and Android to-do apps to try Akavache in a UI. For smaller examples covering cache lifetime, encrypted SQLite, HTTP, images and settings, see the [order cache examples](../examples/README.md).
 
 ## Overview
 
 The sample applications showcase real-world usage patterns for Akavache across different platforms and application types:
 
 1. **AkavacheTodoWpf** - A Windows Presentation Foundation (WPF) desktop application
-2. **AkavacheTodoMaui** - A cross-platform .NET MAUI application 
-3. **AkavacheTodoBlazor** - A Blazor Server web application
+2. **AkavacheTodoMaui** - A .NET MAUI application targeting Android
 
 Each application implements a comprehensive Todo management system that demonstrates:
 
@@ -27,13 +26,13 @@ Each application implements a comprehensive Todo management system that demonstr
 
 | Feature | Description | Demo Location |
 |---------|-------------|---------------|
-| **InsertObject** | Store typed objects with automatic serialization | All todo creation/editing |
-| **GetObject** | Retrieve typed objects with deserialization | Todo loading and display |
-| **GetOrFetchObject** | Cache-first pattern with fallback data source | Individual todo fetching |
-| **GetAndFetchLatest** | Get cached data while refreshing in background | Statistics and API data |
-| **GetOrCreateObject** | Get existing object or create default | Settings initialization |
-| **InvalidateObject** | Remove specific items from cache | Todo deletion |
-| **InvalidateAll** | Clear entire cache | Cache cleanup operations |
+| **InsertObject / GetObject** | Store and read typed objects with the runtime serializer | [Android to-do service](AkavacheTodoMaui/Services/TodoCacheService.cs) |
+| **Insert / Get** | Store and read bytes with a generated JSON contract | [WPF to-do service](AkavacheTodoWpf/Services/TodoCacheService.cs) |
+| **GetOrFetchObject** | Load a missing entry from a data source | [Cache invalidation patterns](CacheInvalidationPatterns.cs) |
+| **GetAndFetchLatest** | Display a cached order, followed by a revision | [Dispatch manifest](../examples/OrderCache/DispatchManifest.cs) |
+| **GetOrCreateObject** | Read settings or create defaults | Android settings initialization |
+| **InvalidateObject** | Remove one typed entry | [Dispatch manifest](../examples/OrderCache/DispatchManifest.cs) |
+| **InvalidateAll** | Clear an entire cache | [Cache invalidation patterns](CacheInvalidationPatterns.cs) |
 | **Vacuum** | Optimize cache storage | Maintenance operations |
 | **GetAllKeys** | Enumerate all cache keys | Debug and monitoring |
 | **GetCreatedAt** | Get cache item timestamps | Metadata queries |
@@ -54,7 +53,7 @@ Each application implements a comprehensive Todo management system that demonstr
 
 ### Shared Components
 
-All three applications share a common architecture pattern:
+Both applications share these components.
 
 ```
 Models/
@@ -81,60 +80,32 @@ ViewModels/
 - **MVVM pattern** with ReactiveUI and WPF data binding
 
 #### MAUI Application Features  
-- **Cross-platform UI** for Windows, iOS, Android, and macOS
+- **Android UI** built with .NET MAUI
 - **Platform-specific services** for notifications and storage
 - **Native styling** with platform-adaptive controls
 - **Mobile-optimized** touch interactions and layouts
 - **Offline-first** data synchronization patterns
 
-> **Note:** The MAUI sample requires **.NET 9** and targets `net9.0-android`, `net9.0-ios`, `net9.0-maccatalyst`, and `net9.0-windows` only.
-
-#### Blazor Application Features
-- **Server-side rendering** with real-time updates
-- **Bootstrap styling** with responsive design
-- **SignalR integration** for live data updates
-- **Web-optimized** pagination and filtering
-- **API simulation** for remote data scenarios
-
 ## Getting Started
 
 ### Prerequisites
 
-- .NET 9.0 SDK or later
-- Visual Studio 2022 or VS Code
-- For MAUI: Platform-specific workloads installed
+- The .NET 11 SDK
+- A Windows desktop for WPF, or the MAUI Android workload and a device or emulator for Android
 
 ### Running the Applications
 
 #### WPF Application
 ```bash
-cd AkavacheTodoWpf
-dotnet run
+dotnet run --project AkavacheTodoWpf -f net11.0-windows10.0.19041.0
 ```
 
 #### MAUI Application  
 ```bash
-cd AkavacheTodoMaui
-# For Windows
-dotnet build -f net9.0-windows10.0.19041.0
-dotnet run -f net9.0-windows10.0.19041.0
-
-# For Android (requires emulator or device)
-dotnet build -f net9.0-android
-
-# For iOS (requires macOS and Xcode)
-dotnet build -f net9.0-ios
-
-# For Mac Catalyst (requires macOS)
-dotnet build -f net9.0-maccatalyst
+dotnet build AkavacheTodoMaui -t:Run -f net11.0-android
 ```
 
-#### Blazor Application
-```bash
-cd AkavacheTodoBlazor
-dotnet run
-# Navigate to https://localhost:5001
-```
+Use the corresponding `net10.0` target to run either sample on .NET 10.
 
 ## Key Implementation Details
 
@@ -146,7 +117,7 @@ The `TodoCacheService` demonstrates best practices for Akavache usage:
 // Basic operations with error handling
 public IObservable<List<TodoItem>> GetAllTodos()
 {
-    return BlobCache.UserAccount
+    return CacheDatabase.UserAccount
         .GetObject<List<TodoItem>>(TodosKey)
         .Catch(Observable.Return(new List<TodoItem>()));
 }
@@ -155,7 +126,7 @@ public IObservable<List<TodoItem>> GetAllTodos()
 public IObservable<TodoItem?> GetTodo(string todoId)
 {
     var key = $"todo_{todoId}";
-    return BlobCache.UserAccount
+    return CacheDatabase.UserAccount
         .GetOrFetchObject(key, async () =>
         {
             var todos = await GetAllTodos().FirstAsync();
@@ -166,7 +137,7 @@ public IObservable<TodoItem?> GetTodo(string todoId)
 // Background refresh pattern
 public IObservable<TodoStats> GetTodoStats()
 {
-    return BlobCache.LocalMachine.GetAndFetchLatest(
+    return CacheDatabase.LocalMachine.GetAndFetchLatest(
         CacheStatsKey,
         () => CalculateTodoStats().ToObservable(),
         createdAt => DateTimeOffset.Now - createdAt > TimeSpan.FromMinutes(5),
@@ -199,17 +170,14 @@ _todoStats = this.WhenAnyValue(x => x.AllTodos.Count)
 
 ### Serialization Configuration
 
-All applications use System.Text.Json for optimal performance:
+The WPF app configures its SQLite stores with generated JSON metadata.
 
 ```csharp
-// Configure Akavache with System.Text.Json
-CoreRegistrations.Serializer = new SystemJsonSerializer();
-
-// Initialize SQLite support
-Registrations.Start("AkavacheTodo", () => SQLitePCL.Batteries_V2.Init());
-
-// Configure DateTime handling
-BlobCache.ForcedDateTimeKind = DateTimeKind.Utc;
+var stores = CacheDatabase.CreateBuilder("AkavacheTodoWpf")
+    .WithSerializerSystemTextJson(TodoJsonContext.Default.Options)
+    .UseForcedDateTimeKind(DateTimeKind.Utc)
+    .WithSqliteDefaults()
+    .Build();
 ```
 
 ## Cache Strategy
@@ -436,6 +404,5 @@ var data2 = await cache.GetOrFetchObject("key", fetchFunc); // Returns "fresh_2"
 - [ReactiveUI Documentation](https://www.reactiveui.net/)
 - [System.Reactive Documentation](https://github.com/dotnet/reactive)
 - [.NET MAUI Documentation](https://docs.microsoft.com/en-us/dotnet/maui/)
-- [Blazor Documentation](https://docs.microsoft.com/en-us/aspnet/core/blazor/)
 
 These sample applications provide a comprehensive reference for implementing Akavache in production applications across different platforms and scenarios.

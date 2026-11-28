@@ -55,38 +55,6 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
     /// <summary>OAPH exposing the current cache information.</summary>
     private readonly ObservableAsPropertyHelper<CacheInfo?> _cacheInfo;
 
-    /// <summary>Backing field for the reactive NewTodoTitle property.</summary>
-    [Reactive]
-    private string _newTodoTitle = string.Empty;
-
-    /// <summary>Backing field for the reactive NewTodoDescription property.</summary>
-    [Reactive]
-    private string _newTodoDescription = string.Empty;
-
-    /// <summary>Backing field for the reactive NewTodoTags property.</summary>
-    [Reactive]
-    private string _newTodoTags = string.Empty;
-
-    /// <summary>Backing field for the reactive NewTodoDueDate property.</summary>
-    [Reactive]
-    private DateTime? _newTodoDueDate = TimeProvider.System.GetUtcNow().UtcDateTime;
-
-    /// <summary>Backing field for the reactive NewTodoPriority property.</summary>
-    [Reactive]
-    private TodoPriority _newTodoPriority = TodoPriority.Medium;
-
-    /// <summary>Backing field for the reactive Settings property.</summary>
-    [Reactive]
-    private AppSettings? _settings = new();
-
-    /// <summary>Backing field for the reactive StatusMessage property.</summary>
-    [Reactive]
-    private string _statusMessage = "Ready";
-
-    /// <summary>Backing field for the reactive NewTodoTime property.</summary>
-    [Reactive]
-    private string _newTodoTime = string.Empty;
-
     /// <summary>Initializes a new instance of the <see cref="MainViewModel"/> class.</summary>
     /// <param name="notificationService">The notification service.</param>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
@@ -156,6 +124,38 @@ public sealed partial class MainViewModel : ReactiveObject, IActivatableViewMode
         // Manually activate immediately to ensure initial data loading
         _ = Activator.Activate();
     }
+
+    /// <summary>Gets or sets the title of the new task.</summary>
+    [Reactive]
+    public partial string NewTodoTitle { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the description of the new task.</summary>
+    [Reactive]
+    public partial string NewTodoDescription { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the comma-separated tags for the new task.</summary>
+    [Reactive]
+    public partial string NewTodoTags { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the due date of the new task.</summary>
+    [Reactive]
+    public partial DateTime? NewTodoDueDate { get; set; } = TimeProvider.System.GetUtcNow().UtcDateTime;
+
+    /// <summary>Gets or sets the priority of the new task.</summary>
+    [Reactive]
+    public partial TodoPriority NewTodoPriority { get; set; } = TodoPriority.Medium;
+
+    /// <summary>Gets or sets the status shown after a cache operation.</summary>
+    [Reactive]
+    public partial string StatusMessage { get; set; } = "Ready";
+
+    /// <summary>Gets or sets the active to-do preferences.</summary>
+    [Reactive]
+    public partial AppSettings? Settings { get; set; } = new();
+
+    /// <summary>Gets or sets the time of day the new task is due.</summary>
+    [Reactive]
+    public partial string NewTodoTime { get; set; } = string.Empty;
 
     /// <summary>Gets a value indicating whether any operation is loading.</summary>
     public bool IsLoading => _isLoading.Value;
