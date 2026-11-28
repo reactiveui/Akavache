@@ -17,7 +17,7 @@ Help us keep the project open and inclusive. Please read and follow our [Code of
 
 ## <a name="question"></a> Got a Question or Problem?
 
-If you have questions about how to use Akavache, please direct these to [StackOverflow](https://stackoverflow.com/questions/tagged/Akavache). The project maintainers hang out in this [Slack](https://github.com/reactiveui/reactiveui#slack) channel.
+If you have questions about how to use Akavache, please direct these to [GitHub Discussions](https://github.com/reactiveui/Akavache/discussions).
 
 ## <a name="issue"></a> Found an Issue?
 
@@ -32,7 +32,7 @@ with a fix.
 You can request a new feature by submitting an issue to our [GitHub Repository](https://github.com/akavache/Akavache).  If you
 would like to implement a new feature then consider what kind of change it is:
 
-* **Major Changes** that you wish to contribute to the project should be discussed first in [Slack](https://github.com/reactiveui/reactiveui#slack) so that we can better coordinate our efforts,
+* **Major Changes** that you wish to contribute to the project should be discussed first in [GitHub Discussions](https://github.com/reactiveui/Akavache/discussions) so that we can better coordinate our efforts,
   prevent duplication of work, and help you to craft the change so that it is successfully accepted
   into the project.
 * **Small Changes** can be crafted and submitted to the [GitHub Repository](https://github.com/akavache/Akavache) as a Pull

@@ -129,7 +129,7 @@ Read data written by different serializers - enables gradual migration and maxim
 
 - **📖 Documentation**: [GitHub Repository](https://github.com/reactiveui/Akavache)
 - **🐛 Bug Reports**: [GitHub Issues](https://github.com/reactiveui/Akavache/issues)
-- **💬 Community Chat**: [ReactiveUI Slack](https://reactiveui.net/slack)
+- **💬 Questions**: [GitHub Discussions](https://github.com/reactiveui/Akavache/discussions)
 - **📦 NuGet Packages**: [Akavache on NuGet](https://www.nuget.org/packages?q=akavache)
 - **🎯 Contributing**: [Contributing Guide](https://github.com/reactiveui/Akavache/blob/main/CONTRIBUTING.md)
 

@@ -495,7 +495,7 @@ If you encounter issues during migration:
 
 1. Check the [Troubleshooting Guide](troubleshooting.md)
 2. Review the [Configuration Documentation](configuration.md)
-3. Ask on [ReactiveUI Slack](https://reactiveui.net/slack)
+3. Ask in [GitHub Discussions](https://github.com/reactiveui/Akavache/discussions)
 4. File an issue on [GitHub](https://github.com/reactiveui/Akavache/issues)
 
 Remember: V11.1 is designed to be a drop-in replacement for V10.x with better performance and more features. Your existing data and most of your code will work without changes!
