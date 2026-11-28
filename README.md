@@ -1,21 +1,17 @@
-[![NuGet Stats](https://img.shields.io/nuget/v/akavache.sqlite3.svg)](https://www.nuget.org/packages/akavache.sqlite3) ![Build](https://github.com/reactiveui/Akavache/workflows/Build/badge.svg) [![Code Coverage](https://codecov.io/gh/reactiveui/akavache/branch/main/graph/badge.svg)](https://codecov.io/gh/reactiveui/akavache)
-<br>
-<a href="https://www.nuget.org/packages/akavache.sqlite3">
-        <img src="https://img.shields.io/nuget/dt/akavache.sqlite3.svg">
-</a>
-<a href="#backers">
-        <img src="https://opencollective.com/reactiveui/backers/badge.svg">
-</a>
-<a href="#sponsors">
-        <img src="https://opencollective.com/reactiveui/sponsors/badge.svg">
-</a>
-<a href="https://reactiveui.net/slack">
-        <img src="https://img.shields.io/badge/chat-slack-blue.svg">
-</a>
+<div align="center">
 
-<img alt="Akavache" src="https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_akavache/main.png" width="150" />
+<a href="https://github.com/reactiveui/Akavache"><img src="https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_akavache/logo.svg" alt="Akavache" width="128"></a>
 
 # Akavache: An Asynchronous Key-Value Store for Native Applications
+
+[![Build](https://img.shields.io/github/actions/workflow/status/reactiveui/Akavache/ci-build.yml?branch=main&label=build&logo=githubactions&logoColor=white)](https://github.com/reactiveui/Akavache/actions/workflows/ci-build.yml)
+[![NuGet](https://img.shields.io/nuget/v/Akavache?label=nuget&logo=nuget&logoColor=white&color=004880)](https://www.nuget.org/packages/Akavache)
+[![Downloads](https://img.shields.io/nuget/dt/Akavache?label=downloads&logo=nuget&logoColor=white&color=004880)](https://www.nuget.org/packages/Akavache)
+[![Coverage](https://img.shields.io/codecov/c/github/reactiveui/Akavache?label=coverage&logo=codecov&logoColor=white)](https://codecov.io/gh/reactiveui/Akavache)
+[![License](https://img.shields.io/github/license/reactiveui/Akavache?color=blue)](https://github.com/reactiveui/Akavache/blob/main/LICENSE)
+[![Discussions](https://img.shields.io/badge/discussions-ask%20a%20question-8A2BE2?logo=github&logoColor=white)](https://github.com/reactiveui/Akavache/discussions)
+
+</div>
 
 Akavache is an *asynchronous*, *persistent* (i.e., writes to disk) key-value store created for writing desktop and mobile applications in C#, based on SQLite3. Akavache is great for both storing important data (i.e., user settings) as well as cached local data that expires.
 
@@ -298,12 +294,30 @@ Settings are automatically persisted and will survive app updates, making them p
 - **[Best Practices](docs/best-practices.md)** - Recommended patterns and anti-patterns
 - **[Troubleshooting](docs/troubleshooting/)** - Common issues and solutions
 
-## Support and Contributing
+## Contribute
 
-- 📖 **Documentation**: [https://github.com/reactiveui/Akavache](https://github.com/reactiveui/Akavache)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/reactiveui/Akavache/issues)
-- 💬 **Chat**: [ReactiveUI Slack](https://reactiveui.net/slack)
-- 📦 **NuGet**: [Akavache Packages](https://www.nuget.org/packages?q=akavache)
+Akavache is part of [ReactiveUI](https://github.com/reactiveui) and is released under the [MIT license](https://github.com/reactiveui/Akavache/blob/main/LICENSE). We welcome contributions of every size, from bug reports and documentation to features and tests.
+
+- **Questions:** ask in [GitHub Discussions](https://github.com/reactiveui/Akavache/discussions).
+- **Bugs and feature requests:** open a [GitHub issue](https://github.com/reactiveui/Akavache/issues/new/choose).
+- **Larger changes:** open an issue or discussion first, so we can agree on the approach before you start.
+- **Contributor guide:** read [reactiveui.net/contribute](https://www.reactiveui.net/contribute/) for [building and testing](https://www.reactiveui.net/contribute/building-and-testing/) and [pull requests](https://www.reactiveui.net/contribute/pull-requests/).
+
+### Coding standards
+
+Every pull request must meet these standards. The build checks most of them.
+
+- Follow the [ReactiveUI C# style guide](https://www.reactiveui.net/contribute/software-style-guide/code-style/).
+- The repository's `.editorconfig` and the StyleSharp, PerformanceSharp and SecuritySharp analyzers run on every build. Fix each finding in the code. Do not suppress it or relax the `.editorconfig`.
+- Add tests for every bug fix and new feature.
+- Document public APIs with XML documentation comments.
+- Write commit messages in the [Conventional Commits](https://www.reactiveui.net/contribute/software-style-guide/commit-message-convention/) format.
+- Follow the [Code of Conduct](https://github.com/reactiveui/.github/blob/main/CODE_OF_CONDUCT.md).
+
+### Support the project
+
+- Sponsor the maintainers on GitHub Sponsors: [reactivemarbles](https://github.com/sponsors/reactivemarbles), [glennawatson](https://github.com/sponsors/glennawatson) and [chrispulman](https://github.com/sponsors/chrispulman).
+- Ask your employer to support open source, for example with the [balanced employee IP agreement](https://github.com/github/balanced-employee-ip-agreement).
 
 ## Sponsors
 
