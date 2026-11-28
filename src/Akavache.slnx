@@ -5,6 +5,8 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Examples/">
+    <Project Path="examples/OrderCache/OrderCache.csproj" />
+    <Project Path="examples/OrderCache.Reactive/OrderCache.Reactive.csproj" />
     <Project Path="samples/AkavacheTodoMaui/AkavacheTodoMaui.csproj">
       <Deploy Solution="*|Any CPU" />
     </Project>

@@ -5,9 +5,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Windows;
-using Akavache;
-using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
 using AkavacheTodoWpf.Services;
 using AkavacheTodoWpf.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,8 +30,12 @@ public partial class App
     {
         base.OnStartup(e);
 
-        // Configure Akavache using the new builder pattern
-        ConfigureAkavache();
+        Resources["BoolToVisibilityConverter"] = new Converters.BooleanToVisibilityConverter();
+        Resources["IntToBoolConverter"] = new Converters.IntToBooleanConverter();
+        Resources["StringToBoolConverter"] = new Converters.StringToBooleanConverter();
+        Resources["InverseBoolConverter"] = new Converters.InverseBooleanConverter();
+
+        _ = RxAppBuilder.CreateReactiveUIBuilder().WithWpf().BuildApp();
 
         // Setup dependency injection
         _host = CreateHostBuilder().Build();
@@ -76,7 +77,7 @@ public partial class App
             // Step 3: Shutdown Akavache properly to flush all pending operations
             try
             {
-                await CacheDatabase.Shutdown().ToTask();
+                await TodoCacheService.FlushAndCloseAsync(CancellationToken.None);
             }
             catch (Exception ex)
             {
@@ -106,18 +107,6 @@ public partial class App
             base.OnExit(e);
         }
     }
-
-    /// <summary>Configures Akavache using the builder pattern with SQLite persistence.</summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ConfigureAkavache() => RxAppBuilder.CreateReactiveUIBuilder()
-            .WithWpf()
-            .WithAkavacheCacheDatabase<SystemJsonSerializer>(
-                static builder => builder
-                    .WithSqliteProvider()
-                    .UseForcedDateTimeKind(DateTimeKind.Utc)
-                    .WithSqliteDefaults(),
-                "AkavacheTodoWpf")
-            .BuildApp();
 
     /// <summary>Creates the host builder used to register application services.</summary>
     /// <returns>The configured <see cref="IHostBuilder"/>.</returns>

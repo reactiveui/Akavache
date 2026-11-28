@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\examples\OrderCache\OrderCache.csproj" />
     <ProjectReference Include="..\..\Akavache.Drawing\Akavache.Drawing.csproj" />
     <ProjectReference Include="..\..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
     <ProjectReference Include="..\..\Akavache.SystemTextJson.Bson\Akavache.SystemTextJson.Bson.csproj" />

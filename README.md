@@ -15,6 +15,8 @@
 
 Akavache is an *asynchronous*, *persistent* (i.e., writes to disk) key-value store created for writing desktop and mobile applications in C#, based on SQLite3. Akavache is great for both storing important data (i.e., user settings) as well as cached local data that expires.
 
+Try the [order cache examples](src/examples/README.md) to store an order offline, reopen an encrypted database, refresh a delivery note and observe a saved preference.
+
 ## What's New in V12
 
 Akavache V12 rewrites the SQLite backend for direct SQLitePCLRaw 3.x access, replacing the sqlite-net-pcl ORM layer entirely. The result is lower per-operation allocations, dedicated worker-thread serialization of all native handle access, and commit coalescing for concurrent writes.

@@ -5,6 +5,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using Akavache;
+using Akavache.Sqlite3;
+using Akavache.SystemTextJson;
 using AkavacheTodoWpf.Models;
 
 namespace AkavacheTodoWpf.Services;
@@ -25,11 +27,22 @@ public static class TodoCacheService
     /// <summary>The caches summarized by <see cref="GetCacheInfo"/>: user account, local machine and secure.</summary>
     private const int TrackedCacheCount = 3;
 
+    /// <summary>The app's SQLite stores and their generated serialization contract.</summary>
+    private static readonly IAkavacheInstance Stores = CacheDatabase.CreateBuilder("AkavacheTodoWpf")
+        .WithSerializerSystemTextJson(TodoJsonContext.Default.Options)
+        .UseForcedDateTimeKind(DateTimeKind.Utc)
+        .WithSqliteDefaults()
+        .Build();
+
+    /// <summary>Gets the user store supplied by the SQLite defaults.</summary>
+    private static IBlobCache UserAccount => Stores.UserAccount!;
+
     /// <summary>Gets all todos from cache.</summary>
     /// <returns>Observable list of todos.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IObservable<List<TodoItem>?> GetAllTodos() => CacheDatabase.UserAccount
-        .GetObject<List<TodoItem>>("todos")
+    public static IObservable<List<TodoItem>?> GetAllTodos() => UserAccount
+        .Get("todos", typeof(List<TodoItem>))
+        .Select(static bytes => bytes is null ? null : SystemJsonSerializer.DeserializeAot(bytes, TodoJsonContext.Default.ListTodoItem))
         .Catch<List<TodoItem>?, Exception>(static _ => Signal.Return<List<TodoItem>?>([]));
 
     /// <summary>Saves todos to cache so that they never expire.</summary>
@@ -44,20 +57,26 @@ public static class TodoCacheService
     /// <returns>Observable unit.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IObservable<RxVoid> SaveTodos(List<TodoItem> todos, DateTimeOffset? expiration) =>
-        CacheDatabase.UserAccount.InsertObject("todos", todos, expiration);
+        UserAccount.Insert("todos", SystemJsonSerializer.SerializeAot(todos, TodoJsonContext.Default.ListTodoItem), typeof(List<TodoItem>), expiration);
 
     /// <summary>Gets application settings.</summary>
     /// <returns>Observable app settings.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IObservable<AppSettings?> GetSettings() => CacheDatabase.UserAccount
-        .GetOrCreateObject("app_settings", static () => new AppSettings());
+    public static IObservable<AppSettings?> GetSettings() => UserAccount
+        .Get("app_settings", typeof(AppSettings))
+        .Select(static bytes => bytes is null ? null : SystemJsonSerializer.DeserializeAot(bytes, TodoJsonContext.Default.AppSettings))
+        .Catch<AppSettings?, Exception>(static _ =>
+        {
+            AppSettings settings = new();
+            return SaveSettings(settings).Select(_ => (AppSettings?)settings);
+        });
 
     /// <summary>Saves application settings.</summary>
     /// <param name="settings">The settings to save.</param>
     /// <returns>Observable unit.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IObservable<RxVoid> SaveSettings(AppSettings? settings) =>
-        CacheDatabase.UserAccount.InsertObject("app_settings", settings);
+        UserAccount.Insert("app_settings", settings is null ? [] : SystemJsonSerializer.SerializeAot(settings, TodoJsonContext.Default.AppSettings), typeof(AppSettings));
 
     /// <summary>Gets todo statistics.</summary>
     /// <returns>Observable todo statistics.</returns>
@@ -73,7 +92,7 @@ public static class TodoCacheService
             System.Diagnostics.Debug.WriteLine("Getting cache info...");
 
             // Use timeout and better error handling for each cache operation
-            var userKeysObs = CacheDatabase.UserAccount.GetAllKeys()
+            var userKeysObs = UserAccount.GetAllKeys()
                 .ToArray()
                 .Timeout(TimeSpan.FromSeconds(CacheQueryTimeoutSeconds))
                 .Catch(static (Exception ex) =>
@@ -82,7 +101,7 @@ public static class TodoCacheService
                     return Signal.Return(Array.Empty<string>());
                 });
 
-            var localKeysObs = CacheDatabase.LocalMachine.GetAllKeys()
+            var localKeysObs = Stores.LocalMachine!.GetAllKeys()
                 .ToArray()
                 .Timeout(TimeSpan.FromSeconds(CacheQueryTimeoutSeconds))
                 .Catch(static (Exception ex) =>
@@ -91,7 +110,7 @@ public static class TodoCacheService
                     return Signal.Return(Array.Empty<string>());
                 });
 
-            var secureKeysObs = CacheDatabase.Secure.GetAllKeys()
+            var secureKeysObs = Stores.Secure!.GetAllKeys()
                 .ToArray()
                 .Timeout(TimeSpan.FromSeconds(CacheQueryTimeoutSeconds))
                 .Catch(static (Exception ex) =>
@@ -130,18 +149,33 @@ public static class TodoCacheService
     /// <returns>Observable unit.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IObservable<RxVoid> InvalidateTodo(string todoId) =>
-        CacheDatabase.UserAccount.Invalidate($"todo_{todoId}");
+        UserAccount.Invalidate($"todo_{todoId}");
 
     /// <summary>Cleans up the cache.</summary>
     /// <returns>Observable unit.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IObservable<RxVoid> CleanupCache() => CacheDatabase.UserAccount.Vacuum();
+    public static IObservable<RxVoid> CleanupCache() => UserAccount.Vacuum();
 
     /// <summary>Saves application state.</summary>
     /// <returns>Observable unit.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IObservable<RxVoid> SaveApplicationState() =>
-        CacheDatabase.UserAccount.InsertObject("last_shutdown", TimeProvider.System.GetLocalNow());
+        UserAccount.Insert(
+            "last_shutdown",
+            SystemJsonSerializer.SerializeAot(TimeProvider.System.GetLocalNow(), TodoJsonContext.Default.DateTimeOffset),
+            typeof(DateTimeOffset));
+
+    /// <summary>Flushes and disposes the four caches opened by the SQLite defaults.</summary>
+    /// <param name="token">Cancels the wait for pending writes.</param>
+    /// <returns>Completion after closing the stores.</returns>
+    internal static async Task FlushAndCloseAsync(CancellationToken token)
+    {
+        using var account = UserAccount;
+        using var local = Stores.LocalMachine!;
+        using var secure = Stores.Secure!;
+        using var memory = Stores.InMemory!;
+        await Task.WhenAll(account.Flush().ToTask(token), local.Flush().ToTask(token), secure.Flush().ToTask(token), memory.Flush().ToTask(token));
+    }
 
     /// <summary>Counts the completed, overdue and due-soon todos in a single pass.</summary>
     /// <param name="todos">The todos to summarize, or null when the cache holds nothing.</param>

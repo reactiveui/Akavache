@@ -32,7 +32,7 @@ public partial class ImageCacheExtensionsTests
         /// <inheritdoc/>
         public Task Save(CompressedBitmapFormat format, float quality, Stream target)
         {
-            byte[] mockPngData = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+            var mockPngData = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jrzsAAAAASUVORK5CYII=");
             return target.WriteAsync(mockPngData, 0, mockPngData.Length);
         }
 
